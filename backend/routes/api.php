@@ -3,6 +3,9 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\ProductController;
+use App\Http\Controllers\SaleController;
 
 /*
 |--------------------------------------------------------------------------
@@ -23,6 +26,17 @@ Route::post('/auth/login', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::get('/auth/me', [AuthController::class, 'me']);
+    
+    // Categories
+    Route::apiResource('categories', CategoryController::class);
+    
+    // Products
+    Route::apiResource('products', ProductController::class);
+    Route::get('/products/search', [ProductController::class, 'search']);
+    
+    // Sales
+    Route::apiResource('sales', SaleController::class)->only(['index', 'store', 'show']);
+    Route::get('/sales/{id}/invoice', [SaleController::class, 'invoice']);
     
     // Test route
     Route::get('/test', function (Request $request) {

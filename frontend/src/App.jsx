@@ -4,8 +4,13 @@ import Layout from './layouts/Layout'
 import Home from './pages/Home'
 import Login from './pages/Login'
 import Register from './pages/Register'
+import Categories from './pages/Categories'
+import Products from './pages/Products'
+import Sales from './pages/Sales'
+import Invoice from './pages/Invoice'
 import ProtectedRoute from './components/ProtectedRoute'
 import './App.css'
+import './styles/print.css'
 
 function App() {
   return (
@@ -26,6 +31,10 @@ function App() {
             }
           >
             <Route index element={<Home />} />
+            <Route path="categories" element={<Categories />} />
+            <Route path="products" element={<Products />} />
+            <Route path="sales" element={<Sales />} />
+            <Route path="sales/:id/invoice" element={<Invoice />} />
           </Route>
         </Routes>
       </BrowserRouter>

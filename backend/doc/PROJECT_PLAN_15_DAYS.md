@@ -153,37 +153,37 @@ GET    /api/auth/me
 ### ✅ المهام التفصيلية
 
 #### Backend:
-- [ ] Migration: `categories` table
-  - id, tenant_id, name, description
-- [ ] Migration: `products` table
+- [x] Migration: `categories` table ✅
+  - id, tenant_id, name, description ✅
+- [x] Migration: `products` table ✅
   - id, tenant_id, category_id, name, barcode, purchase_price, 
     sale_price, quantity, expiry_date, min_stock_alert, 
-    min_expiry_alert, created_at, updated_at
-- [ ] **Model: `BaseModel`** مع Global Scope للمواد ⚠️
-- [ ] `CategoryController`:
-  - `index()` - عرض جميع الأقسام
-  - `store()` - إضافة قسم
-  - `update()` - تعديل قسم
-  - `destroy()` - حذف قسم
-- [ ] `ProductController`:
-  - `index()` - عرض جميع المنتجات (مع pagination & search)
-  - `store()` - إضافة منتج
-  - `show()` - عرض منتج واحد
-  - `update()` - تعديل منتج
-  - `destroy()` - حذف منتج
-  - `search()` - بحث سريع (اسم/باركود)
-- [ ] Validation Rules للمنتجات
+    min_expiry_alert, created_at, updated_at ✅
+- [x] **Model: `BaseModel`** مع Global Scope للمواد ⚠️ ✅
+- [x] `CategoryController`: ✅
+  - `index()` - عرض جميع الأقسام ✅
+  - `store()` - إضافة قسم ✅
+  - `update()` - تعديل قسم ✅
+  - `destroy()` - حذف قسم ✅
+- [x] `ProductController`: ✅
+  - `index()` - عرض جميع المنتجات (مع pagination & search) ✅
+  - `store()` - إضافة منتج ✅
+  - `show()` - عرض منتج واحد ✅
+  - `update()` - تعديل منتج ✅
+  - `destroy()` - حذف منتج ✅
+  - `search()` - بحث سريع (اسم/باركود) ✅
+- [x] Validation Rules للمنتجات ✅
 
 #### Frontend:
-- [ ] صفحة الأقسام (`Categories.jsx`)
-  - عرض الأقسام
-  - إضافة/تعديل/حذف قسم
-- [ ] صفحة المنتجات (`Products.jsx`)
-  - جدول المنتجات
-  - بحث سريع
-  - إضافة/تعديل/حذف منتج
-- [ ] Modal/Form لإضافة/تعديل منتج
-- [ ] Component لعرض تنبيهات المخزون والصلاحية
+- [x] صفحة الأقسام (`Categories.jsx`) ✅
+  - عرض الأقسام ✅
+  - إضافة/تعديل/حذف قسم ✅
+- [x] صفحة المنتجات (`Products.jsx`) ✅
+  - جدول المنتجات ✅
+  - بحث سريع ✅
+  - إضافة/تعديل/حذف منتج ✅
+- [x] Modal/Form لإضافة/تعديل منتج ✅
+- [x] Component لعرض تنبيهات المخزون والصلاحية ✅
 
 ### 🔌 Endpoints
 ```
@@ -228,30 +228,30 @@ GET    /api/products/search?q={query}
 ### ✅ المهام التفصيلية
 
 #### Backend:
-- [ ] **Migration: `inventory_transactions` table** ⚠️ أولاً
+- [x] **Migration: `inventory_transactions` table** ⚠️ أولاً ✅
   - id, tenant_id, product_id, type (in/out/return), 
-    quantity, reference_type, reference_id, notes, created_at
-- [ ] Model: `InventoryTransaction` (extends BaseModel)
-- [ ] Migration: `sales` table
+    quantity, reference_type, reference_id, notes, created_at ✅
+- [x] Model: `InventoryTransaction` (extends BaseModel) ✅
+- [x] Migration: `sales` table ✅
   - id, tenant_id, invoice_number, user_id, total, discount, 
-    payment_method, status, created_at
-- [ ] Migration: `sale_items` table
-  - id, sale_id, product_id, quantity, price, subtotal
-- [ ] `SaleController`:
-  - `store()` - إنشاء عملية بيع
-  - `index()` - عرض المبيعات
-  - `show()` - عرض فاتورة واحدة
-- [ ] Logic لخصم الكمية من المخزون تلقائيًا
-- [ ] Logic لإنشاء Inventory Transaction عند البيع
-- [ ] Logic لتوليد رقم فاتورة تلقائي
+    payment_method, status, created_at ✅
+- [x] Migration: `sale_items` table ✅
+  - id, sale_id, product_id, quantity, price, subtotal ✅
+- [x] `SaleController`: ✅
+  - `store()` - إنشاء عملية بيع ✅
+  - `index()` - عرض المبيعات ✅
+  - `show()` - عرض فاتورة واحدة ✅
+- [x] Logic لخصم الكمية من المخزون تلقائيًا ✅
+- [x] Logic لإنشاء Inventory Transaction عند البيع ✅
+- [x] Logic لتوليد رقم فاتورة تلقائي ✅
 
 #### Frontend:
-- [ ] صفحة المبيعات (`Sales.jsx`)
-- [ ] Component: `Cart.jsx` - سلة المشتريات
-- [ ] Component: `ProductSearch.jsx` - بحث سريع
-- [ ] Component: `CartItem.jsx` - عنصر في السلة
-- [ ] إضافة/حذف/تعديل الكمية في السلة
-- [ ] حساب الإجمالي تلقائيًا
+- [x] صفحة المبيعات (`Sales.jsx`) ✅
+- [x] Component: `Cart.jsx` - سلة المشتريات ✅
+- [x] Component: `ProductSearch.jsx` - بحث سريع ✅
+- [x] Component: `CartItem.jsx` - عنصر في السلة ✅
+- [x] إضافة/حذف/تعديل الكمية في السلة ✅
+- [x] حساب الإجمالي تلقائيًا ✅
 
 ### 🔌 Endpoints
 ```
@@ -285,21 +285,21 @@ GET    /api/sales/{id}
 ### ✅ المهام التفصيلية
 
 #### Backend:
-- [ ] إضافة Logic للخصومات (نسبة/قيمة)
-- [ ] إضافة طرق الدفع (كاش، بطاقة، تحويل)
-- [ ] **Invoice HTML Template** (بدل PDF معقد) ✅
-  - HTML بسيط + CSS خاص للطباعة
-  - Endpoint لإرجاع HTML
-- [ ] Endpoint لطباعة الفاتورة (HTML)
+- [x] إضافة Logic للخصومات (نسبة/قيمة) ✅ (موجود في SaleController)
+- [x] إضافة طرق الدفع (كاش، بطاقة، تحويل) ✅ (موجود في SaleController)
+- [x] **Invoice HTML Template** (بدل PDF معقد) ✅
+  - HTML بسيط + CSS خاص للطباعة ✅
+  - Endpoint لإرجاع HTML ✅
+- [x] Endpoint لطباعة الفاتورة (HTML) ✅
 
 #### Frontend:
-- [ ] Component: `DiscountModal.jsx` - إضافة خصم
-- [ ] Component: `PaymentMethod.jsx` - اختيار طريقة الدفع
-- [ ] زر البيع مع Confirmation
-- [ ] Component: `Invoice.jsx` - عرض الفاتورة (HTML)
-- [ ] زر طباعة الفاتورة (window.print())
-- [ ] CSS خاص للطباعة (@media print)
-- [ ] إعادة تعيين السلة بعد البيع
+- [x] Component: `DiscountModal.jsx` - إضافة خصم ✅ (مدمج في Cart)
+- [x] Component: `PaymentMethod.jsx` - اختيار طريقة الدفع ✅ (مدمج في Cart)
+- [x] زر البيع مع Confirmation ✅
+- [x] Component: `Invoice.jsx` - عرض الفاتورة (HTML) ✅
+- [x] زر طباعة الفاتورة (window.print()) ✅
+- [x] CSS خاص للطباعة (@media print) ✅
+- [x] إعادة تعيين السلة بعد البيع ✅
 
 ### 🔌 Endpoints
 ```

@@ -1,4 +1,4 @@
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Outlet, useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 /**
@@ -8,6 +8,7 @@ import { useAuth } from '../context/AuthContext';
 function Layout() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleLogout = async () => {
     await logout();
@@ -26,6 +27,46 @@ function Layout() {
               </h1>
             </div>
             <nav className="flex items-center space-x-4">
+              <Link
+                to="/"
+                className={`px-3 py-2 rounded-md text-sm font-medium ${
+                  location.pathname === '/'
+                    ? 'bg-indigo-100 text-indigo-700'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                الرئيسية
+              </Link>
+              <Link
+                to="/categories"
+                className={`px-3 py-2 rounded-md text-sm font-medium ${
+                  location.pathname === '/categories'
+                    ? 'bg-indigo-100 text-indigo-700'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                الأقسام
+              </Link>
+              <Link
+                to="/products"
+                className={`px-3 py-2 rounded-md text-sm font-medium ${
+                  location.pathname === '/products'
+                    ? 'bg-indigo-100 text-indigo-700'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                المنتجات
+              </Link>
+              <Link
+                to="/sales"
+                className={`px-3 py-2 rounded-md text-sm font-medium ${
+                  location.pathname === '/sales'
+                    ? 'bg-indigo-100 text-indigo-700'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                المبيعات
+              </Link>
               <span className="text-gray-600">
                 {user?.name}
               </span>

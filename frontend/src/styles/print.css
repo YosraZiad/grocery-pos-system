@@ -1,0 +1,32 @@
+/* Print Styles */
+@media print {
+  body {
+    margin: 0;
+    padding: 0;
+    background: white;
+  }
+
+  .no-print,
+  header,
+  footer,
+  nav,
+  button {
+    display: none !important;
+  }
+
+  .invoice-preview {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  @page {
+    margin: 1cm;
+    size: A4;
+  }
+
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
