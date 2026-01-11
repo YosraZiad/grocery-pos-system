@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useI18n } from '../context/I18nContext';
 import api from '../services/api';
 
 function ProductForm({ product, onSubmit, onCancel, isLoading }) {
+  const { t } = useI18n();
   const [formData, setFormData] = useState({
     category_id: '',
     name: '',
@@ -54,57 +56,79 @@ function ProductForm({ product, onSubmit, onCancel, isLoading }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          القسم *
-        </label>
-        <select
-          name="category_id"
-          value={formData.category_id}
-          onChange={handleChange}
-          required
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-        >
-          <option value="">اختر القسم</option>
-          {categories?.map((category) => (
-            <option key={category.id} value={category.id}>
-              {category.name}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          اسم المنتج *
-        </label>
-        <input
-          type="text"
-          name="name"
-          value={formData.name}
-          onChange={handleChange}
-          required
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-        />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          الباركود
-        </label>
-        <input
-          type="text"
-          name="barcode"
-          value={formData.barcode}
-          onChange={handleChange}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-        />
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            سعر الشراء *
+          <label className="label">
+            {t('categories')} *
+          </label>
+          <select
+            name="category_id"
+            value={formData.category_id}
+            onChange={handleChange}
+            required
+            className="input"
+          >
+            <option value="">{t('allCategories')}</option>
+            {categories?.map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="label">
+            {t('productName')} *
+          </label>
+          <input
+            type="text"
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
+            required
+            className="input"
+            placeholder={t('productName')}
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className="label">
+            {t('barcode')}
+          </label>
+          <input
+            type="text"
+            name="barcode"
+            value={formData.barcode}
+            onChange={handleChange}
+            className="input"
+            placeholder={t('barcode')}
+          />
+        </div>
+
+        <div>
+          <label className="label">
+            {t('quantity')} *
+          </label>
+          <input
+            type="number"
+            name="quantity"
+            value={formData.quantity}
+            onChange={handleChange}
+            required
+            min="0"
+            className="input"
+            placeholder={t('quantity')}
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className="label">
+            {t('purchasePrice')} *
           </label>
           <input
             type="number"
@@ -114,13 +138,14 @@ function ProductForm({ product, onSubmit, onCancel, isLoading }) {
             onChange={handleChange}
             required
             min="0"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+            className="input"
+            placeholder="0.00"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            سعر البيع *
+          <label className="label">
+            {t('salePrice')} *
           </label>
           <input
             type="number"
@@ -130,45 +155,29 @@ function ProductForm({ product, onSubmit, onCancel, isLoading }) {
             onChange={handleChange}
             required
             min="0"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+            className="input"
+            placeholder="0.00"
           />
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            الكمية *
-          </label>
-          <input
-            type="number"
-            name="quantity"
-            value={formData.quantity}
-            onChange={handleChange}
-            required
-            min="0"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            تاريخ انتهاء الصلاحية
+          <label className="label">
+            Expiry Date
           </label>
           <input
             type="date"
             name="expiry_date"
             value={formData.expiry_date}
             onChange={handleChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+            className="input"
           />
         </div>
-      </div>
 
-      <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            تنبيه المخزون الأدنى
+          <label className="label">
+            Min Stock Alert
           </label>
           <input
             type="number"
@@ -176,39 +185,26 @@ function ProductForm({ product, onSubmit, onCancel, isLoading }) {
             value={formData.min_stock_alert}
             onChange={handleChange}
             min="0"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            تنبيه الصلاحية (أيام)
-          </label>
-          <input
-            type="number"
-            name="min_expiry_alert"
-            value={formData.min_expiry_alert}
-            onChange={handleChange}
-            min="0"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+            className="input"
+            placeholder="5"
           />
         </div>
       </div>
 
-      <div className="flex justify-end space-x-2 pt-4">
+      <div className="flex justify-end space-x-3 rtl:space-x-reverse pt-4 border-t border-gray-200 dark:border-gray-700">
         <button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
+          className="btn-secondary"
         >
-          إلغاء
+          {t('cancel')}
         </button>
         <button
           type="submit"
           disabled={isLoading}
-          className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 disabled:opacity-50"
+          className="btn-primary disabled:opacity-50"
         >
-          {product ? 'تحديث' : 'إضافة'}
+          {product ? t('update') : t('save')}
         </button>
       </div>
     </form>

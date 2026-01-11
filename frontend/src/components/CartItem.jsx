@@ -1,4 +1,8 @@
+import { useI18n } from '../context/I18nContext';
+
 function CartItem({ item, onUpdateQuantity, onRemove }) {
+  const { t } = useI18n();
+  
   const handleQuantityChange = (newQuantity) => {
     if (newQuantity < 1) {
       onRemove();
@@ -8,21 +12,23 @@ function CartItem({ item, onUpdateQuantity, onRemove }) {
   };
 
   return (
-    <div className="flex items-center justify-between p-4 border-b border-gray-200">
-      <div className="flex-1">
-        <div className="font-medium text-gray-900">{item.product.name}</div>
-        <div className="text-sm text-gray-500">
+    <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-150">
+      <div className="flex-1 min-w-0">
+        <div className="font-medium text-gray-900 dark:text-white text-base">
+          {item.product.name}
+        </div>
+        <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
           {item.product.category?.name} | {item.price} ر.س
         </div>
       </div>
-      <div className="flex items-center space-x-4">
+      <div className="flex items-center space-x-4 rtl:space-x-reverse">
         {/* تحكم في الكمية */}
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2 rtl:space-x-reverse border border-gray-300 dark:border-gray-600 rounded-lg">
           <button
             onClick={() => handleQuantityChange(item.quantity - 1)}
-            className="w-8 h-8 flex items-center justify-center border border-gray-300 rounded-md hover:bg-gray-50"
+            className="w-10 h-10 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-700 rounded-l-lg transition-colors duration-200 text-gray-600 dark:text-gray-400 font-semibold"
           >
-            -
+            −
           </button>
           <input
             type="number"
@@ -30,19 +36,19 @@ function CartItem({ item, onUpdateQuantity, onRemove }) {
             onChange={(e) => handleQuantityChange(parseInt(e.target.value) || 1)}
             min="1"
             max={item.product.quantity + item.quantity}
-            className="w-16 text-center border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500"
+            className="w-16 text-center border-0 bg-transparent text-gray-900 dark:text-white focus:outline-none focus:ring-0"
           />
           <button
             onClick={() => handleQuantityChange(item.quantity + 1)}
-            className="w-8 h-8 flex items-center justify-center border border-gray-300 rounded-md hover:bg-gray-50"
+            className="w-10 h-10 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-700 rounded-r-lg transition-colors duration-200 text-gray-600 dark:text-gray-400 font-semibold"
           >
             +
           </button>
         </div>
 
         {/* الإجمالي */}
-        <div className="w-24 text-right">
-          <div className="font-medium text-gray-900">
+        <div className="w-24 text-right rtl:text-left">
+          <div className="font-bold text-gray-900 dark:text-white text-lg">
             {(item.price * item.quantity).toFixed(2)} ر.س
           </div>
         </div>
@@ -50,7 +56,8 @@ function CartItem({ item, onUpdateQuantity, onRemove }) {
         {/* زر الحذف */}
         <button
           onClick={onRemove}
-          className="text-red-600 hover:text-red-900 px-2"
+          className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 p-2 rounded-lg transition-colors duration-200"
+          title={t('delete')}
         >
           🗑️
         </button>

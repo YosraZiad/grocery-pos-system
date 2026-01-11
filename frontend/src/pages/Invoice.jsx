@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { useI18n } from '../context/I18nContext';
 import api from '../services/api';
 
 function Invoice() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { t } = useI18n();
   const [invoiceHtml, setInvoiceHtml] = useState('');
 
   // جلب الفاتورة
@@ -37,35 +39,51 @@ function Invoice() {
   };
 
   if (isLoading) {
-    return <div className="text-center py-8">جاري التحميل...</div>;
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">{t('loading')}</p>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <div className="bg-white rounded-lg shadow-lg p-6 mb-4">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-bold text-gray-900">
-            فاتورة #{sale?.invoice_number}
-          </h2>
-          <div className="space-x-2">
+    <div className="max-w-4xl mx-auto space-y-6">
+      {/* Header Actions */}
+      <div className="card">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+              Invoice #{sale?.invoice_number}
+            </h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+              {sale?.created_at && new Date(sale.created_at).toLocaleDateString()}
+            </p>
+          </div>
+          <div className="flex space-x-3 rtl:space-x-reverse">
             <button
               onClick={() => navigate('/sales')}
-              className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
+              className="btn-secondary"
             >
-              رجوع
+              ← {t('home')}
             </button>
             <button
               onClick={handlePrint}
-              className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+              className="btn-primary flex items-center space-x-2 rtl:space-x-reverse"
             >
-              🖨️ طباعة
+              <span>🖨️</span>
+              <span>Print</span>
             </button>
           </div>
         </div>
+      </div>
 
-        {/* عرض HTML الفاتورة */}
+      {/* Invoice Preview */}
+      <div className="card p-0 overflow-hidden">
         <div 
-          className="invoice-preview"
+          className="invoice-preview bg-white dark:bg-gray-800 p-8"
           dangerouslySetInnerHTML={{ __html: invoiceHtml }}
         />
       </div>

@@ -1,14 +1,11 @@
-function SearchBar({ value, onChange, placeholder = "بحث..." }) {
+import { useI18n } from '../context/I18nContext';
+
+function SearchBar({ value, onChange, placeholder }) {
+  const { t } = useI18n();
+  
   return (
     <div className="relative">
-      <input
-        type="text"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        className="w-full px-4 py-2 pl-10 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-      />
-      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+      <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none rtl:left-auto rtl:right-0 rtl:pl-0 rtl:pr-3">
         <svg
           className="h-5 w-5 text-gray-400"
           fill="none"
@@ -23,6 +20,13 @@ function SearchBar({ value, onChange, placeholder = "بحث..." }) {
           />
         </svg>
       </div>
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder || t('searchPlaceholder')}
+        className="input pl-10 rtl:pl-0 rtl:pr-10"
+      />
     </div>
   );
 }
