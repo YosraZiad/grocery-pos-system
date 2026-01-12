@@ -277,6 +277,23 @@ const translations = {
     categoryUpdatedSuccessfully: 'Category updated successfully',
     categoryDeletedSuccessfully: 'Category deleted successfully',
     confirmDeleteCategory: 'Are you sure you want to delete this category?',
+    
+    // Profit & Loss
+    profitLoss: 'Profit & Loss',
+    profitLossDescription: 'Calculate profits and losses On-The-Fly from sales, expenses, and returns',
+    totalSales: 'Total Sales',
+    costOfGoods: 'Cost of Goods',
+    grossProfit: 'Gross Profit',
+    netProfit: 'Net Profit',
+    details: 'Details',
+    daily: 'Daily',
+    monthly: 'Monthly',
+    byProduct: 'By Product',
+    byCategory: 'By Category',
+    month: 'Month',
+    year: 'Year',
+    quantitySold: 'Quantity Sold',
+    productsSold: 'Products Sold',
   },
   ar: {
     // Navigation
@@ -553,6 +570,23 @@ const translations = {
     categoryUpdatedSuccessfully: 'تم تحديث القسم بنجاح',
     categoryDeletedSuccessfully: 'تم حذف القسم بنجاح',
     confirmDeleteCategory: 'هل أنت متأكد من حذف هذا القسم؟',
+    
+    // Profit & Loss
+    profitLoss: 'الأرباح والخسائر',
+    profitLossDescription: 'حساب الأرباح والخسائر مباشرة من المبيعات والمصروفات والمرتجعات',
+    totalSales: 'إجمالي المبيعات',
+    costOfGoods: 'تكلفة البضاعة',
+    grossProfit: 'الربح الإجمالي',
+    netProfit: 'الربح الصافي',
+    details: 'التفاصيل',
+    daily: 'يومي',
+    monthly: 'شهري',
+    byProduct: 'حسب منتج',
+    byCategory: 'حسب قسم',
+    month: 'الشهر',
+    year: 'السنة',
+    quantitySold: 'الكمية المباعة',
+    productsSold: 'المنتجات المباعة',
   },
 };
 

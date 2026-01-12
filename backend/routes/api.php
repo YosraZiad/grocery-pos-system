@@ -12,6 +12,7 @@ use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\PurchaseInvoiceController;
 use App\Http\Controllers\ExpenseCategoryController;
 use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\ProfitLossController;
 
 /*
 |--------------------------------------------------------------------------
@@ -97,6 +98,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/expenses/{id}', [ExpenseController::class, 'update'])->middleware('permission:edit expenses');
     Route::delete('/expenses/{id}', [ExpenseController::class, 'destroy'])->middleware('permission:delete expenses');
     Route::get('/expenses/summary', [ExpenseController::class, 'summary'])->middleware('permission:view expenses');
+    
+    // Profit & Loss
+    Route::get('/profit-loss/daily', [ProfitLossController::class, 'daily'])->middleware('permission:view reports');
+    Route::get('/profit-loss/monthly', [ProfitLossController::class, 'monthly'])->middleware('permission:view reports');
+    Route::get('/profit-loss/by-product', [ProfitLossController::class, 'byProduct'])->middleware('permission:view reports');
+    Route::get('/profit-loss/by-category', [ProfitLossController::class, 'byCategory'])->middleware('permission:view reports');
+    Route::get('/profit-loss/summary', [ProfitLossController::class, 'summary'])->middleware('permission:view reports');
     
     // Test route
     Route::get('/test', function (Request $request) {

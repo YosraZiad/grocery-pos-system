@@ -138,6 +138,16 @@ function Layout() {
               >
                 {t('expensesManagement')}
               </Link>
+              <Link
+                to="/profit-loss"
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  isActive('/profit-loss')
+                    ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300'
+                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                }`}
+              >
+                {t('profitLoss')}
+              </Link>
             </nav>
 
             {/* User Actions */}
