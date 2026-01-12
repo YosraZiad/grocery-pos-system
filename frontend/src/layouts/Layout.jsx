@@ -71,12 +71,72 @@ function Layout() {
               <Link
                 to="/sales"
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  isActive('/sales')
+                  isActive('/sales') && !isActive('/sales-list')
                     ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300'
                     : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                 }`}
               >
                 {t('sales')}
+              </Link>
+              <Link
+                to="/sales-list"
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  isActive('/sales-list')
+                    ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300'
+                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                }`}
+              >
+                {t('salesList')}
+              </Link>
+              <Link
+                to="/inventory"
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  isActive('/inventory')
+                    ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300'
+                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                }`}
+              >
+                {t('inventory')}
+              </Link>
+              <Link
+                to="/returns"
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  isActive('/returns')
+                    ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300'
+                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                }`}
+              >
+                {t('returnsManagement')}
+              </Link>
+              <Link
+                to="/suppliers"
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  isActive('/suppliers')
+                    ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300'
+                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                }`}
+              >
+                {t('suppliersManagement')}
+              </Link>
+              <Link
+                to="/purchase-invoices"
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  isActive('/purchase-invoices')
+                    ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300'
+                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                }`}
+              >
+                {t('purchaseInvoices')}
+              </Link>
+              <Link
+                to="/expenses"
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  isActive('/expenses')
+                    ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300'
+                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                }`}
+              >
+                {t('expensesManagement')}
               </Link>
             </nav>
 
@@ -107,13 +167,13 @@ function Layout() {
                 </div>
                 <div className="flex flex-col">
                   <span className="text-sm font-medium text-gray-900 dark:text-white">
-                    {user?.name}
-                  </span>
-                  {user?.roles && user.roles.length > 0 && (
+                {user?.name}
+              </span>
+              {user?.roles && user.roles.length > 0 && (
                     <span className="text-xs text-gray-500 dark:text-gray-400">
-                      {user.roles[0].name}
-                    </span>
-                  )}
+                  {user.roles[0].name}
+                </span>
+              )}
                 </div>
               </div>
 

@@ -245,7 +245,7 @@ function Products() {
           <div className="bg-white dark:bg-gray-800 px-4 py-3 border-t border-gray-200 dark:border-gray-700 sm:px-6">
             <div className="flex items-center justify-between">
               <div className="text-sm text-gray-700 dark:text-gray-300">
-                Showing {data.from} to {data.to} of {data.total} products
+                {t('showing')} {data.from} {t('to')} {data.to} {t('of')} {data.total} {t('products').toLowerCase()}
               </div>
               <div className="flex space-x-2 rtl:space-x-reverse">
                 {data.links.map((link, index) => (
@@ -279,7 +279,7 @@ function Products() {
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-bold text-gray-900 dark:text-white">
                 {editingProduct ? t('editProduct') : t('addProduct')}
-              </h3>
+            </h3>
               <button
                 onClick={handleCloseModal}
                 className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"

@@ -19,6 +19,12 @@ class SaleController extends Controller
     {
         $query = Sale::with(['user', 'items.product']);
 
+        // البحث برقم الفاتورة
+        if ($request->has('search')) {
+            $search = $request->search;
+            $query->where('invoice_number', 'like', "%{$search}%");
+        }
+
         // فلترة حسب التاريخ
         if ($request->has('from')) {
             $query->whereDate('created_at', '>=', $request->from);
@@ -171,5 +177,59 @@ class SaleController extends Controller
         $html = view('invoice', compact('sale'))->render();
 
         return response($html)->header('Content-Type', 'text/html');
+    }
+
+    /**
+     * إلغاء عملية بيع
+     */
+    public function cancel(string $id)
+    {
+        DB::beginTransaction();
+        try {
+            $sale = Sale::with('items.product')->findOrFail($id);
+
+            // التحقق من أن البيع مكتمل
+            if ($sale->status !== 'completed') {
+                return response()->json([
+                    'message' => 'Cannot cancel a sale that is not completed',
+                ], 422);
+            }
+
+            // إرجاع الكمية للمخزون وإنشاء Inventory Transaction
+            foreach ($sale->items as $item) {
+                $product = $item->product;
+                
+                // إرجاع الكمية للمخزون
+                $product->increment('quantity', $item->quantity);
+
+                // إنشاء Inventory Transaction للإرجاع
+                InventoryTransaction::create([
+                    'tenant_id' => config('tenant_id'),
+                    'product_id' => $product->id,
+                    'type' => 'return',
+                    'quantity' => $item->quantity,
+                    'reference_type' => 'Sale',
+                    'reference_id' => $sale->id,
+                    'notes' => "إلغاء بيع - فاتورة رقم: {$sale->invoice_number}",
+                ]);
+            }
+
+            // تحديث حالة البيع
+            $sale->update(['status' => 'cancelled']);
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Sale cancelled successfully',
+                'data' => $sale->load(['user', 'items.product']),
+            ], 200);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'message' => 'Error cancelling sale',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
 }

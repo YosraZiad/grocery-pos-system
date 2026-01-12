@@ -95,100 +95,100 @@ function Register() {
         {/* Register Form */}
         <div className="card">
           <form className="space-y-6" onSubmit={handleSubmit}>
-            {error && (
+          {error && (
               <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg text-sm">
-                {error}
-              </div>
-            )}
+              {error}
+            </div>
+          )}
 
-            <div className="space-y-4">
-              <div>
+          <div className="space-y-4">
+            <div>
                 <label htmlFor="name" className="label">
-                  Name *
-                </label>
-                <input
-                  id="name"
-                  name="name"
-                  type="text"
-                  required
+                  {t('name')} *
+              </label>
+              <input
+                id="name"
+                name="name"
+                type="text"
+                required
                   className="input"
-                  placeholder="Full Name"
-                  value={formData.name}
-                  onChange={handleChange}
-                />
-                {errors.name && (
+                  placeholder={t('fullName')}
+                value={formData.name}
+                onChange={handleChange}
+              />
+              {errors.name && (
                   <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.name[0]}</p>
-                )}
-              </div>
-
-              <div>
-                <label htmlFor="email" className="label">
-                  {t('email')} *
-                </label>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  className="input"
-                  placeholder={t('email')}
-                  value={formData.email}
-                  onChange={handleChange}
-                />
-                {errors.email && (
-                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.email[0]}</p>
-                )}
-              </div>
-
-              <div>
-                <label htmlFor="password" className="label">
-                  {t('password')} *
-                </label>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="new-password"
-                  required
-                  className="input"
-                  placeholder="Password (min 8 characters)"
-                  value={formData.password}
-                  onChange={handleChange}
-                />
-                {errors.password && (
-                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.password[0]}</p>
-                )}
-              </div>
-
-              <div>
-                <label htmlFor="password_confirmation" className="label">
-                  Confirm Password *
-                </label>
-                <input
-                  id="password_confirmation"
-                  name="password_confirmation"
-                  type="password"
-                  autoComplete="new-password"
-                  required
-                  className="input"
-                  placeholder="Confirm Password"
-                  value={formData.password_confirmation}
-                  onChange={handleChange}
-                />
-              </div>
+              )}
             </div>
 
             <div>
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full btn-primary py-3 text-base disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? t('processing') : t('registerButton')}
-              </button>
+                <label htmlFor="email" className="label">
+                  {t('email')} *
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                  className="input"
+                  placeholder={t('email')}
+                value={formData.email}
+                onChange={handleChange}
+              />
+              {errors.email && (
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.email[0]}</p>
+              )}
             </div>
-          </form>
+
+            <div>
+                <label htmlFor="password" className="label">
+                  {t('password')} *
+              </label>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                autoComplete="new-password"
+                required
+                  className="input"
+                  placeholder={t('passwordMin')}
+                value={formData.password}
+                onChange={handleChange}
+              />
+              {errors.password && (
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.password[0]}</p>
+              )}
+            </div>
+
+            <div>
+                <label htmlFor="password_confirmation" className="label">
+                  {t('confirmPassword')} *
+              </label>
+              <input
+                id="password_confirmation"
+                name="password_confirmation"
+                type="password"
+                autoComplete="new-password"
+                required
+                  className="input"
+                  placeholder={t('confirmPasswordPlaceholder')}
+                value={formData.password_confirmation}
+                onChange={handleChange}
+              />
+            </div>
+          </div>
+
+          <div>
+            <button
+              type="submit"
+              disabled={loading}
+                className="w-full btn-primary py-3 text-base disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+                {loading ? t('processing') : t('registerButton')}
+            </button>
+          </div>
+        </form>
         </div>
       </div>
     </div>

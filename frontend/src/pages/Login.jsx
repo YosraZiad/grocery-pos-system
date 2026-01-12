@@ -72,57 +72,57 @@ function Login() {
         {/* Login Form */}
         <div className="card">
           <form className="space-y-6" onSubmit={handleSubmit}>
-            {error && (
+          {error && (
               <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg text-sm">
-                {error}
-              </div>
-            )}
+              {error}
+            </div>
+          )}
 
             <div className="space-y-4">
-              <div>
+            <div>
                 <label htmlFor="email" className="label">
                   {t('email')}
-                </label>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
                   className="input"
                   placeholder={t('email')}
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </div>
-
-              <div>
-                <label htmlFor="password" className="label">
-                  {t('password')}
-                </label>
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  autoComplete="current-password"
-                  required
-                  className="input"
-                  placeholder={t('password')}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </div>
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
             </div>
 
             <div>
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full btn-primary py-3 text-base disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? t('processing') : t('loginButton')}
-              </button>
+                <label htmlFor="password" className="label">
+                  {t('password')}
+              </label>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                autoComplete="current-password"
+                required
+                  className="input"
+                  placeholder={t('password')}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
             </div>
+          </div>
+
+          <div>
+            <button
+              type="submit"
+              disabled={loading}
+                className="w-full btn-primary py-3 text-base disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+                {loading ? t('processing') : t('loginButton')}
+            </button>
+          </div>
 
             {/* Test Accounts */}
             <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
@@ -132,13 +132,13 @@ function Login() {
               <div className="space-y-1 text-xs text-gray-600 dark:text-gray-400">
                 <p>
                   <strong className="text-gray-900 dark:text-gray-200">{t('admin')}:</strong> admin@example.com / password
-                </p>
-                <p>
+            </p>
+            <p>
                   <strong className="text-gray-900 dark:text-gray-200">{t('cashier')}:</strong> cashier@example.com / password
-                </p>
+            </p>
               </div>
-            </div>
-          </form>
+          </div>
+        </form>
         </div>
       </div>
     </div>

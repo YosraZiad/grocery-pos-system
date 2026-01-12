@@ -21,7 +21,7 @@ createRoot(document.getElementById('root')).render(
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <I18nProvider>
-          <App />
+      <App />
         </I18nProvider>
       </ThemeProvider>
     </QueryClientProvider>

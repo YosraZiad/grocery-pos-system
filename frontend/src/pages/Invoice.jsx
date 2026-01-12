@@ -56,8 +56,8 @@ function Invoice() {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-              Invoice #{sale?.invoice_number}
-            </h2>
+              {t('invoice')} #{sale?.invoice_number}
+          </h2>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
               {sale?.created_at && new Date(sale.created_at).toLocaleDateString()}
             </p>
@@ -74,11 +74,11 @@ function Invoice() {
               className="btn-primary flex items-center space-x-2 rtl:space-x-reverse"
             >
               <span>🖨️</span>
-              <span>Print</span>
+              <span>{t('print')}</span>
             </button>
           </div>
+          </div>
         </div>
-      </div>
 
       {/* Invoice Preview */}
       <div className="card p-0 overflow-hidden">

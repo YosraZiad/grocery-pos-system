@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useI18n } from '../context/I18nContext';
 import api from '../services/api';
 import ProductSearch from '../components/ProductSearch';
@@ -10,7 +10,14 @@ function Sales() {
   const [cartItems, setCartItems] = useState([]);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const location = useLocation();
   const { t } = useI18n();
+
+  // Reset السلة عند فتح الصفحة (New Sale)
+  useEffect(() => {
+    // Reset السلة عند فتح الصفحة مباشرة (New Sale)
+    setCartItems([]);
+  }, []);
 
   // إضافة منتج للسلة
   const handleAddProduct = (product) => {
@@ -44,7 +51,7 @@ function Sales() {
 
     // التحقق من توفر الكمية
     if (quantity > product.quantity + newItems[index].quantity) {
-      alert(`Available quantity: ${product.quantity + newItems[index].quantity}`);
+      alert(`${t('availableQuantity')}: ${product.quantity + newItems[index].quantity}`);
       return;
     }
 
@@ -88,7 +95,7 @@ function Sales() {
           {t('salesScreenTitle')}
         </h2>
         <p className="text-gray-600 dark:text-gray-400">
-          Quick and easy point of sale system
+          {t('quickAndEasy')}
         </p>
       </div>
 

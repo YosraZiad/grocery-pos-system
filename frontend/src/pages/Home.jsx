@@ -1,11 +1,41 @@
 import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { useI18n } from '../context/I18nContext';
+import api from '../services/api';
 
 /**
  * صفحة الرئيسية - Dashboard حديث واحترافي
  */
 function Home() {
   const { t } = useI18n();
+
+  // جلب إحصائيات المخزون
+  const { data: inventoryStats } = useQuery({
+    queryKey: ['inventory', 'stats'],
+    queryFn: async () => {
+      const response = await api.get('/inventory/stats');
+      return response.data.data;
+    },
+  });
+
+  // جلب عدد المنتجات
+  const { data: productsData } = useQuery({
+    queryKey: ['products', 'count'],
+    queryFn: async () => {
+      const response = await api.get('/products?per_page=1');
+      return response.data;
+    },
+  });
+
+  // جلب مبيعات اليوم
+  const today = new Date().toISOString().split('T')[0];
+  const { data: todaySales } = useQuery({
+    queryKey: ['sales', 'today', today],
+    queryFn: async () => {
+      const response = await api.get(`/sales?from=${today}&to=${today}`);
+      return response.data;
+    },
+  });
 
   const features = [
     {
@@ -41,7 +71,7 @@ function Home() {
           </h1>
           <p className="text-lg md:text-xl text-primary-100 max-w-2xl mx-auto">
             {t('welcomeDesc')}
-          </p>
+        </p>
         </div>
       </div>
 
@@ -59,7 +89,7 @@ function Home() {
               </div>
               <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors duration-200">
                 {feature.title}
-              </h3>
+          </h3>
               <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
                 {feature.description}
               </p>
@@ -71,55 +101,71 @@ function Home() {
         ))}
       </div>
 
-      {/* Quick Stats (يمكن إضافتها لاحقاً) */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="card bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border-blue-200 dark:border-blue-800">
+      {/* Quick Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Link to="/products" className="card bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border-blue-200 dark:border-blue-800 hover:shadow-lg transition-all duration-200">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                Total Products
+                {t('totalProducts')}
               </p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                --
+                {productsData?.total || 0}
               </p>
             </div>
             <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center text-2xl">
               📦
             </div>
           </div>
-        </div>
+        </Link>
 
-        <div className="card bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 border-green-200 dark:border-green-800">
+        <Link to="/sales" className="card bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 border-green-200 dark:border-green-800 hover:shadow-lg transition-all duration-200">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                Today Sales
+                {t('todaySales')}
               </p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                --
-              </p>
-            </div>
+                {todaySales?.total || 0}
+          </p>
+        </div>
             <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center text-2xl">
               💰
             </div>
           </div>
-        </div>
+        </Link>
 
-        <div className="card bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 border-purple-200 dark:border-purple-800">
+        <Link to="/inventory" className="card bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-800/20 border-yellow-200 dark:border-yellow-800 hover:shadow-lg transition-all duration-200">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                Low Stock
+                {t('lowStock')}
               </p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                --
-              </p>
-            </div>
-            <div className="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center text-2xl">
+                {inventoryStats?.low_stock_count || 0}
+          </p>
+        </div>
+            <div className="w-12 h-12 bg-yellow-500 rounded-lg flex items-center justify-center text-2xl">
               ⚠️
             </div>
           </div>
+        </Link>
+
+        <Link to="/inventory" className="card bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 border-orange-200 dark:border-orange-800 hover:shadow-lg transition-all duration-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                {t('expiringSoon')}
+              </p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                {inventoryStats?.expiring_soon_count || 0}
+          </p>
         </div>
+            <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center text-2xl">
+              ⏰
+            </div>
+          </div>
+        </Link>
       </div>
     </div>
   );

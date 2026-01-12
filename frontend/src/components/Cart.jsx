@@ -1,12 +1,17 @@
 import { useState } from 'react';
 import { useI18n } from '../context/I18nContext';
 import CartItem from './CartItem';
+import DiscountModal from './DiscountModal';
+import PaymentMethod from './PaymentMethod';
+import ConfirmationModal from './ConfirmationModal';
 
 function Cart({ items, onUpdateQuantity, onRemoveItem, onCheckout, isLoading }) {
   const { t } = useI18n();
   const [discount, setDiscount] = useState(0);
   const [discountType, setDiscountType] = useState('fixed');
   const [paymentMethod, setPaymentMethod] = useState('cash');
+  const [showDiscountModal, setShowDiscountModal] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   // حساب الإجمالي
   const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
@@ -19,6 +24,10 @@ function Cart({ items, onUpdateQuantity, onRemoveItem, onCheckout, isLoading }) 
   const total = subtotal - discountAmount;
 
   const handleCheckout = () => {
+    setShowConfirmModal(true);
+  };
+
+  const confirmCheckout = () => {
     const saleData = {
       items: items.map(item => ({
         product_id: item.product.id,
@@ -76,23 +85,21 @@ function Cart({ items, onUpdateQuantity, onRemoveItem, onCheckout, isLoading }) 
 
           {/* الخصم */}
           <div className="space-y-2">
-            <div className="flex items-center space-x-2 rtl:space-x-reverse">
-              <select
-                value={discountType}
-                onChange={(e) => setDiscountType(e.target.value)}
-                className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600 dark:text-gray-400">
+                {t('discount')}:
+              </span>
+              <button
+                onClick={() => setShowDiscountModal(true)}
+                className="text-sm text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300 font-medium"
               >
-                <option value="fixed">{t('fixed')}</option>
-                <option value="percentage">{t('percentage')}</option>
-              </select>
-              <input
-                type="number"
-                value={discount}
-                onChange={(e) => setDiscount(parseFloat(e.target.value) || 0)}
-                min="0"
-                placeholder={t('discount')}
-                className="flex-1 input text-sm"
-              />
+                {discount > 0 
+                  ? discountType === 'percentage' 
+                    ? `${discount}%` 
+                    : `${discount.toFixed(2)} ر.س`
+                  : t('addDiscount')
+                }
+              </button>
             </div>
             {discount > 0 && (
               <div className="flex justify-between text-red-600 dark:text-red-400 font-medium">
@@ -111,20 +118,11 @@ function Cart({ items, onUpdateQuantity, onRemoveItem, onCheckout, isLoading }) 
           </div>
 
           {/* طريقة الدفع */}
-          <div>
-            <label className="label mb-2">
-              {t('paymentMethod')}
-            </label>
-            <select
-              value={paymentMethod}
-              onChange={(e) => setPaymentMethod(e.target.value)}
-              className="input w-full"
-            >
-              <option value="cash">{t('cash')}</option>
-              <option value="card">{t('card')}</option>
-              <option value="transfer">{t('transfer')}</option>
-            </select>
-          </div>
+          <PaymentMethod
+            value={paymentMethod}
+            onChange={setPaymentMethod}
+            disabled={isLoading}
+          />
 
           {/* زر البيع */}
           <button
@@ -136,6 +134,30 @@ function Cart({ items, onUpdateQuantity, onRemoveItem, onCheckout, isLoading }) 
           </button>
         </div>
       )}
+
+      {/* Discount Modal */}
+      <DiscountModal
+        isOpen={showDiscountModal}
+        onClose={() => setShowDiscountModal(false)}
+        onApply={(disc, type) => {
+          setDiscount(disc);
+          setDiscountType(type);
+        }}
+        currentDiscount={discount}
+        currentDiscountType={discountType}
+      />
+
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showConfirmModal}
+        onClose={() => setShowConfirmModal(false)}
+        onConfirm={confirmCheckout}
+        title={t('confirmSale')}
+        message={t('confirmSaleMessage')}
+        confirmText={t('completeSale')}
+        cancelText={t('cancel')}
+        type="info"
+      />
     </div>
   );
 }

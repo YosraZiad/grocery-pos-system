@@ -57,52 +57,52 @@ function ProductForm({ product, onSubmit, onCancel, isLoading }) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
+      <div>
           <label className="label">
             {t('categories')} *
-          </label>
-          <select
-            name="category_id"
-            value={formData.category_id}
-            onChange={handleChange}
-            required
+        </label>
+        <select
+          name="category_id"
+          value={formData.category_id}
+          onChange={handleChange}
+          required
             className="input"
-          >
+        >
             <option value="">{t('allCategories')}</option>
-            {categories?.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.name}
-              </option>
-            ))}
-          </select>
-        </div>
+          {categories?.map((category) => (
+            <option key={category.id} value={category.id}>
+              {category.name}
+            </option>
+          ))}
+        </select>
+      </div>
 
-        <div>
+      <div>
           <label className="label">
             {t('productName')} *
-          </label>
-          <input
-            type="text"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            required
+        </label>
+        <input
+          type="text"
+          name="name"
+          value={formData.name}
+          onChange={handleChange}
+          required
             className="input"
             placeholder={t('productName')}
-          />
+        />
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
+      <div>
           <label className="label">
             {t('barcode')}
-          </label>
-          <input
-            type="text"
-            name="barcode"
-            value={formData.barcode}
-            onChange={handleChange}
+        </label>
+        <input
+          type="text"
+          name="barcode"
+          value={formData.barcode}
+          onChange={handleChange}
             className="input"
             placeholder={t('barcode')}
           />
@@ -173,7 +173,7 @@ function ProductForm({ product, onSubmit, onCancel, isLoading }) {
             onChange={handleChange}
             className="input"
           />
-        </div>
+      </div>
 
         <div>
           <label className="label">

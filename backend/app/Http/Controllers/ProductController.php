@@ -3,8 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Http\Requests\StoreProductRequest;
+use App\Http\Requests\UpdateProductRequest;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 
 class ProductController extends Controller
 {
@@ -39,27 +40,8 @@ class ProductController extends Controller
     /**
      * إضافة منتج جديد
      */
-    public function store(Request $request)
+    public function store(StoreProductRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            'category_id' => 'required|exists:categories,id',
-            'name' => 'required|string|max:255',
-            'barcode' => 'nullable|string|unique:products,barcode',
-            'purchase_price' => 'required|numeric|min:0',
-            'sale_price' => 'required|numeric|min:0',
-            'quantity' => 'required|integer|min:0',
-            'expiry_date' => 'nullable|date',
-            'min_stock_alert' => 'nullable|integer|min:0',
-            'min_expiry_alert' => 'nullable|integer|min:0',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'message' => 'Validation error',
-                'errors' => $validator->errors(),
-            ], 422);
-        }
-
         $product = Product::create([
             'tenant_id' => config('tenant_id'),
             'category_id' => $request->category_id,
@@ -94,28 +76,9 @@ class ProductController extends Controller
     /**
      * تعديل منتج
      */
-    public function update(Request $request, string $id)
+    public function update(UpdateProductRequest $request, string $id)
     {
         $product = Product::findOrFail($id);
-
-        $validator = Validator::make($request->all(), [
-            'category_id' => 'required|exists:categories,id',
-            'name' => 'required|string|max:255',
-            'barcode' => 'nullable|string|unique:products,barcode,' . $id,
-            'purchase_price' => 'required|numeric|min:0',
-            'sale_price' => 'required|numeric|min:0',
-            'quantity' => 'required|integer|min:0',
-            'expiry_date' => 'nullable|date',
-            'min_stock_alert' => 'nullable|integer|min:0',
-            'min_expiry_alert' => 'nullable|integer|min:0',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'message' => 'Validation error',
-                'errors' => $validator->errors(),
-            ], 422);
-        }
 
         $product->update($request->all());
 

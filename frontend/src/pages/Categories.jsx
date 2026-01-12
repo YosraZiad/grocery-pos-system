@@ -170,7 +170,7 @@ function Categories() {
         <div className="card text-center py-12">
           <div className="text-6xl mb-4">📦</div>
           <p className="text-gray-600 dark:text-gray-400">{t('noCategories')}</p>
-        </div>
+      </div>
       )}
 
       {/* Modal */}
@@ -180,7 +180,7 @@ function Categories() {
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-bold text-gray-900 dark:text-white">
                 {editingId ? t('editCategory') : t('addCategory')}
-              </h3>
+            </h3>
               <button
                 onClick={handleCloseModal}
                 className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"

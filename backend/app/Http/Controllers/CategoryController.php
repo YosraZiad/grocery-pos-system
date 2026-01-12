@@ -3,8 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use App\Http\Requests\StoreCategoryRequest;
+use App\Http\Requests\UpdateCategoryRequest;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 
 class CategoryController extends Controller
 {
@@ -23,20 +24,8 @@ class CategoryController extends Controller
     /**
      * إضافة قسم جديد
      */
-    public function store(Request $request)
+    public function store(StoreCategoryRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'message' => 'Validation error',
-                'errors' => $validator->errors(),
-            ], 422);
-        }
-
         $category = Category::create([
             'tenant_id' => config('tenant_id'),
             'name' => $request->name,
@@ -64,21 +53,9 @@ class CategoryController extends Controller
     /**
      * تعديل قسم
      */
-    public function update(Request $request, string $id)
+    public function update(UpdateCategoryRequest $request, string $id)
     {
         $category = Category::findOrFail($id);
-
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'message' => 'Validation error',
-                'errors' => $validator->errors(),
-            ], 422);
-        }
 
         $category->update([
             'name' => $request->name,

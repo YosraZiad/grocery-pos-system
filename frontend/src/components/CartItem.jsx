@@ -1,4 +1,5 @@
 import { useI18n } from '../context/I18nContext';
+import QuantityControl from './QuantityControl';
 
 function CartItem({ item, onUpdateQuantity, onRemove }) {
   const { t } = useI18n();
@@ -23,28 +24,12 @@ function CartItem({ item, onUpdateQuantity, onRemove }) {
       </div>
       <div className="flex items-center space-x-4 rtl:space-x-reverse">
         {/* تحكم في الكمية */}
-        <div className="flex items-center space-x-2 rtl:space-x-reverse border border-gray-300 dark:border-gray-600 rounded-lg">
-          <button
-            onClick={() => handleQuantityChange(item.quantity - 1)}
-            className="w-10 h-10 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-700 rounded-l-lg transition-colors duration-200 text-gray-600 dark:text-gray-400 font-semibold"
-          >
-            −
-          </button>
-          <input
-            type="number"
-            value={item.quantity}
-            onChange={(e) => handleQuantityChange(parseInt(e.target.value) || 1)}
-            min="1"
-            max={item.product.quantity + item.quantity}
-            className="w-16 text-center border-0 bg-transparent text-gray-900 dark:text-white focus:outline-none focus:ring-0"
-          />
-          <button
-            onClick={() => handleQuantityChange(item.quantity + 1)}
-            className="w-10 h-10 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-700 rounded-r-lg transition-colors duration-200 text-gray-600 dark:text-gray-400 font-semibold"
-          >
-            +
-          </button>
-        </div>
+        <QuantityControl
+          value={item.quantity}
+          onChange={handleQuantityChange}
+          min={1}
+          max={item.product.quantity + item.quantity}
+        />
 
         {/* الإجمالي */}
         <div className="w-24 text-right rtl:text-left">
