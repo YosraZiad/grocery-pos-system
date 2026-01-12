@@ -161,6 +161,7 @@
                 <p><strong>طريقة الدفع:</strong> 
                     @if($sale->payment_method === 'cash') نقدي
                     @elseif($sale->payment_method === 'card') بطاقة
+                    @elseif($sale->payment_method === 'transfer') تحويل
                     @else تحويل
                     @endif
                 </p>

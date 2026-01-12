@@ -379,6 +379,27 @@ const translations = {
     cash: 'Cash',
     card: 'Card',
     currency: 'Currency',
+    
+    // Backup
+    backupManagement: 'Backup Management',
+    createBackup: 'Create Backup',
+    backupList: 'Backup List',
+    creating: 'Creating...',
+    restore: 'Restore',
+    download: 'Download',
+    confirmCreateBackup: 'Are you sure you want to create a backup?',
+    confirmRestoreBackup: 'Are you sure you want to restore this backup? This will replace all current data.',
+    confirmDeleteBackup: 'Are you sure you want to delete this backup?',
+    backupCreatedSuccessfully: 'Backup created successfully',
+    backupRestoredSuccessfully: 'Backup restored successfully',
+    backupDeletedSuccessfully: 'Backup deleted successfully',
+    noBackupsFound: 'No backups found',
+    
+    // Monthly Comparison
+    monthlyComparison: 'Monthly Comparison',
+    month1: 'Month 1',
+    month2: 'Month 2',
+    comparison: 'Comparison',
   },
   ar: {
     // Navigation
@@ -757,6 +778,27 @@ const translations = {
     cash: 'نقدي',
     card: 'بطاقة',
     currency: 'عملة',
+    
+    // Backup
+    backupManagement: 'إدارة النسخ الاحتياطي',
+    createBackup: 'إنشاء نسخة احتياطية',
+    backupList: 'قائمة النسخ الاحتياطية',
+    creating: 'جاري الإنشاء...',
+    restore: 'استرجاع',
+    download: 'تحميل',
+    confirmCreateBackup: 'هل أنت متأكد من إنشاء نسخة احتياطية؟',
+    confirmRestoreBackup: 'هل أنت متأكد من استرجاع هذه النسخة؟ سيتم استبدال جميع البيانات الحالية.',
+    confirmDeleteBackup: 'هل أنت متأكد من حذف هذه النسخة؟',
+    backupCreatedSuccessfully: 'تم إنشاء النسخة الاحتياطية بنجاح',
+    backupRestoredSuccessfully: 'تم استرجاع النسخة الاحتياطية بنجاح',
+    backupDeletedSuccessfully: 'تم حذف النسخة الاحتياطية بنجاح',
+    noBackupsFound: 'لا توجد نسخ احتياطية',
+    
+    // Monthly Comparison
+    monthlyComparison: 'مقارنة شهرية',
+    month1: 'الشهر الأول',
+    month2: 'الشهر الثاني',
+    comparison: 'المقارنة',
   },
 };
 

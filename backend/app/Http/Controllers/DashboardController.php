@@ -29,7 +29,8 @@ class DashboardController extends Controller
                 DB::raw('COUNT(*) as count'),
                 DB::raw('SUM(total) as total'),
                 DB::raw('SUM(CASE WHEN payment_method = "cash" THEN total ELSE 0 END) as cash'),
-                DB::raw('SUM(CASE WHEN payment_method = "card" THEN total ELSE 0 END) as card')
+                DB::raw('SUM(CASE WHEN payment_method = "card" THEN total ELSE 0 END) as card'),
+                DB::raw('SUM(CASE WHEN payment_method = "transfer" THEN total ELSE 0 END) as transfer')
             )
             ->first();
 

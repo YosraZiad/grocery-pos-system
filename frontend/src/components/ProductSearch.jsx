@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useI18n } from '../context/I18nContext';
 import api from '../services/api';
@@ -7,6 +7,9 @@ function ProductSearch({ onSelectProduct }) {
   const { t } = useI18n();
   const [searchQuery, setSearchQuery] = useState('');
   const [showResults, setShowResults] = useState(false);
+  const inputRef = useRef(null);
+  const barcodeBuffer = useRef('');
+  const barcodeTimeout = useRef(null);
 
   // بحث المنتجات
   const { data: searchResults, isLoading } = useQuery({
@@ -43,11 +46,16 @@ function ProductSearch({ onSelectProduct }) {
         </svg>
       </div>
       <input
+        ref={inputRef}
         type="text"
         value={searchQuery}
         onChange={(e) => {
           setSearchQuery(e.target.value);
           setShowResults(true);
+          // إعادة تعيين buffer عند الكتابة اليدوية
+          if (e.target.value.length < 8) {
+            barcodeBuffer.current = '';
+          }
         }}
         onFocus={() => setShowResults(true)}
         placeholder={t('searchPlaceholder')}

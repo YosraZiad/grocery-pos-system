@@ -16,6 +16,7 @@ use App\Http\Controllers\ProfitLossController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\BackupController;
 
 /*
 |--------------------------------------------------------------------------
@@ -116,6 +117,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/reports/expired-losses', [ReportController::class, 'expiredLosses'])->middleware('permission:view reports');
     Route::get('/reports/inventory', [ReportController::class, 'inventoryReports'])->middleware('permission:view reports');
     Route::get('/reports/financial', [ReportController::class, 'financialReports'])->middleware('permission:view reports');
+    Route::get('/reports/monthly-comparison', [ReportController::class, 'monthlyComparison'])->middleware('permission:view reports');
     Route::get('/reports/export/pdf', [ReportController::class, 'exportPDF'])->middleware('permission:view reports');
     
     // Settings
@@ -126,6 +128,13 @@ Route::middleware('auth:sanctum')->group(function () {
     
     // Dashboard
     Route::get('/dashboard/stats', [DashboardController::class, 'stats']);
+    
+    // Backup
+    Route::post('/backup/create', [BackupController::class, 'create'])->middleware('permission:edit settings');
+    Route::get('/backup/list', [BackupController::class, 'list'])->middleware('permission:view settings');
+    Route::post('/backup/restore/{id}', [BackupController::class, 'restore'])->middleware('permission:edit settings');
+    Route::delete('/backup/{id}', [BackupController::class, 'destroy'])->middleware('permission:delete settings');
+    Route::get('/backup/{id}/download', [BackupController::class, 'download'])->middleware('permission:view settings');
     
     // Test route
     Route::get('/test', function (Request $request) {

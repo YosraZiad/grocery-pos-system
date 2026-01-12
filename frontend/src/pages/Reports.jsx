@@ -5,13 +5,18 @@ import api from '../services/api';
 
 function Reports() {
   const { t } = useI18n();
-  const [reportType, setReportType] = useState('bestSelling'); // bestSelling, worstSelling, salesByTime, expiredLosses, inventory, financial
+  const [reportType, setReportType] = useState('bestSelling'); // bestSelling, worstSelling, salesByTime, expiredLosses, inventory, financial, monthlyComparison
   const [period, setPeriod] = useState('monthly'); // daily, monthly
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
   const [fromDate, setFromDate] = useState(startOfMonth.toISOString().split('T')[0]);
   const [toDate, setToDate] = useState(now.toISOString().split('T')[0]);
+  
+  // Monthly Comparison
+  const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const [month1, setMonth1] = useState(lastMonth.toISOString().slice(0, 7));
+  const [month2, setMonth2] = useState(now.toISOString().slice(0, 7));
 
   // جلب أفضل المنتجات مبيعًا
   const { data: bestSellingData, isLoading: bestSellingLoading } = useQuery({
@@ -82,6 +87,19 @@ function Reports() {
     enabled: reportType === 'financial',
   });
 
+  // جلب مقارنة شهرية
+  const { data: monthlyComparisonData, isLoading: monthlyComparisonLoading } = useQuery({
+    queryKey: ['reports-monthly-comparison', month1, month2],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      params.append('month1', month1);
+      params.append('month2', month2);
+      const response = await api.get(`/reports/monthly-comparison?${params.toString()}`);
+      return response.data;
+    },
+    enabled: reportType === 'monthlyComparison',
+  });
+
   // تصدير PDF
   const handleExportPDF = async () => {
     try {
@@ -126,7 +144,7 @@ function Reports() {
     });
   };
 
-  const isLoading = bestSellingLoading || worstSellingLoading || salesByTimeLoading || expiredLossesLoading || inventoryLoading || financialLoading;
+  const isLoading = bestSellingLoading || worstSellingLoading || salesByTimeLoading || expiredLossesLoading || inventoryLoading || financialLoading || monthlyComparisonLoading;
 
   if (isLoading) {
     return (
@@ -214,6 +232,16 @@ function Reports() {
           >
             {t('financialReports')}
           </button>
+          <button
+            onClick={() => setReportType('monthlyComparison')}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              reportType === 'monthlyComparison'
+                ? 'bg-primary-600 text-white'
+                : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+            }`}
+          >
+            {t('monthlyComparison')}
+          </button>
         </div>
         <div className="mt-4">
           <button
@@ -253,6 +281,31 @@ function Reports() {
               onChange={(e) => setDate(e.target.value)}
               className="input"
             />
+          </div>
+        </div>
+      )}
+
+      {reportType === 'monthlyComparison' && (
+        <div className="card">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="label">{t('month1')}</label>
+              <input
+                type="month"
+                value={month1}
+                onChange={(e) => setMonth1(e.target.value)}
+                className="input"
+              />
+            </div>
+            <div>
+              <label className="label">{t('month2')}</label>
+              <input
+                type="month"
+                value={month2}
+                onChange={(e) => setMonth2(e.target.value)}
+                className="input"
+              />
+            </div>
           </div>
         </div>
       )}
@@ -651,6 +704,111 @@ function Reports() {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Monthly Comparison View */}
+      {reportType === 'monthlyComparison' && monthlyComparisonData?.data && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Month 1 */}
+            <div className="card">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+                {monthlyComparisonData.data.month1.period}
+              </h3>
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-gray-600 dark:text-gray-400">{t('sales')}:</span>
+                  <span className="font-bold">{formatCurrency(monthlyComparisonData.data.month1.sales)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600 dark:text-gray-400">{t('expenses')}:</span>
+                  <span className="font-bold">{formatCurrency(monthlyComparisonData.data.month1.expenses)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600 dark:text-gray-400">{t('profit')}:</span>
+                  <span className="font-bold">{formatCurrency(monthlyComparisonData.data.month1.profit)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600 dark:text-gray-400">{t('transactions')}:</span>
+                  <span className="font-bold">{monthlyComparisonData.data.month1.transactions}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Month 2 */}
+            <div className="card">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+                {monthlyComparisonData.data.month2.period}
+              </h3>
+              <div className="space-y-3">
+                <div className="flex justify-between">
+                  <span className="text-gray-600 dark:text-gray-400">{t('sales')}:</span>
+                  <span className="font-bold">{formatCurrency(monthlyComparisonData.data.month2.sales)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600 dark:text-gray-400">{t('expenses')}:</span>
+                  <span className="font-bold">{formatCurrency(monthlyComparisonData.data.month2.expenses)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600 dark:text-gray-400">{t('profit')}:</span>
+                  <span className="font-bold">{formatCurrency(monthlyComparisonData.data.month2.profit)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600 dark:text-gray-400">{t('transactions')}:</span>
+                  <span className="font-bold">{monthlyComparisonData.data.month2.transactions}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Differences */}
+          <div className="card">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+              {t('comparison')}
+            </h3>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <span className="text-gray-600 dark:text-gray-400">{t('sales')}:</span>
+                <span className={`font-bold ${
+                  monthlyComparisonData.data.difference.sales >= 0 
+                    ? 'text-green-600 dark:text-green-400' 
+                    : 'text-red-600 dark:text-red-400'
+                }`}>
+                  {monthlyComparisonData.data.difference.sales >= 0 ? '+' : ''}
+                  {formatCurrency(monthlyComparisonData.data.difference.sales)} 
+                  ({monthlyComparisonData.data.percentage_change.sales >= 0 ? '+' : ''}
+                  {monthlyComparisonData.data.percentage_change.sales.toFixed(1)}%)
+                </span>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <span className="text-gray-600 dark:text-gray-400">{t('expenses')}:</span>
+                <span className={`font-bold ${
+                  monthlyComparisonData.data.difference.expenses <= 0 
+                    ? 'text-green-600 dark:text-green-400' 
+                    : 'text-red-600 dark:text-red-400'
+                }`}>
+                  {monthlyComparisonData.data.difference.expenses >= 0 ? '+' : ''}
+                  {formatCurrency(monthlyComparisonData.data.difference.expenses)} 
+                  ({monthlyComparisonData.data.percentage_change.expenses >= 0 ? '+' : ''}
+                  {monthlyComparisonData.data.percentage_change.expenses.toFixed(1)}%)
+                </span>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <span className="text-gray-600 dark:text-gray-400">{t('profit')}:</span>
+                <span className={`font-bold ${
+                  monthlyComparisonData.data.difference.profit >= 0 
+                    ? 'text-green-600 dark:text-green-400' 
+                    : 'text-red-600 dark:text-red-400'
+                }`}>
+                  {monthlyComparisonData.data.difference.profit >= 0 ? '+' : ''}
+                  {formatCurrency(monthlyComparisonData.data.difference.profit)} 
+                  ({monthlyComparisonData.data.percentage_change.profit >= 0 ? '+' : ''}
+                  {monthlyComparisonData.data.percentage_change.profit.toFixed(1)}%)
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

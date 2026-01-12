@@ -386,6 +386,26 @@ function Home() {
                 {sales.card?.toFixed(2) || '0.00'}
               </p>
             </div>
+            {sales.transfer > 0 && (
+              <div className="flex items-center justify-between p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+                <div className="flex items-center space-x-3 rtl:space-x-reverse">
+                  <div className="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center text-white">
+                    🏦
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-900 dark:text-white">
+                      {t('transfer')}
+                    </p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      {((sales.transfer / (sales.total || 1)) * 100).toFixed(1)}%
+                    </p>
+                  </div>
+                </div>
+                <p className="text-lg font-bold text-gray-900 dark:text-white">
+                  {sales.transfer?.toFixed(2) || '0.00'}
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>

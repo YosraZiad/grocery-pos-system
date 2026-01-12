@@ -6,7 +6,7 @@ import api from '../services/api';
 function Settings() {
   const { t } = useI18n();
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState('store'); // store, printer
+  const [activeTab, setActiveTab] = useState('store'); // store, printer, backup
   const [settings, setSettings] = useState({
     store_name: '',
     store_address: '',
@@ -152,6 +152,16 @@ function Settings() {
             }`}
           >
             {t('printerSettings')}
+          </button>
+          <button
+            onClick={() => setActiveTab('backup')}
+            className={`px-4 py-2 font-medium transition-colors ${
+              activeTab === 'backup'
+                ? 'border-b-2 border-primary-600 text-primary-600 dark:text-primary-400'
+                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+            }`}
+          >
+            {t('backupManagement')}
           </button>
         </div>
       </div>
@@ -352,6 +362,176 @@ function Settings() {
           </div>
         </div>
       )}
+
+      {/* Backup Management */}
+      {activeTab === 'backup' && (
+        <BackupManager />
+      )}
+    </div>
+  );
+}
+
+// Backup Manager Component
+function BackupManager() {
+  const { t } = useI18n();
+  const queryClient = useQueryClient();
+
+  // جلب قائمة النسخ الاحتياطية
+  const { data: backupsData, isLoading, refetch } = useQuery({
+    queryKey: ['backups'],
+    queryFn: async () => {
+      const response = await api.get('/backup/list');
+      return response.data;
+    },
+  });
+
+  // إنشاء نسخة احتياطية
+  const createBackupMutation = useMutation({
+    mutationFn: async () => {
+      const response = await api.post('/backup/create');
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['backups']);
+      alert(t('backupCreatedSuccessfully'));
+    },
+    onError: (error) => {
+      alert(error.response?.data?.message || t('error'));
+    },
+  });
+
+  // استرجاع نسخة احتياطية
+  const restoreBackupMutation = useMutation({
+    mutationFn: async (path) => {
+      const response = await api.post(`/backup/restore/1`, { path });
+      return response.data;
+    },
+    onSuccess: () => {
+      alert(t('backupRestoredSuccessfully'));
+    },
+    onError: (error) => {
+      alert(error.response?.data?.message || t('error'));
+    },
+  });
+
+  // حذف نسخة احتياطية
+  const deleteBackupMutation = useMutation({
+    mutationFn: async (path) => {
+      const response = await api.delete(`/backup/1`, { data: { path } });
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['backups']);
+      alert(t('backupDeletedSuccessfully'));
+    },
+    onError: (error) => {
+      alert(error.response?.data?.message || t('error'));
+    },
+  });
+
+  const handleCreateBackup = () => {
+    if (window.confirm(t('confirmCreateBackup'))) {
+      createBackupMutation.mutate();
+    }
+  };
+
+  const handleRestore = (path) => {
+    if (window.confirm(t('confirmRestoreBackup'))) {
+      restoreBackupMutation.mutate(path);
+    }
+  };
+
+  const handleDelete = (path) => {
+    if (window.confirm(t('confirmDeleteBackup'))) {
+      deleteBackupMutation.mutate(path);
+    }
+  };
+
+  const handleDownload = (path) => {
+    window.open(`/api/backup/1/download?path=${encodeURIComponent(path)}`, '_blank');
+  };
+
+  const formatFileSize = (bytes) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+  };
+
+  return (
+    <div className="card">
+      <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+        {t('backupManagement')}
+      </h3>
+
+      {/* Create Backup Button */}
+      <div className="mb-6">
+        <button
+          onClick={handleCreateBackup}
+          disabled={createBackupMutation.isPending}
+          className="btn-primary"
+        >
+          {createBackupMutation.isPending ? t('creating') : t('createBackup')}
+        </button>
+      </div>
+
+      {/* Backups List */}
+      <div>
+        <h4 className="text-md font-semibold text-gray-900 dark:text-white mb-3">
+          {t('backupList')}
+        </h4>
+        {isLoading ? (
+          <div className="text-center py-8">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+            <p className="mt-4 text-gray-600 dark:text-gray-400">{t('loading')}</p>
+          </div>
+        ) : backupsData?.data && backupsData.data.length > 0 ? (
+          <div className="space-y-3">
+            {backupsData.data.map((backup, index) => (
+              <div
+                key={index}
+                className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg"
+              >
+                <div className="flex-1">
+                  <p className="font-medium text-gray-900 dark:text-white">
+                    {backup.date}
+                  </p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    {formatFileSize(backup.size)} • {backup.age}
+                  </p>
+                </div>
+                <div className="flex items-center space-x-2 rtl:space-x-reverse">
+                  <button
+                    onClick={() => handleDownload(backup.path)}
+                    className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
+                  >
+                    {t('download')}
+                  </button>
+                  <button
+                    onClick={() => handleRestore(backup.path)}
+                    disabled={restoreBackupMutation.isPending}
+                    className="px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600"
+                  >
+                    {t('restore')}
+                  </button>
+                  <button
+                    onClick={() => handleDelete(backup.path)}
+                    disabled={deleteBackupMutation.isPending}
+                    className="px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600"
+                  >
+                    {t('delete')}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+            {t('noBackupsFound')}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

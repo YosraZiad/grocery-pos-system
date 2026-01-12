@@ -634,4 +634,108 @@ class ReportController extends Controller
 
         return $html;
     }
+
+    /**
+     * مقارنة شهرية مباشرة
+     */
+    public function monthlyComparison(Request $request)
+    {
+        $month1 = $request->month1 ?? now()->subMonth()->format('Y-m');
+        $month2 = $request->month2 ?? now()->format('Y-m');
+
+        // بيانات الشهر الأول
+        $month1Data = $this->getMonthlyData($month1);
+        
+        // بيانات الشهر الثاني
+        $month2Data = $this->getMonthlyData($month2);
+
+        // حساب الفروقات
+        $comparison = [
+            'month1' => [
+                'period' => $month1,
+                'sales' => $month1Data['sales'],
+                'expenses' => $month1Data['expenses'],
+                'profit' => $month1Data['profit'],
+                'transactions' => $month1Data['transactions'],
+            ],
+            'month2' => [
+                'period' => $month2,
+                'sales' => $month2Data['sales'],
+                'expenses' => $month2Data['expenses'],
+                'profit' => $month2Data['profit'],
+                'transactions' => $month2Data['transactions'],
+            ],
+            'difference' => [
+                'sales' => $month2Data['sales'] - $month1Data['sales'],
+                'expenses' => $month2Data['expenses'] - $month1Data['expenses'],
+                'profit' => $month2Data['profit'] - $month1Data['profit'],
+                'transactions' => $month2Data['transactions'] - $month1Data['transactions'],
+            ],
+            'percentage_change' => [
+                'sales' => $month1Data['sales'] > 0 
+                    ? (($month2Data['sales'] - $month1Data['sales']) / $month1Data['sales']) * 100 
+                    : 0,
+                'expenses' => $month1Data['expenses'] > 0 
+                    ? (($month2Data['expenses'] - $month1Data['expenses']) / $month1Data['expenses']) * 100 
+                    : 0,
+                'profit' => $month1Data['profit'] != 0 
+                    ? (($month2Data['profit'] - $month1Data['profit']) / abs($month1Data['profit'])) * 100 
+                    : 0,
+            ],
+        ];
+
+        return response()->json([
+            'data' => $comparison,
+        ], 200);
+    }
+
+    /**
+     * الحصول على بيانات شهر معين
+     */
+    private function getMonthlyData($month)
+    {
+        [$year, $monthNum] = explode('-', $month);
+
+        // المبيعات
+        $sales = Sale::whereYear('created_at', $year)
+            ->whereMonth('created_at', $monthNum)
+            ->select(
+                DB::raw('SUM(total) as total'),
+                DB::raw('COUNT(*) as count')
+            )
+            ->first();
+
+        // تكلفة البضاعة
+        $cogs = DB::table('sale_items')
+            ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
+            ->join('products', 'sale_items.product_id', '=', 'products.id')
+            ->whereYear('sales.created_at', $year)
+            ->whereMonth('sales.created_at', $monthNum)
+            ->selectRaw('SUM(COALESCE(products.purchase_price, 0) * sale_items.quantity) as cogs')
+            ->value('cogs') ?? 0;
+
+        // المصروفات
+        $expenses = Expense::whereYear('date', $year)
+            ->whereMonth('date', $monthNum)
+            ->sum('amount');
+
+        // المرتجعات
+        $returns = ProductReturn::where('status', 'approved')
+            ->whereYear('created_at', $year)
+            ->whereMonth('created_at', $monthNum)
+            ->sum('amount');
+
+        $salesTotal = $sales->total ?? 0;
+        $grossProfit = $salesTotal - $cogs - $returns;
+        $netProfit = $grossProfit - $expenses;
+
+        return [
+            'sales' => (float) $salesTotal,
+            'cogs' => (float) $cogs,
+            'expenses' => (float) $expenses,
+            'returns' => (float) $returns,
+            'profit' => (float) $netProfit,
+            'transactions' => (int) ($sales->count ?? 0),
+        ];
+    }
 }
