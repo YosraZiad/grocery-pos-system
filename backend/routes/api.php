@@ -13,6 +13,9 @@ use App\Http\Controllers\PurchaseInvoiceController;
 use App\Http\Controllers\ExpenseCategoryController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\ProfitLossController;
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\SettingController;
+use App\Http\Controllers\DashboardController;
 
 /*
 |--------------------------------------------------------------------------
@@ -105,6 +108,24 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/profit-loss/by-product', [ProfitLossController::class, 'byProduct'])->middleware('permission:view reports');
     Route::get('/profit-loss/by-category', [ProfitLossController::class, 'byCategory'])->middleware('permission:view reports');
     Route::get('/profit-loss/summary', [ProfitLossController::class, 'summary'])->middleware('permission:view reports');
+    
+    // Reports
+    Route::get('/reports/best-selling', [ReportController::class, 'bestSelling'])->middleware('permission:view reports');
+    Route::get('/reports/worst-selling', [ReportController::class, 'worstSelling'])->middleware('permission:view reports');
+    Route::get('/reports/sales-by-time', [ReportController::class, 'salesByTime'])->middleware('permission:view reports');
+    Route::get('/reports/expired-losses', [ReportController::class, 'expiredLosses'])->middleware('permission:view reports');
+    Route::get('/reports/inventory', [ReportController::class, 'inventoryReports'])->middleware('permission:view reports');
+    Route::get('/reports/financial', [ReportController::class, 'financialReports'])->middleware('permission:view reports');
+    Route::get('/reports/export/pdf', [ReportController::class, 'exportPDF'])->middleware('permission:view reports');
+    
+    // Settings
+    Route::get('/settings', [SettingController::class, 'index'])->middleware('permission:view settings');
+    Route::put('/settings', [SettingController::class, 'update'])->middleware('permission:edit settings');
+    Route::post('/settings/bulk-update', [SettingController::class, 'bulkUpdate'])->middleware('permission:edit settings');
+    Route::post('/settings/upload-logo', [SettingController::class, 'uploadLogo'])->middleware('permission:edit settings');
+    
+    // Dashboard
+    Route::get('/dashboard/stats', [DashboardController::class, 'stats']);
     
     // Test route
     Route::get('/test', function (Request $request) {

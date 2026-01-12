@@ -148,6 +148,26 @@ function Layout() {
               >
                 {t('profitLoss')}
               </Link>
+              <Link
+                to="/reports"
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  isActive('/reports')
+                    ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300'
+                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                }`}
+              >
+                {t('reports')}
+              </Link>
+              <Link
+                to="/settings"
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  isActive('/settings')
+                    ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300'
+                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                }`}
+              >
+                {t('settings')}
+              </Link>
             </nav>
 
             {/* User Actions */}

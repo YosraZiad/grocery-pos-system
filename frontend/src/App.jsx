@@ -16,6 +16,8 @@ import Suppliers from './pages/Suppliers'
 import PurchaseInvoices from './pages/PurchaseInvoices'
 import Expenses from './pages/Expenses'
 import ProfitLoss from './pages/ProfitLoss'
+import Reports from './pages/Reports'
+import Settings from './pages/Settings'
 import ProtectedRoute from './components/ProtectedRoute'
 import './App.css'
 import './styles/print.css'
@@ -51,6 +53,8 @@ function App() {
             <Route path="purchase-invoices" element={<PurchaseInvoices />} />
             <Route path="expenses" element={<Expenses />} />
             <Route path="profit-loss" element={<ProfitLoss />} />
+            <Route path="reports" element={<Reports />} />
+            <Route path="settings" element={<Settings />} />
           </Route>
         </Routes>
       </BrowserRouter>

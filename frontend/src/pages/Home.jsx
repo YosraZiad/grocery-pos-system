@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
 import { useI18n } from '../context/I18nContext';
 import api from '../services/api';
 
@@ -8,164 +9,385 @@ import api from '../services/api';
  */
 function Home() {
   const { t } = useI18n();
+  const [period, setPeriod] = useState('today'); // today, week, month, year
 
-  // جلب إحصائيات المخزون
-  const { data: inventoryStats } = useQuery({
-    queryKey: ['inventory', 'stats'],
+  // جلب إحصائيات Dashboard
+  const { data: dashboardData, isLoading } = useQuery({
+    queryKey: ['dashboard', 'stats', period],
     queryFn: async () => {
-      const response = await api.get('/inventory/stats');
+      const response = await api.get(`/dashboard/stats?period=${period}`);
       return response.data.data;
     },
   });
 
-  // جلب عدد المنتجات
-  const { data: productsData } = useQuery({
-    queryKey: ['products', 'count'],
-    queryFn: async () => {
-      const response = await api.get('/products?per_page=1');
-      return response.data;
-    },
-  });
+  const stats = dashboardData || {};
+  const sales = stats.sales || {};
+  const expenses = stats.expenses || {};
+  const alerts = stats.alerts || {};
 
-  // جلب مبيعات اليوم
-  const today = new Date().toISOString().split('T')[0];
-  const { data: todaySales } = useQuery({
-    queryKey: ['sales', 'today', today],
-    queryFn: async () => {
-      const response = await api.get(`/sales?from=${today}&to=${today}`);
-      return response.data;
-    },
-  });
-
-  const features = [
-    {
-      icon: '📦',
-      title: t('productManagement'),
-      description: t('productManagementDesc'),
-      link: '/products',
-      color: 'from-blue-500 to-blue-600',
-    },
+  // Quick Actions
+  const quickActions = [
     {
       icon: '💰',
-      title: t('salesScreen'),
-      description: t('salesScreenDesc'),
+      title: t('newSale'),
       link: '/sales',
       color: 'from-green-500 to-green-600',
     },
     {
+      icon: '📦',
+      title: t('addProduct'),
+      link: '/products',
+      color: 'from-blue-500 to-blue-600',
+    },
+    {
+      icon: '📥',
+      title: t('purchaseInvoice'),
+      link: '/purchase-invoices',
+      color: 'from-purple-500 to-purple-600',
+    },
+    {
       icon: '📊',
       title: t('reports'),
-      description: t('reportsDesc'),
-      link: '#',
-      color: 'from-purple-500 to-purple-600',
+      link: '/reports',
+      color: 'from-orange-500 to-orange-600',
     },
   ];
 
-  return (
-    <div className="space-y-8">
-      {/* Welcome Card */}
-      <div className="card bg-gradient-to-br from-primary-500 to-primary-700 text-white border-0 shadow-xl">
-        <div className="text-center py-8">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4">
-            {t('welcome')}
-          </h1>
-          <p className="text-lg md:text-xl text-primary-100 max-w-2xl mx-auto">
-            {t('welcomeDesc')}
-        </p>
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">{t('loading')}</p>
         </div>
       </div>
+    );
+  }
 
-      {/* Features Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {features.map((feature, index) => (
-          <Link
-            key={index}
-            to={feature.link}
-            className="group"
-          >
-            <div className="card hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 h-full">
-              <div className={`w-16 h-16 bg-gradient-to-br ${feature.color} rounded-xl flex items-center justify-center text-3xl mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                {feature.icon}
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors duration-200">
-                {feature.title}
-          </h3>
-              <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">
-                {feature.description}
-              </p>
-              <div className="mt-4 flex items-center text-primary-600 dark:text-primary-400 font-medium text-sm group-hover:translate-x-1 rtl:group-hover:-translate-x-1 transition-transform duration-200">
-                {t('home')} →
-              </div>
-            </div>
-          </Link>
-        ))}
-      </div>
-
-      {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Link to="/products" className="card bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border-blue-200 dark:border-blue-800 hover:shadow-lg transition-all duration-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                {t('totalProducts')}
-              </p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                {productsData?.total || 0}
-              </p>
-            </div>
-            <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center text-2xl">
-              📦
-            </div>
-          </div>
-        </Link>
-
-        <Link to="/sales" className="card bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 border-green-200 dark:border-green-800 hover:shadow-lg transition-all duration-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                {t('todaySales')}
-              </p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                {todaySales?.total || 0}
+  return (
+    <div className="space-y-6">
+      {/* Header with Period Selector */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+            {t('dashboard')}
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400">
+            {t('dashboardDesc')}
           </p>
         </div>
+        <div className="flex items-center space-x-2 rtl:space-x-reverse">
+          {['today', 'week', 'month', 'year'].map((p) => (
+            <button
+              key={p}
+              onClick={() => setPeriod(p)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                period === p
+                  ? 'bg-primary-600 text-white'
+                  : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+              }`}
+            >
+              {t(p)}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Sales */}
+        <div className="card bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 border-green-200 dark:border-green-800">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                {t('sales')}
+              </p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                {sales.total?.toFixed(2) || '0.00'}
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                {sales.count || 0} {t('transactions')}
+              </p>
+            </div>
             <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center text-2xl">
               💰
             </div>
           </div>
-        </Link>
+        </div>
 
-        <Link to="/inventory" className="card bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-800/20 border-yellow-200 dark:border-yellow-800 hover:shadow-lg transition-all duration-200">
+        {/* Profit */}
+        <div className="card bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border-blue-200 dark:border-blue-800">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                {t('lowStock')}
+                {t('profit')}
               </p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                {inventoryStats?.low_stock_count || 0}
-          </p>
-        </div>
-            <div className="w-12 h-12 bg-yellow-500 rounded-lg flex items-center justify-center text-2xl">
-              ⚠️
+                {stats.profit?.toFixed(2) || '0.00'}
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                {t('grossProfit')}
+              </p>
+            </div>
+            <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center text-2xl">
+              📈
             </div>
           </div>
-        </Link>
+        </div>
 
-        <Link to="/inventory" className="card bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 border-orange-200 dark:border-orange-800 hover:shadow-lg transition-all duration-200">
+        {/* Expenses */}
+        <div className="card bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 border-red-200 dark:border-red-800">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                {t('expiringSoon')}
+                {t('expenses')}
               </p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                {inventoryStats?.expiring_soon_count || 0}
-          </p>
-        </div>
-            <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center text-2xl">
-              ⏰
+                {expenses.total?.toFixed(2) || '0.00'}
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                {expenses.count || 0} {t('expenses')}
+              </p>
+            </div>
+            <div className="w-12 h-12 bg-red-500 rounded-lg flex items-center justify-center text-2xl">
+              💸
             </div>
           </div>
-        </Link>
+        </div>
+
+        {/* Items Sold */}
+        <div className="card bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 border-purple-200 dark:border-purple-800">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                {t('itemsSold')}
+              </p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                {stats.items_sold || 0}
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                {t('units')}
+              </p>
+            </div>
+            <div className="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center text-2xl">
+              📦
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Alerts Panel */}
+      {(alerts.low_stock > 0 || alerts.expired > 0 || alerts.expiring_soon > 0 || alerts.pending_returns > 0) && (
+        <div className="card bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800">
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
+            <span className="mr-2 rtl:ml-2">⚠️</span>
+            {t('alerts')}
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {alerts.low_stock > 0 && (
+              <Link
+                to="/inventory?filter=low_stock"
+                className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-lg hover:shadow-md transition-shadow"
+              >
+                <span className="text-sm text-gray-700 dark:text-gray-300">
+                  {t('lowStock')}
+                </span>
+                <span className="text-lg font-bold text-yellow-600 dark:text-yellow-400">
+                  {alerts.low_stock}
+                </span>
+              </Link>
+            )}
+            {alerts.expired > 0 && (
+              <Link
+                to="/inventory?filter=expired"
+                className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-lg hover:shadow-md transition-shadow"
+              >
+                <span className="text-sm text-gray-700 dark:text-gray-300">
+                  {t('expired')}
+                </span>
+                <span className="text-lg font-bold text-red-600 dark:text-red-400">
+                  {alerts.expired}
+                </span>
+              </Link>
+            )}
+            {alerts.expiring_soon > 0 && (
+              <Link
+                to="/inventory?filter=expiring_soon"
+                className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-lg hover:shadow-md transition-shadow"
+              >
+                <span className="text-sm text-gray-700 dark:text-gray-300">
+                  {t('expiringSoon')}
+                </span>
+                <span className="text-lg font-bold text-orange-600 dark:text-orange-400">
+                  {alerts.expiring_soon}
+                </span>
+              </Link>
+            )}
+            {alerts.pending_returns > 0 && (
+              <Link
+                to="/returns?status=pending"
+                className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-lg hover:shadow-md transition-shadow"
+              >
+                <span className="text-sm text-gray-700 dark:text-gray-300">
+                  {t('pendingReturns')}
+                </span>
+                <span className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                  {alerts.pending_returns}
+                </span>
+              </Link>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Quick Actions & Charts Row */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Quick Actions */}
+        <div className="lg:col-span-1">
+          <div className="card">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+              {t('quickActions')}
+            </h3>
+            <div className="space-y-3">
+              {quickActions.map((action, index) => (
+                <Link
+                  key={index}
+                  to={action.link}
+                  className="flex items-center p-4 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors group"
+                >
+                  <div className={`w-10 h-10 bg-gradient-to-br ${action.color} rounded-lg flex items-center justify-center text-xl mr-3 rtl:ml-3 group-hover:scale-110 transition-transform`}>
+                    {action.icon}
+                  </div>
+                  <span className="font-medium text-gray-900 dark:text-white">
+                    {action.title}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Daily Sales Chart */}
+        <div className="lg:col-span-2">
+          <div className="card">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+              {t('dailySales')} ({t('last7Days')})
+            </h3>
+            {stats.daily_sales && stats.daily_sales.length > 0 ? (
+              <div className="space-y-2">
+                {stats.daily_sales.map((day, index) => (
+                  <div key={index} className="flex items-center space-x-3 rtl:space-x-reverse">
+                    <div className="w-20 text-sm text-gray-600 dark:text-gray-400">
+                      {new Date(day.date).toLocaleDateString('ar-SA', { weekday: 'short', day: 'numeric' })}
+                    </div>
+                    <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-6 relative overflow-hidden">
+                      <div
+                        className="bg-gradient-to-r from-green-500 to-green-600 h-full rounded-full flex items-center justify-end pr-2"
+                        style={{
+                          width: `${(day.total / Math.max(...stats.daily_sales.map(d => d.total))) * 100}%`,
+                        }}
+                      >
+                        <span className="text-xs font-medium text-white">
+                          {day.total.toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="w-20 text-sm font-medium text-gray-900 dark:text-white text-left rtl:text-right">
+                      {day.count} {t('sales')}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                {t('noData')}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Top Products & Payment Methods */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Top Products */}
+        <div className="card">
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+            {t('topProducts')} ({t('last7Days')})
+          </h3>
+          {stats.top_products && stats.top_products.length > 0 ? (
+            <div className="space-y-3">
+              {stats.top_products.map((product, index) => (
+                <div
+                  key={product.id}
+                  className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
+                >
+                  <div className="flex items-center space-x-3 rtl:space-x-reverse">
+                    <div className="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                      {index + 1}
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900 dark:text-white">
+                        {product.name}
+                      </p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">
+                        {product.total_quantity} {t('units')} - {product.total_revenue?.toFixed(2)} {t('currency')}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+              {t('noData')}
+            </div>
+          )}
+        </div>
+
+        {/* Payment Methods */}
+        <div className="card">
+          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+            {t('paymentMethods')}
+          </h3>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+              <div className="flex items-center space-x-3 rtl:space-x-reverse">
+                <div className="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center text-white">
+                  💵
+                </div>
+                <div>
+                  <p className="font-medium text-gray-900 dark:text-white">
+                    {t('cash')}
+                  </p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    {((sales.cash / (sales.total || 1)) * 100).toFixed(1)}%
+                  </p>
+                </div>
+              </div>
+              <p className="text-lg font-bold text-gray-900 dark:text-white">
+                {sales.cash?.toFixed(2) || '0.00'}
+              </p>
+            </div>
+            <div className="flex items-center justify-between p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+              <div className="flex items-center space-x-3 rtl:space-x-reverse">
+                <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center text-white">
+                  💳
+                </div>
+                <div>
+                  <p className="font-medium text-gray-900 dark:text-white">
+                    {t('card')}
+                  </p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    {((sales.card / (sales.total || 1)) * 100).toFixed(1)}%
+                  </p>
+                </div>
+              </div>
+              <p className="text-lg font-bold text-gray-900 dark:text-white">
+                {sales.card?.toFixed(2) || '0.00'}
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
