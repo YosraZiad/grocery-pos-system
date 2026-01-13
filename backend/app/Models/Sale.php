@@ -45,9 +45,17 @@ class Sale extends BaseModel
     public static function generateInvoiceNumber(): string
     {
         $date = now()->format('Ymd');
-        $lastSale = self::whereDate('created_at', today())
-            ->orderBy('id', 'desc')
-            ->first();
+        $tenantId = config('tenant_id');
+        
+        // البحث عن آخر فاتورة لنفس الـ tenant
+        $query = self::whereDate('created_at', today())
+            ->orderBy('id', 'desc');
+            
+        if ($tenantId) {
+            $query->where('tenant_id', $tenantId);
+        }
+        
+        $lastSale = $query->first();
 
         if ($lastSale) {
             $lastNumber = (int) substr($lastSale->invoice_number, -4);

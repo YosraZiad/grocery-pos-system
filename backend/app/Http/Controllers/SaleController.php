@@ -62,10 +62,28 @@ class SaleController extends Controller
 
         DB::beginTransaction();
         try {
+            $tenantId = config('tenant_id');
+            $userId = $request->user()->id;
+            
+            if (!$tenantId) {
+                DB::rollBack();
+                return response()->json([
+                    'message' => 'Tenant ID is required',
+                ], 400);
+            }
+            
+            if (!$userId) {
+                DB::rollBack();
+                return response()->json([
+                    'message' => 'User authentication required',
+                ], 401);
+            }
+            
             // التحقق من توفر الكمية
             foreach ($request->items as $item) {
                 $product = Product::findOrFail($item['product_id']);
                 if ($product->quantity < $item['quantity']) {
+                    DB::rollBack();
                     return response()->json([
                         'message' => "الكمية المتاحة غير كافية للمنتج: {$product->name}",
                         'product' => $product->name,
@@ -96,9 +114,9 @@ class SaleController extends Controller
 
             // إنشاء البيع
             $sale = Sale::create([
-                'tenant_id' => config('tenant_id'),
+                'tenant_id' => $tenantId,
                 'invoice_number' => Sale::generateInvoiceNumber(),
-                'user_id' => $request->user()->id,
+                'user_id' => $userId,
                 'total' => $total,
                 'discount' => $discountAmount,
                 'discount_type' => $discountType,
@@ -127,7 +145,7 @@ class SaleController extends Controller
 
                 // إنشاء Inventory Transaction
                 InventoryTransaction::create([
-                    'tenant_id' => config('tenant_id'),
+                    'tenant_id' => $tenantId,
                     'product_id' => $product->id,
                     'type' => 'out',
                     'quantity' => $quantity,

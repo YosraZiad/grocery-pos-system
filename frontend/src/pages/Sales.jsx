@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useI18n } from '../context/I18nContext';
+import toast from 'react-hot-toast';
 import api from '../services/api';
 import ProductSearch from '../components/ProductSearch';
 import Cart from '../components/Cart';
@@ -51,7 +52,10 @@ function Sales() {
 
     // التحقق من توفر الكمية
     if (quantity > product.quantity + newItems[index].quantity) {
-      alert(`${t('availableQuantity')}: ${product.quantity + newItems[index].quantity}`);
+      toast.error(
+        `${t('availableQuantity')}: ${product.quantity + newItems[index].quantity}`,
+        { duration: 4000 }
+      );
       return;
     }
 
@@ -79,11 +83,16 @@ function Sales() {
       queryClient.invalidateQueries(['products']);
       queryClient.invalidateQueries(['sales']);
 
+      toast.success(t('saleCompletedSuccessfully') || 'Sale completed successfully');
+      
       // توجيه المستخدم لصفحة الفاتورة
       navigate(`/sales/${data.data.id}/invoice`);
     },
     onError: (error) => {
-      alert(error.response?.data?.message || t('error'));
+      const message = error.response?.data?.message || 
+        (error.response?.data?.errors ? Object.values(error.response.data.errors).flat().join(', ') : null) ||
+        t('errorCreatingSale') || 'Error creating sale';
+      toast.error(message, { duration: 5000 });
     },
   });
 

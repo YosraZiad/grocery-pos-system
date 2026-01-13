@@ -143,6 +143,8 @@ const translations = {
     confirmPasswordPlaceholder: 'Confirm Password',
     noResultsFound: 'No results found',
     availableQuantity: 'Available quantity',
+    saleCompletedSuccessfully: 'Sale completed successfully',
+    errorCreatingSale: 'Error creating sale',
     passwordMin: 'Password (min 8 characters)',
     
     // Sales List & Details
@@ -545,6 +547,8 @@ const translations = {
     confirmPasswordPlaceholder: 'تأكيد كلمة المرور',
     noResultsFound: 'لا توجد نتائج',
     availableQuantity: 'الكمية المتاحة',
+    saleCompletedSuccessfully: 'تم إتمام البيع بنجاح',
+    errorCreatingSale: 'خطأ في إنشاء البيع',
     passwordMin: 'كلمة المرور (8 أحرف على الأقل)',
     
     // Sales List & Details
