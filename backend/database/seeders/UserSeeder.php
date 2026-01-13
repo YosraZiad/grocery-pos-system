@@ -29,7 +29,11 @@ class UserSeeder extends Seeder
                 'tenant_id' => $tenant->id,
             ]
         );
-        $admin->assignRole('admin');
+        // تعيين الدور مع guard_name صحيح
+        $admin->assignRole(\Spatie\Permission\Models\Role::firstOrCreate([
+            'name' => 'admin',
+            'guard_name' => 'sanctum'
+        ]));
 
         // إنشاء كاشير
         $cashier = User::firstOrCreate(
@@ -40,6 +44,10 @@ class UserSeeder extends Seeder
                 'tenant_id' => $tenant->id,
             ]
         );
-        $cashier->assignRole('cashier');
+        // تعيين الدور مع guard_name صحيح
+        $cashier->assignRole(\Spatie\Permission\Models\Role::firstOrCreate([
+            'name' => 'cashier',
+            'guard_name' => 'sanctum'
+        ]));
     }
 }

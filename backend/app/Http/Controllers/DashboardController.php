@@ -37,6 +37,7 @@ class DashboardController extends Controller
         // عدد المنتجات المباعة
         $itemsSold = DB::table('sale_items')
             ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
+            ->where('sales.tenant_id', config('tenant_id'))
             ->whereBetween('sales.created_at', [$startDate, $endDate])
             ->sum('sale_items.quantity');
 
@@ -44,12 +45,15 @@ class DashboardController extends Controller
         $profit = DB::table('sale_items')
             ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
             ->join('products', 'sale_items.product_id', '=', 'products.id')
+            ->where('sales.tenant_id', config('tenant_id'))
+            ->where('products.tenant_id', config('tenant_id'))
             ->whereBetween('sales.created_at', [$startDate, $endDate])
             ->selectRaw('SUM((sale_items.price - COALESCE(products.purchase_price, 0)) * sale_items.quantity) as profit')
             ->value('profit') ?? 0;
 
         // المصروفات
-        $expenses = Expense::whereBetween('date', [$startDate->toDateString(), $endDate->toDateString()])
+        $expenses = Expense::whereDate('date', '>=', $startDate->toDateString())
+            ->whereDate('date', '<=', $endDate->toDateString())
             ->select(
                 DB::raw('SUM(amount) as total'),
                 DB::raw('COUNT(*) as count')
@@ -57,7 +61,7 @@ class DashboardController extends Controller
             ->first();
 
         // المنتجات منخفضة المخزون
-        $lowStockProducts = Product::where('quantity', '<=', DB::raw('low_stock_threshold'))
+        $lowStockProducts = Product::whereColumn('quantity', '<=', 'min_stock_alert')
             ->count();
 
         // المنتجات المنتهية الصلاحية
@@ -91,6 +95,8 @@ class DashboardController extends Controller
         $topProducts = DB::table('sale_items')
             ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
             ->join('products', 'sale_items.product_id', '=', 'products.id')
+            ->where('sales.tenant_id', config('tenant_id'))
+            ->where('products.tenant_id', config('tenant_id'))
             ->whereBetween('sales.created_at', [now()->subDays(6)->startOfDay(), $endDate])
             ->select(
                 'products.id',
@@ -111,6 +117,7 @@ class DashboardController extends Controller
                     'total' => (float) ($sales->total ?? 0),
                     'cash' => (float) ($sales->cash ?? 0),
                     'card' => (float) ($sales->card ?? 0),
+                    'transfer' => (float) ($sales->transfer ?? 0),
                 ],
                 'items_sold' => (int) $itemsSold,
                 'profit' => (float) $profit,

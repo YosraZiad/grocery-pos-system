@@ -64,12 +64,12 @@ class RolePermissionSeeder extends Seeder
         ];
 
         foreach ($permissions as $permission) {
-            Permission::firstOrCreate(['name' => $permission]);
+            Permission::firstOrCreate(['name' => $permission, 'guard_name' => 'sanctum']);
         }
 
         // إنشاء الأدوار
-        $adminRole = Role::firstOrCreate(['name' => 'admin']);
-        $cashierRole = Role::firstOrCreate(['name' => 'cashier']);
+        $adminRole = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'sanctum']);
+        $cashierRole = Role::firstOrCreate(['name' => 'cashier', 'guard_name' => 'sanctum']);
 
         // تعيين جميع الصلاحيات للمدير
         $adminRole->givePermissionTo(Permission::all());

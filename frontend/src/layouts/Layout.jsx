@@ -1,10 +1,11 @@
+import { useState } from 'react';
 import { Outlet, useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useI18n } from '../context/I18nContext';
 import { useTheme } from '../context/ThemeContext';
 
 /**
- * Layout حديث واحترافي مع دعم اللغات والثيم
+ * Layout حديث واحترافي مع Navigation محسّن
  */
 function Layout() {
   const { user, logout } = useAuth();
@@ -12,6 +13,10 @@ function Layout() {
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [salesMenuOpen, setSalesMenuOpen] = useState(false);
+  const [managementMenuOpen, setManagementMenuOpen] = useState(false);
+  const [reportsMenuOpen, setReportsMenuOpen] = useState(false);
 
   const handleLogout = async () => {
     await logout();
@@ -19,6 +24,30 @@ function Layout() {
   };
 
   const isActive = (path) => location.pathname === path;
+
+  // Navigation Groups
+  const navigationGroups = {
+    main: [
+      { path: '/', label: t('home'), icon: '🏠' },
+      { path: '/categories', label: t('categories'), icon: '📁' },
+      { path: '/products', label: t('products'), icon: '📦' },
+    ],
+    sales: [
+      { path: '/sales', label: t('sales'), icon: '💰' },
+      { path: '/sales-list', label: t('salesList'), icon: '📋' },
+    ],
+    management: [
+      { path: '/inventory', label: t('inventory'), icon: '📊' },
+      { path: '/returns', label: t('returnsManagement'), icon: '🔄' },
+      { path: '/suppliers', label: t('suppliersManagement'), icon: '👥' },
+      { path: '/purchase-invoices', label: t('purchaseInvoices'), icon: '📄' },
+      { path: '/expenses', label: t('expensesManagement'), icon: '💸' },
+    ],
+    reports: [
+      { path: '/profit-loss', label: t('profitLoss'), icon: '📈' },
+      { path: '/reports', label: t('reports'), icon: '📊' },
+    ],
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
@@ -36,142 +65,165 @@ function Layout() {
               </h1>
             </div>
 
-            {/* Navigation */}
-            <nav className="hidden md:flex items-center space-x-1 rtl:space-x-reverse">
-              <Link
-                to="/"
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  isActive('/')
-                    ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300'
-                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-                }`}
-              >
-                {t('home')}
-              </Link>
-              <Link
-                to="/categories"
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  isActive('/categories')
-                    ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300'
-                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-                }`}
-              >
-                {t('categories')}
-              </Link>
-              <Link
-                to="/products"
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  isActive('/products')
-                    ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300'
-                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-                }`}
-              >
-                {t('products')}
-              </Link>
-              <Link
-                to="/sales"
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  isActive('/sales') && !isActive('/sales-list')
-                    ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300'
-                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-                }`}
-              >
-                {t('sales')}
-              </Link>
-              <Link
-                to="/sales-list"
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  isActive('/sales-list')
-                    ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300'
-                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-                }`}
-              >
-                {t('salesList')}
-              </Link>
-              <Link
-                to="/inventory"
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  isActive('/inventory')
-                    ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300'
-                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-                }`}
-              >
-                {t('inventory')}
-              </Link>
-              <Link
-                to="/returns"
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  isActive('/returns')
-                    ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300'
-                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-                }`}
-              >
-                {t('returnsManagement')}
-              </Link>
-              <Link
-                to="/suppliers"
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  isActive('/suppliers')
-                    ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300'
-                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-                }`}
-              >
-                {t('suppliersManagement')}
-              </Link>
-              <Link
-                to="/purchase-invoices"
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  isActive('/purchase-invoices')
-                    ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300'
-                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-                }`}
-              >
-                {t('purchaseInvoices')}
-              </Link>
-              <Link
-                to="/expenses"
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  isActive('/expenses')
-                    ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300'
-                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-                }`}
-              >
-                {t('expensesManagement')}
-              </Link>
-              <Link
-                to="/profit-loss"
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  isActive('/profit-loss')
-                    ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300'
-                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-                }`}
-              >
-                {t('profitLoss')}
-              </Link>
-              <Link
-                to="/reports"
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
-                  isActive('/reports')
-                    ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300'
-                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
-                }`}
-              >
-                {t('reports')}
-              </Link>
+            {/* Desktop Navigation */}
+            <nav className="hidden lg:flex items-center space-x-1 rtl:space-x-reverse">
+              {/* Main Links */}
+              {navigationGroups.main.map((item) => (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center space-x-1 rtl:space-x-reverse ${
+                    isActive(item.path)
+                      ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300'
+                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  }`}
+                >
+                  <span>{item.icon}</span>
+                  <span>{item.label}</span>
+                </Link>
+              ))}
+
+              {/* Sales Dropdown */}
+              <div className="relative group">
+                <button
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center space-x-1 rtl:space-x-reverse ${
+                    isActive('/sales') || isActive('/sales-list')
+                      ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300'
+                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  }`}
+                  onMouseEnter={() => setSalesMenuOpen(true)}
+                  onMouseLeave={() => setSalesMenuOpen(false)}
+                >
+                  <span>💰</span>
+                  <span>{t('sales')}</span>
+                  <span>▼</span>
+                </button>
+                {(salesMenuOpen || isActive('/sales') || isActive('/sales-list')) && (
+                  <div
+                    className="absolute top-full left-0 rtl:left-auto rtl:right-0 mt-1 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50"
+                    onMouseEnter={() => setSalesMenuOpen(true)}
+                    onMouseLeave={() => setSalesMenuOpen(false)}
+                  >
+                    {navigationGroups.sales.map((item) => (
+                      <Link
+                        key={item.path}
+                        to={item.path}
+                        className={`block px-4 py-2 text-sm transition-colors ${
+                          isActive(item.path)
+                            ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
+                            : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                        }`}
+                      >
+                        <span className="mr-2 rtl:ml-2">{item.icon}</span>
+                        {item.label}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Management Dropdown */}
+              <div className="relative group">
+                <button
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center space-x-1 rtl:space-x-reverse ${
+                    navigationGroups.management.some(item => isActive(item.path))
+                      ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300'
+                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  }`}
+                  onMouseEnter={() => setManagementMenuOpen(true)}
+                  onMouseLeave={() => setManagementMenuOpen(false)}
+                >
+                  <span>⚙️</span>
+                  <span>{t('management')}</span>
+                  <span>▼</span>
+                </button>
+                {(managementMenuOpen || navigationGroups.management.some(item => isActive(item.path))) && (
+                  <div
+                    className="absolute top-full left-0 rtl:left-auto rtl:right-0 mt-1 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50"
+                    onMouseEnter={() => setManagementMenuOpen(true)}
+                    onMouseLeave={() => setManagementMenuOpen(false)}
+                  >
+                    {navigationGroups.management.map((item) => (
+                      <Link
+                        key={item.path}
+                        to={item.path}
+                        className={`block px-4 py-2 text-sm transition-colors ${
+                          isActive(item.path)
+                            ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
+                            : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                        }`}
+                      >
+                        <span className="mr-2 rtl:ml-2">{item.icon}</span>
+                        {item.label}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Reports Dropdown */}
+              <div className="relative group">
+                <button
+                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center space-x-1 rtl:space-x-reverse ${
+                    navigationGroups.reports.some(item => isActive(item.path))
+                      ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300'
+                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  }`}
+                  onMouseEnter={() => setReportsMenuOpen(true)}
+                  onMouseLeave={() => setReportsMenuOpen(false)}
+                >
+                  <span>📊</span>
+                  <span>{t('reports')}</span>
+                  <span>▼</span>
+                </button>
+                {(reportsMenuOpen || navigationGroups.reports.some(item => isActive(item.path))) && (
+                  <div
+                    className="absolute top-full left-0 rtl:left-auto rtl:right-0 mt-1 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50"
+                    onMouseEnter={() => setReportsMenuOpen(true)}
+                    onMouseLeave={() => setReportsMenuOpen(false)}
+                  >
+                    {navigationGroups.reports.map((item) => (
+                      <Link
+                        key={item.path}
+                        to={item.path}
+                        className={`block px-4 py-2 text-sm transition-colors ${
+                          isActive(item.path)
+                            ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
+                            : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                        }`}
+                      >
+                        <span className="mr-2 rtl:ml-2">{item.icon}</span>
+                        {item.label}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Settings */}
               <Link
                 to="/settings"
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center space-x-1 rtl:space-x-reverse ${
                   isActive('/settings')
                     ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300'
                     : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
                 }`}
               >
-                {t('settings')}
+                <span>⚙️</span>
+                <span>{t('settings')}</span>
               </Link>
             </nav>
 
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="lg:hidden p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+            >
+              <span className="text-2xl">☰</span>
+            </button>
+
             {/* User Actions */}
-            <div className="flex items-center space-x-3 rtl:space-x-reverse">
+            <div className="flex items-center space-x-2 rtl:space-x-reverse">
               {/* Language Toggle */}
               <button
                 onClick={toggleLanguage}
@@ -190,33 +242,120 @@ function Layout() {
                 {theme === 'light' ? '🌙' : '☀️'}
               </button>
 
-              {/* User Info */}
-              <div className="hidden md:flex items-center space-x-2 rtl:space-x-reverse px-3 py-1 rounded-lg bg-gray-100 dark:bg-gray-700">
+              {/* User Info - Compact */}
+              <div className="hidden md:flex items-center space-x-2 rtl:space-x-reverse">
                 <div className="w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">
                   {user?.name?.charAt(0)?.toUpperCase() || 'U'}
                 </div>
-                <div className="flex flex-col">
-                  <span className="text-sm font-medium text-gray-900 dark:text-white">
-                {user?.name}
-              </span>
-              {user?.roles && user.roles.length > 0 && (
-                    <span className="text-xs text-gray-500 dark:text-gray-400">
-                  {user.roles[0].name}
-                </span>
-              )}
-                </div>
+                <button
+                  onClick={handleLogout}
+                  className="px-3 py-1 text-sm font-medium text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-200"
+                >
+                  {t('logout')}
+                </button>
               </div>
-
-              {/* Logout Button */}
-              <button
-                onClick={handleLogout}
-                className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-200"
-              >
-                {t('logout')}
-              </button>
             </div>
           </div>
         </div>
+
+        {/* Mobile Menu */}
+        {mobileMenuOpen && (
+          <div className="lg:hidden border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+            <div className="px-4 py-3 space-y-1">
+              {navigationGroups.main.map((item) => (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`block px-3 py-2 rounded-lg text-sm font-medium ${
+                    isActive(item.path)
+                      ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300'
+                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  }`}
+                >
+                  <span className="mr-2 rtl:ml-2">{item.icon}</span>
+                  {item.label}
+                </Link>
+              ))}
+              
+              <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
+                <p className="px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
+                  {t('sales')}
+                </p>
+                {navigationGroups.sales.map((item) => (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={`block px-3 py-2 rounded-lg text-sm font-medium ${
+                      isActive(item.path)
+                        ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300'
+                        : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                    }`}
+                  >
+                    <span className="mr-2 rtl:ml-2">{item.icon}</span>
+                    {item.label}
+                  </Link>
+                ))}
+              </div>
+
+              <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
+                <p className="px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
+                  {t('management')}
+                </p>
+                {navigationGroups.management.map((item) => (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={`block px-3 py-2 rounded-lg text-sm font-medium ${
+                      isActive(item.path)
+                        ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300'
+                        : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                    }`}
+                  >
+                    <span className="mr-2 rtl:ml-2">{item.icon}</span>
+                    {item.label}
+                  </Link>
+                ))}
+              </div>
+
+              <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
+                <p className="px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
+                  {t('reports')}
+                </p>
+                {navigationGroups.reports.map((item) => (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={`block px-3 py-2 rounded-lg text-sm font-medium ${
+                      isActive(item.path)
+                        ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300'
+                        : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                    }`}
+                  >
+                    <span className="mr-2 rtl:ml-2">{item.icon}</span>
+                    {item.label}
+                  </Link>
+                ))}
+              </div>
+
+              <Link
+                to="/settings"
+                onClick={() => setMobileMenuOpen(false)}
+                className={`block px-3 py-2 rounded-lg text-sm font-medium ${
+                  isActive('/settings')
+                    ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300'
+                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                }`}
+              >
+                <span className="mr-2 rtl:ml-2">⚙️</span>
+                {t('settings')}
+              </Link>
+            </div>
+          </div>
+        )}
       </header>
 
       {/* Main Content */}

@@ -94,7 +94,6 @@ const translations = {
     close: 'Close',
     copyright: '© 2024 Grocery POS System. All rights reserved.',
     noCategories: 'No categories yet',
-    confirmDelete: 'Are you sure you want to delete this item?',
     back: 'Back',
     print: 'Print',
     invoice: 'Invoice',
@@ -103,7 +102,6 @@ const translations = {
     inventoryManagement: 'Inventory Management',
     manageAndMonitor: 'Manage and monitor your inventory',
     totalProducts: 'Total Products',
-    lowStock: 'Low Stock',
     expiringSoon: 'Expiring Soon',
     expired: 'Expired',
     outOfStock: 'Out of Stock',
@@ -242,7 +240,6 @@ const translations = {
     paidAmount: 'Paid Amount',
     balance: 'Balance',
     selectSupplier: 'Select Supplier',
-    items: 'Items',
     addItem: 'Add Item',
     noPurchaseInvoicesFound: 'No purchase invoices found',
     purchaseInvoiceCreatedSuccessfully: 'Purchase invoice created successfully',
@@ -296,7 +293,6 @@ const translations = {
     productsSold: 'Products Sold',
     
     // Reports
-    reports: 'Reports',
     reportsDescription: 'Comprehensive reports on sales, products, and losses',
     bestSellingProducts: 'Best Selling Products',
     worstSellingProducts: 'Worst Selling Products',
@@ -359,26 +355,14 @@ const translations = {
     dashboardDesc: 'Overview of your store performance',
     today: 'Today',
     week: 'This Week',
-    month: 'This Month',
-    year: 'This Year',
-    transactions: 'Transactions',
-    profit: 'Profit',
-    grossProfit: 'Gross Profit',
-    itemsSold: 'Items Sold',
     units: 'Units',
     alerts: 'Alerts',
     pendingReturns: 'Pending Returns',
     quickActions: 'Quick Actions',
-    newSale: 'New Sale',
-    addProduct: 'Add Product',
-    purchaseInvoice: 'Purchase Invoice',
     dailySales: 'Daily Sales',
     last7Days: 'Last 7 Days',
     topProducts: 'Top Products',
     paymentMethods: 'Payment Methods',
-    cash: 'Cash',
-    card: 'Card',
-    currency: 'Currency',
     
     // Backup
     backupManagement: 'Backup Management',
@@ -394,6 +378,11 @@ const translations = {
     backupRestoredSuccessfully: 'Backup restored successfully',
     backupDeletedSuccessfully: 'Backup deleted successfully',
     noBackupsFound: 'No backups found',
+    
+    // Categories
+    categoryDeletedSuccessfully: 'Category deleted successfully',
+    cannotDeleteCategoryWithProducts: 'Cannot delete category with existing products',
+    confirmDeleteCategory: 'Are you sure you want to delete this category?',
     
     // Monthly Comparison
     monthlyComparison: 'Monthly Comparison',
@@ -493,7 +482,6 @@ const translations = {
     close: 'إغلاق',
     copyright: '© 2024 Grocery POS System. جميع الحقوق محفوظة.',
     noCategories: 'لا توجد أقسام بعد',
-    confirmDelete: 'هل أنت متأكد من حذف هذا العنصر؟',
     back: 'رجوع',
     print: 'طباعة',
     invoice: 'فاتورة',
@@ -502,7 +490,6 @@ const translations = {
     inventoryManagement: 'إدارة المخزون',
     manageAndMonitor: 'إدارة ومراقبة المخزون',
     totalProducts: 'إجمالي المنتجات',
-    lowStock: 'مخزون منخفض',
     expiringSoon: 'قريب الانتهاء',
     expired: 'منتهي الصلاحية',
     outOfStock: 'نفد المخزون',
@@ -641,7 +628,6 @@ const translations = {
     paidAmount: 'المبلغ المدفوع',
     balance: 'المتبقي',
     selectSupplier: 'اختر المورد',
-    items: 'العناصر',
     addItem: 'إضافة عنصر',
     noPurchaseInvoicesFound: 'لا توجد فواتير شراء',
     purchaseInvoiceCreatedSuccessfully: 'تم إنشاء فاتورة الشراء بنجاح',
@@ -695,7 +681,6 @@ const translations = {
     productsSold: 'المنتجات المباعة',
     
     // Reports
-    reports: 'التقارير',
     reportsDescription: 'تقارير شاملة عن المبيعات والمنتجات والخسائر',
     bestSellingProducts: 'أفضل المنتجات مبيعًا',
     worstSellingProducts: 'المنتجات الضعيفة',
@@ -758,26 +743,14 @@ const translations = {
     dashboardDesc: 'نظرة عامة على أداء متجرك',
     today: 'اليوم',
     week: 'هذا الأسبوع',
-    month: 'هذا الشهر',
-    year: 'هذا العام',
-    transactions: 'معاملة',
-    profit: 'الربح',
-    grossProfit: 'إجمالي الربح',
-    itemsSold: 'المنتجات المباعة',
     units: 'وحدة',
     alerts: 'تنبيهات',
     pendingReturns: 'مرتجعات معلقة',
     quickActions: 'إجراءات سريعة',
-    newSale: 'بيع جديد',
-    addProduct: 'إضافة منتج',
-    purchaseInvoice: 'فاتورة شراء',
     dailySales: 'المبيعات اليومية',
     last7Days: 'آخر 7 أيام',
     topProducts: 'أفضل المنتجات',
     paymentMethods: 'طرق الدفع',
-    cash: 'نقدي',
-    card: 'بطاقة',
-    currency: 'عملة',
     
     // Backup
     backupManagement: 'إدارة النسخ الاحتياطي',
@@ -793,6 +766,14 @@ const translations = {
     backupRestoredSuccessfully: 'تم استرجاع النسخة الاحتياطية بنجاح',
     backupDeletedSuccessfully: 'تم حذف النسخة الاحتياطية بنجاح',
     noBackupsFound: 'لا توجد نسخ احتياطية',
+    
+    // Categories
+    categoryDeletedSuccessfully: 'تم حذف القسم بنجاح',
+    cannotDeleteCategoryWithProducts: 'لا يمكن حذف القسم لأنه يحتوي على منتجات. يرجى حذف المنتجات أولاً.',
+    confirmDeleteCategory: 'هل أنت متأكد من حذف هذا القسم؟',
+    
+    // Navigation
+    management: 'الإدارة',
     
     // Monthly Comparison
     monthlyComparison: 'مقارنة شهرية',

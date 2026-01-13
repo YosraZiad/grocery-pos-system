@@ -57,6 +57,11 @@ function Categories() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['categories']);
+      alert(t('categoryDeletedSuccessfully') || 'Category deleted successfully');
+    },
+    onError: (error) => {
+      const message = error.response?.data?.message || t('error') || 'Error';
+      alert(message);
     },
   });
 
@@ -79,7 +84,15 @@ function Categories() {
   };
 
   const handleDelete = (id) => {
-    if (window.confirm(t('confirmDelete'))) {
+    const category = data?.find(cat => cat.id === id);
+    const hasProducts = category?.products_count > 0;
+    
+    if (hasProducts) {
+      alert(t('cannotDeleteCategoryWithProducts') || `Cannot delete category. It has ${category.products_count} product(s). Please remove products first.`);
+      return;
+    }
+    
+    if (window.confirm(t('confirmDeleteCategory') || 'Are you sure you want to delete this category?')) {
       deleteMutation.mutate(id);
     }
   };
