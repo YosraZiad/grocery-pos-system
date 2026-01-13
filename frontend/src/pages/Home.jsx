@@ -103,7 +103,7 @@ function Home() {
                 {t('sales')}
               </p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                {sales.total?.toFixed(2) || '0.00'}
+                {(Number(sales.total) || 0).toFixed(2)}
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                 {sales.count || 0} {t('transactions')}
@@ -123,7 +123,7 @@ function Home() {
                 {t('profit')}
               </p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                {stats.profit?.toFixed(2) || '0.00'}
+                {(Number(stats.profit) || 0).toFixed(2)}
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                 {t('grossProfit')}
@@ -143,7 +143,7 @@ function Home() {
                 {t('expenses')}
               </p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                {expenses.total?.toFixed(2) || '0.00'}
+                {(Number(expenses.total) || 0).toFixed(2)}
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                 {expenses.count || 0} {t('expenses')}
@@ -275,28 +275,34 @@ function Home() {
             </h3>
             {stats.daily_sales && stats.daily_sales.length > 0 ? (
               <div className="space-y-2">
-                {stats.daily_sales.map((day, index) => (
-                  <div key={index} className="flex items-center space-x-3 rtl:space-x-reverse">
-                    <div className="w-20 text-sm text-gray-600 dark:text-gray-400">
-                      {new Date(day.date).toLocaleDateString('ar-SA', { weekday: 'short', day: 'numeric' })}
-                    </div>
-                    <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-6 relative overflow-hidden">
-                      <div
-                        className="bg-gradient-to-r from-green-500 to-green-600 h-full rounded-full flex items-center justify-end pr-2"
-                        style={{
-                          width: `${(day.total / Math.max(...stats.daily_sales.map(d => d.total))) * 100}%`,
-                        }}
-                      >
-                        <span className="text-xs font-medium text-white">
-                          {day.total.toFixed(2)}
-                        </span>
+                {stats.daily_sales.map((day, index) => {
+                  const dayTotal = Number(day.total) || 0;
+                  const maxTotal = Math.max(...stats.daily_sales.map(d => Number(d.total) || 0));
+                  const percentage = maxTotal > 0 ? (dayTotal / maxTotal) * 100 : 0;
+                  
+                  return (
+                    <div key={index} className="flex items-center space-x-3 rtl:space-x-reverse">
+                      <div className="w-20 text-sm text-gray-600 dark:text-gray-400">
+                        {new Date(day.date).toLocaleDateString('ar-SA', { weekday: 'short', day: 'numeric' })}
+                      </div>
+                      <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-6 relative overflow-hidden">
+                        <div
+                          className="bg-gradient-to-r from-green-500 to-green-600 h-full rounded-full flex items-center justify-end pr-2"
+                          style={{
+                            width: `${percentage}%`,
+                          }}
+                        >
+                          <span className="text-xs font-medium text-white">
+                            {dayTotal.toFixed(2)}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="w-20 text-sm font-medium text-gray-900 dark:text-white text-left rtl:text-right">
+                        {day.count || 0} {t('sales')}
                       </div>
                     </div>
-                    <div className="w-20 text-sm font-medium text-gray-900 dark:text-white text-left rtl:text-right">
-                      {day.count} {t('sales')}
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <div className="text-center py-8 text-gray-500 dark:text-gray-400">
@@ -330,7 +336,7 @@ function Home() {
                         {product.name}
                       </p>
                       <p className="text-sm text-gray-500 dark:text-gray-400">
-                        {product.total_quantity} {t('units')} - {product.total_revenue?.toFixed(2)} {t('currency')}
+                        {product.total_quantity || 0} {t('units')} - {(Number(product.total_revenue) || 0).toFixed(2)} {t('currency')}
                       </p>
                     </div>
                   </div>
@@ -360,12 +366,12 @@ function Home() {
                     {t('cash')}
                   </p>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
-                    {((sales.cash / (sales.total || 1)) * 100).toFixed(1)}%
+                    {sales.total > 0 ? ((Number(sales.cash) || 0) / (Number(sales.total) || 1) * 100).toFixed(1) : '0.0'}%
                   </p>
                 </div>
               </div>
               <p className="text-lg font-bold text-gray-900 dark:text-white">
-                {sales.cash?.toFixed(2) || '0.00'}
+                {(Number(sales.cash) || 0).toFixed(2)}
               </p>
             </div>
             <div className="flex items-center justify-between p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
@@ -378,12 +384,12 @@ function Home() {
                     {t('card')}
                   </p>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
-                    {((sales.card / (sales.total || 1)) * 100).toFixed(1)}%
+                    {sales.total > 0 ? ((Number(sales.card) || 0) / (Number(sales.total) || 1) * 100).toFixed(1) : '0.0'}%
                   </p>
                 </div>
               </div>
               <p className="text-lg font-bold text-gray-900 dark:text-white">
-                {sales.card?.toFixed(2) || '0.00'}
+                {(Number(sales.card) || 0).toFixed(2)}
               </p>
             </div>
             {sales.transfer > 0 && (
@@ -397,12 +403,12 @@ function Home() {
                       {t('transfer')}
                     </p>
                     <p className="text-sm text-gray-500 dark:text-gray-400">
-                      {((sales.transfer / (sales.total || 1)) * 100).toFixed(1)}%
+                      {sales.total > 0 ? ((Number(sales.transfer) || 0) / (Number(sales.total) || 1) * 100).toFixed(1) : '0.0'}%
                     </p>
                   </div>
                 </div>
                 <p className="text-lg font-bold text-gray-900 dark:text-white">
-                  {sales.transfer?.toFixed(2) || '0.00'}
+                  {(Number(sales.transfer) || 0).toFixed(2)}
                 </p>
               </div>
             )}
