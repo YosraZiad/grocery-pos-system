@@ -276,6 +276,14 @@ const translations = {
     errorUpdatingCategory: 'Error updating category',
     errorDeletingCategory: 'Error deleting category',
     deletingCategory: 'Deleting category...',
+    
+    // Products
+    productCreatedSuccessfully: 'Product created successfully',
+    productUpdatedSuccessfully: 'Product updated successfully',
+    productDeletedSuccessfully: 'Product deleted successfully',
+    errorCreatingProduct: 'Error creating product',
+    errorUpdatingProduct: 'Error updating product',
+    errorDeletingProduct: 'Error deleting product',
     categoryDeletedSuccessfully: 'Category deleted successfully',
     confirmDeleteCategory: 'Are you sure you want to delete this category?',
     
@@ -668,6 +676,14 @@ const translations = {
     errorUpdatingCategory: 'خطأ في تحديث القسم',
     errorDeletingCategory: 'خطأ في حذف القسم',
     deletingCategory: 'جاري حذف القسم...',
+    
+    // Products
+    productCreatedSuccessfully: 'تم إنشاء المنتج بنجاح',
+    productUpdatedSuccessfully: 'تم تحديث المنتج بنجاح',
+    productDeletedSuccessfully: 'تم حذف المنتج بنجاح',
+    errorCreatingProduct: 'خطأ في إنشاء المنتج',
+    errorUpdatingProduct: 'خطأ في تحديث المنتج',
+    errorDeletingProduct: 'خطأ في حذف المنتج',
     categoryDeletedSuccessfully: 'تم حذف القسم بنجاح',
     confirmDeleteCategory: 'هل أنت متأكد من حذف هذا القسم؟',
     

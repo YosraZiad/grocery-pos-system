@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useI18n } from '../context/I18nContext';
+import toast from 'react-hot-toast';
 import api from '../services/api';
 import SearchBar from '../components/SearchBar';
 import ProductForm from '../components/ProductForm';
@@ -44,6 +45,13 @@ function Products() {
       queryClient.invalidateQueries(['products']);
       setShowModal(false);
       setEditingProduct(null);
+      toast.success(t('productCreatedSuccessfully') || 'Product created successfully');
+    },
+    onError: (error) => {
+      const message = error.response?.data?.message || 
+        (error.response?.data?.errors ? Object.values(error.response.data.errors).flat().join(', ') : null) ||
+        t('errorCreatingProduct') || 'Error creating product';
+      toast.error(message);
     },
   });
 
@@ -57,6 +65,13 @@ function Products() {
       queryClient.invalidateQueries(['products']);
       setShowModal(false);
       setEditingProduct(null);
+      toast.success(t('productUpdatedSuccessfully') || 'Product updated successfully');
+    },
+    onError: (error) => {
+      const message = error.response?.data?.message || 
+        (error.response?.data?.errors ? Object.values(error.response.data.errors).flat().join(', ') : null) ||
+        t('errorUpdatingProduct') || 'Error updating product';
+      toast.error(message);
     },
   });
 
@@ -68,6 +83,11 @@ function Products() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['products']);
+      toast.success(t('productDeletedSuccessfully') || 'Product deleted successfully');
+    },
+    onError: (error) => {
+      const message = error.response?.data?.message || t('errorDeletingProduct') || 'Error deleting product';
+      toast.error(message);
     },
   });
 

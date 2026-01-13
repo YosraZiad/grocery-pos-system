@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreProductRequest extends FormRequest
 {
@@ -21,10 +22,23 @@ class StoreProductRequest extends FormRequest
      */
     public function rules(): array
     {
+        $tenantId = config('tenant_id');
+        
         return [
-            'category_id' => 'required|exists:categories,id',
+            'category_id' => [
+                'required',
+                Rule::exists('categories', 'id')->where(function ($query) use ($tenantId) {
+                    $query->where('tenant_id', $tenantId);
+                }),
+            ],
             'name' => 'required|string|max:255',
-            'barcode' => 'nullable|string|unique:products,barcode',
+            'barcode' => [
+                'nullable',
+                'string',
+                Rule::unique('products', 'barcode')->where(function ($query) use ($tenantId) {
+                    $query->where('tenant_id', $tenantId);
+                }),
+            ],
             'purchase_price' => 'required|numeric|min:0',
             'sale_price' => 'required|numeric|min:0',
             'quantity' => 'required|integer|min:0',
