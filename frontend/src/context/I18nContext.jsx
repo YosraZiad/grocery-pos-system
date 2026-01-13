@@ -272,6 +272,10 @@ const translations = {
     expenses: 'expenses',
     categoryCreatedSuccessfully: 'Category created successfully',
     categoryUpdatedSuccessfully: 'Category updated successfully',
+    errorCreatingCategory: 'Error creating category',
+    errorUpdatingCategory: 'Error updating category',
+    errorDeletingCategory: 'Error deleting category',
+    deletingCategory: 'Deleting category...',
     categoryDeletedSuccessfully: 'Category deleted successfully',
     confirmDeleteCategory: 'Are you sure you want to delete this category?',
     
@@ -660,6 +664,10 @@ const translations = {
     expenses: 'مصروفات',
     categoryCreatedSuccessfully: 'تم إنشاء القسم بنجاح',
     categoryUpdatedSuccessfully: 'تم تحديث القسم بنجاح',
+    errorCreatingCategory: 'خطأ في إنشاء القسم',
+    errorUpdatingCategory: 'خطأ في تحديث القسم',
+    errorDeletingCategory: 'خطأ في حذف القسم',
+    deletingCategory: 'جاري حذف القسم...',
     categoryDeletedSuccessfully: 'تم حذف القسم بنجاح',
     confirmDeleteCategory: 'هل أنت متأكد من حذف هذا القسم؟',
     

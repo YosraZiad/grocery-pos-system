@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useI18n } from '../context/I18nContext';
+import toast from 'react-hot-toast';
 import api from '../services/api';
 
 function Categories() {
@@ -31,6 +32,11 @@ function Categories() {
       setShowModal(false);
       setName('');
       setDescription('');
+      toast.success(t('categoryCreatedSuccessfully') || 'Category created successfully');
+    },
+    onError: (error) => {
+      const message = error.response?.data?.message || t('errorCreatingCategory') || 'Error creating category';
+      toast.error(message);
     },
   });
 
@@ -46,6 +52,11 @@ function Categories() {
       setEditingId(null);
       setName('');
       setDescription('');
+      toast.success(t('categoryUpdatedSuccessfully') || 'Category updated successfully');
+    },
+    onError: (error) => {
+      const message = error.response?.data?.message || t('errorUpdatingCategory') || 'Error updating category';
+      toast.error(message);
     },
   });
 
@@ -57,11 +68,11 @@ function Categories() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['categories']);
-      alert(t('categoryDeletedSuccessfully') || 'Category deleted successfully');
+      toast.success(t('categoryDeletedSuccessfully') || 'Category deleted successfully');
     },
     onError: (error) => {
-      const message = error.response?.data?.message || t('error') || 'Error';
-      alert(message);
+      const message = error.response?.data?.message || t('errorDeletingCategory') || 'Error deleting category';
+      toast.error(message);
     },
   });
 
@@ -88,12 +99,29 @@ function Categories() {
     const hasProducts = category?.products_count > 0;
     
     if (hasProducts) {
-      alert(t('cannotDeleteCategoryWithProducts') || `Cannot delete category. It has ${category.products_count} product(s). Please remove products first.`);
+      toast.error(
+        t('cannotDeleteCategoryWithProducts') || 
+        `Cannot delete category. It has ${category.products_count} product(s). Please remove products first.`,
+        { duration: 5000 }
+      );
       return;
     }
     
+    // استخدام confirmation dialog
     if (window.confirm(t('confirmDeleteCategory') || 'Are you sure you want to delete this category?')) {
-      deleteMutation.mutate(id);
+      toast.promise(
+        new Promise((resolve, reject) => {
+          deleteMutation.mutate(id, {
+            onSuccess: () => resolve(),
+            onError: (error) => reject(error),
+          });
+        }),
+        {
+          loading: t('deletingCategory') || 'Deleting category...',
+          success: t('categoryDeletedSuccessfully') || 'Category deleted successfully',
+          error: (err) => err.response?.data?.message || t('errorDeletingCategory') || 'Error deleting category',
+        }
+      );
     }
   };
 
