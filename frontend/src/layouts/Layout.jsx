@@ -105,7 +105,7 @@ function Layout() {
                   <span>{t('sales')}</span>
                   <span>▼</span>
                 </button>
-                {(salesMenuOpen || isActive('/sales') || isActive('/sales-list')) && (
+                {salesMenuOpen && (
                   <div
                     className="absolute top-full left-0 rtl:left-auto rtl:right-0 mt-1 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50"
                     onMouseEnter={() => setSalesMenuOpen(true)}
@@ -145,7 +145,7 @@ function Layout() {
                   <span>{t('management')}</span>
                   <span>▼</span>
                 </button>
-                {(managementMenuOpen || navigationGroups.management.some(item => isActive(item.path))) && (
+                {managementMenuOpen && (
                   <div
                     className="absolute top-full left-0 rtl:left-auto rtl:right-0 mt-1 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50"
                     onMouseEnter={() => setManagementMenuOpen(true)}
@@ -185,7 +185,7 @@ function Layout() {
                   <span>{t('reports')}</span>
                   <span>▼</span>
                 </button>
-                {(reportsMenuOpen || navigationGroups.reports.some(item => isActive(item.path))) && (
+                {reportsMenuOpen && (
                   <div
                     className="absolute top-full left-0 rtl:left-auto rtl:right-0 mt-1 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50"
                     onMouseEnter={() => setReportsMenuOpen(true)}
