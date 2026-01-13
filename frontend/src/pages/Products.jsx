@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useI18n } from '../context/I18nContext';
 import toast from 'react-hot-toast';
+import ConfirmationModal from '../components/ConfirmationModal';
 import api from '../services/api';
 import SearchBar from '../components/SearchBar';
 import ProductForm from '../components/ProductForm';
@@ -11,6 +12,8 @@ function Products() {
   const [categoryFilter, setCategoryFilter] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [productToDelete, setProductToDelete] = useState(null);
   const queryClient = useQueryClient();
   const { t } = useI18n();
 
@@ -83,11 +86,9 @@ function Products() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['products']);
-      toast.success(t('productDeletedSuccessfully') || 'Product deleted successfully');
     },
     onError: (error) => {
-      const message = error.response?.data?.message || t('errorDeletingProduct') || 'Error deleting product';
-      toast.error(message);
+      // Error handling is done in toast.promise
     },
   });
 
@@ -105,9 +106,29 @@ function Products() {
   };
 
   const handleDelete = (id) => {
-    if (window.confirm(t('confirmDelete'))) {
-      deleteMutation.mutate(id);
-    }
+    setProductToDelete(id);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = () => {
+    if (!productToDelete) return;
+    
+    toast.promise(
+      new Promise((resolve, reject) => {
+        deleteMutation.mutate(productToDelete, {
+          onSuccess: () => resolve(),
+          onError: (error) => reject(error),
+        });
+      }),
+      {
+        loading: t('deletingProduct') || 'Deleting product...',
+        success: t('productDeletedSuccessfully') || 'Product deleted successfully',
+        error: (err) => err.response?.data?.message || t('errorDeletingProduct') || 'Error deleting product',
+      }
+    );
+    
+    setShowDeleteModal(false);
+    setProductToDelete(null);
   };
 
   const handleCloseModal = () => {
@@ -316,6 +337,21 @@ function Products() {
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setProductToDelete(null);
+        }}
+        onConfirm={confirmDelete}
+        title={t('confirmDelete') || 'Confirm Delete'}
+        message={t('confirmDeleteProduct') || 'Are you sure you want to delete this product?'}
+        confirmText={t('delete') || 'Delete'}
+        cancelText={t('cancel') || 'Cancel'}
+        type="danger"
+      />
     </div>
   );
 }

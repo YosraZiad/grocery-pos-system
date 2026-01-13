@@ -284,6 +284,8 @@ const translations = {
     errorCreatingProduct: 'Error creating product',
     errorUpdatingProduct: 'Error updating product',
     errorDeletingProduct: 'Error deleting product',
+    confirmDeleteProduct: 'Are you sure you want to delete this product?',
+    deletingProduct: 'Deleting product...',
     categoryDeletedSuccessfully: 'Category deleted successfully',
     confirmDeleteCategory: 'Are you sure you want to delete this category?',
     
@@ -684,6 +686,8 @@ const translations = {
     errorCreatingProduct: 'خطأ في إنشاء المنتج',
     errorUpdatingProduct: 'خطأ في تحديث المنتج',
     errorDeletingProduct: 'خطأ في حذف المنتج',
+    confirmDeleteProduct: 'هل أنت متأكد من حذف هذا المنتج؟',
+    deletingProduct: 'جاري حذف المنتج...',
     categoryDeletedSuccessfully: 'تم حذف القسم بنجاح',
     confirmDeleteCategory: 'هل أنت متأكد من حذف هذا القسم؟',
     
