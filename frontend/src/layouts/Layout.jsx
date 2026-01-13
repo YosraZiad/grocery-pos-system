@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Outlet, useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useI18n } from '../context/I18nContext';
@@ -24,6 +24,13 @@ function Layout() {
   };
 
   const isActive = (path) => location.pathname === path;
+
+  // إغلاق القوائم المنسدلة عند تغيير الصفحة
+  useEffect(() => {
+    setSalesMenuOpen(false);
+    setManagementMenuOpen(false);
+    setReportsMenuOpen(false);
+  }, [location.pathname]);
 
   // Navigation Groups
   const navigationGroups = {
@@ -108,6 +115,7 @@ function Layout() {
                       <Link
                         key={item.path}
                         to={item.path}
+                        onClick={() => setSalesMenuOpen(false)}
                         className={`block px-4 py-2 text-sm transition-colors ${
                           isActive(item.path)
                             ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
@@ -147,6 +155,7 @@ function Layout() {
                       <Link
                         key={item.path}
                         to={item.path}
+                        onClick={() => setManagementMenuOpen(false)}
                         className={`block px-4 py-2 text-sm transition-colors ${
                           isActive(item.path)
                             ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
@@ -186,6 +195,7 @@ function Layout() {
                       <Link
                         key={item.path}
                         to={item.path}
+                        onClick={() => setReportsMenuOpen(false)}
                         className={`block px-4 py-2 text-sm transition-colors ${
                           isActive(item.path)
                             ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
