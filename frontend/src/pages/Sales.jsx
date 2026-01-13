@@ -88,40 +88,42 @@ function Sales() {
   });
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-          {t('salesScreenTitle')}
-        </h2>
-        <p className="text-gray-600 dark:text-gray-400">
-          {t('quickAndEasy')}
-        </p>
+    <div className="space-y-4">
+      {/* Header - Compact */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+            {t('salesScreenTitle')}
+          </h2>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+            {t('quickAndEasy')}
+          </p>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* البحث وإضافة المنتجات */}
-        <div className="lg:col-span-2 space-y-6">
-          <div className="card">
+        <div className="lg:col-span-5 space-y-4">
+          <div className="card p-6">
             <ProductSearch onSelectProduct={handleAddProduct} />
           </div>
 
-          {/* معلومات إضافية */}
-          <div className="card bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border-blue-200 dark:border-blue-800">
-            <h3 className="font-semibold text-blue-900 dark:text-blue-300 mb-3 flex items-center space-x-2 rtl:space-x-reverse">
+          {/* معلومات إضافية - Compact */}
+          <div className="card bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border-blue-200 dark:border-blue-800 p-4">
+            <h3 className="font-semibold text-blue-900 dark:text-blue-300 mb-2 flex items-center space-x-2 rtl:space-x-reverse text-sm">
               <span>💡</span>
               <span>{t('tips')}</span>
             </h3>
-            <ul className="text-sm text-blue-800 dark:text-blue-300 space-y-2">
-              <li>{t('tip1')}</li>
-              <li>{t('tip2')}</li>
-              <li>{t('tip3')}</li>
+            <ul className="text-xs text-blue-800 dark:text-blue-300 space-y-1">
+              <li>• {t('tip1')}</li>
+              <li>• {t('tip2')}</li>
+              <li>• {t('tip3')}</li>
             </ul>
           </div>
         </div>
 
-        {/* سلة المشتريات */}
-        <div className="lg:col-span-1">
+        {/* سلة المشتريات - أكبر مساحة */}
+        <div className="lg:col-span-7">
           <Cart
             items={cartItems}
             onUpdateQuantity={handleUpdateQuantity}
