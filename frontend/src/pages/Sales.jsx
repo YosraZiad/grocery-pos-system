@@ -89,10 +89,31 @@ function Sales() {
       navigate(`/sales/${data.data.id}/invoice`);
     },
     onError: (error) => {
-      const message = error.response?.data?.message || 
-        (error.response?.data?.errors ? Object.values(error.response.data.errors).flat().join(', ') : null) ||
-        t('errorCreatingSale') || 'Error creating sale';
-      toast.error(message, { duration: 5000 });
+      console.error('Sale creation error:', error);
+      
+      let message = t('errorCreatingSale') || 'Error creating sale';
+      
+      if (error.response) {
+        // Server responded with error
+        if (error.response.data?.message) {
+          message = error.response.data.message;
+        } else if (error.response.data?.errors) {
+          const errors = Object.values(error.response.data.errors).flat();
+          message = errors.join(', ');
+        } else if (error.response.data?.error) {
+          message = error.response.data.error;
+        } else {
+          message = `Server error: ${error.response.status} ${error.response.statusText}`;
+        }
+      } else if (error.request) {
+        // Request was made but no response received
+        message = t('networkError') || 'Network error. Please check your connection.';
+      } else {
+        // Something else happened
+        message = error.message || t('errorCreatingSale') || 'Error creating sale';
+      }
+      
+      toast.error(message, { duration: 6000 });
     },
   });
 

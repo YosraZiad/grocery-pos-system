@@ -164,9 +164,16 @@ class SaleController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
+            
+            // Log the error for debugging
+            \Log::error('Sale creation error: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'request' => $request->all(),
+            ]);
+            
             return response()->json([
-                'message' => 'Error creating sale',
-                'error' => $e->getMessage(),
+                'message' => 'Error creating sale: ' . $e->getMessage(),
+                'error' => config('app.debug') ? $e->getMessage() : 'An error occurred while creating the sale',
             ], 500);
         }
     }
