@@ -6,6 +6,7 @@ use App\Models\Product;
 use App\Http\Requests\StoreProductRequest;
 use App\Http\Requests\UpdateProductRequest;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
 
 class ProductController extends Controller
 {
@@ -119,8 +120,10 @@ class ProductController extends Controller
 
         $query = $request->q;
         $products = Product::with('category')
-            ->where('name', 'like', "%{$query}%")
-            ->orWhere('barcode', 'like', "%{$query}%")
+            ->where(function ($q) use ($query) {
+                $q->where('name', 'like', "%{$query}%")
+                  ->orWhere('barcode', 'like', "%{$query}%");
+            })
             ->limit(20)
             ->get();
 
