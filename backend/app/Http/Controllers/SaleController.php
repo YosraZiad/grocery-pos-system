@@ -9,6 +9,7 @@ use App\Models\InventoryTransaction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class SaleController extends Controller
 {
@@ -44,9 +45,29 @@ class SaleController extends Controller
      */
     public function store(Request $request)
     {
+        $tenantId = config('tenant_id');
+        
+        // Custom validation for products with tenant_id
         $validator = Validator::make($request->all(), [
             'items' => 'required|array|min:1',
-            'items.*.product_id' => 'required|exists:products,id',
+            'items.*.product_id' => [
+                'required',
+                function ($attribute, $value, $fail) use ($tenantId) {
+                    if ($tenantId) {
+                        $product = Product::where('id', $value)
+                            ->where('tenant_id', $tenantId)
+                            ->first();
+                        if (!$product) {
+                            $fail('The selected product does not exist or does not belong to your tenant.');
+                        }
+                    } else {
+                        $product = Product::find($value);
+                        if (!$product) {
+                            $fail('The selected product does not exist.');
+                        }
+                    }
+                },
+            ],
             'items.*.quantity' => 'required|integer|min:1',
             'discount' => 'nullable|numeric|min:0',
             'discount_type' => 'nullable|in:percentage,fixed',
@@ -62,7 +83,6 @@ class SaleController extends Controller
 
         DB::beginTransaction();
         try {
-            $tenantId = config('tenant_id');
             $userId = $request->user()->id;
             
             if (!$tenantId) {
