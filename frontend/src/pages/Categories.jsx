@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useI18n } from '../context/I18nContext';
 import toast from 'react-hot-toast';
+import ConfirmationModal from '../components/ConfirmationModal';
 import api from '../services/api';
 
 function Categories() {
@@ -9,6 +10,8 @@ function Categories() {
   const [description, setDescription] = useState('');
   const [editingId, setEditingId] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [categoryToDelete, setCategoryToDelete] = useState(null);
   const queryClient = useQueryClient();
   const { t } = useI18n();
 
@@ -107,22 +110,30 @@ function Categories() {
       return;
     }
     
-    // استخدام confirmation dialog
-    if (window.confirm(t('confirmDeleteCategory') || 'Are you sure you want to delete this category?')) {
-      toast.promise(
-        new Promise((resolve, reject) => {
-          deleteMutation.mutate(id, {
-            onSuccess: () => resolve(),
-            onError: (error) => reject(error),
-          });
-        }),
-        {
-          loading: t('deletingCategory') || 'Deleting category...',
-          success: t('categoryDeletedSuccessfully') || 'Category deleted successfully',
-          error: (err) => err.response?.data?.message || t('errorDeletingCategory') || 'Error deleting category',
-        }
-      );
-    }
+    // فتح modal التأكيد
+    setCategoryToDelete(id);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = () => {
+    if (!categoryToDelete) return;
+    
+    toast.promise(
+      new Promise((resolve, reject) => {
+        deleteMutation.mutate(categoryToDelete, {
+          onSuccess: () => resolve(),
+          onError: (error) => reject(error),
+        });
+      }),
+      {
+        loading: t('deletingCategory') || 'Deleting category...',
+        success: t('categoryDeletedSuccessfully') || 'Category deleted successfully',
+        error: (err) => err.response?.data?.message || t('errorDeletingCategory') || 'Error deleting category',
+      }
+    );
+    
+    setShowDeleteModal(false);
+    setCategoryToDelete(null);
   };
 
   const handleCloseModal = () => {
@@ -275,6 +286,21 @@ function Categories() {
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setCategoryToDelete(null);
+        }}
+        onConfirm={confirmDelete}
+        title={t('confirmDelete') || 'Confirm Delete'}
+        message={t('confirmDeleteCategory') || 'Are you sure you want to delete this category?'}
+        confirmText={t('delete') || 'Delete'}
+        cancelText={t('cancel') || 'Cancel'}
+        type="danger"
+      />
     </div>
   );
 }
