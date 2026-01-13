@@ -48,10 +48,10 @@ Route::middleware('auth:sanctum')->group(function () {
     // Products
     Route::get('/products', [ProductController::class, 'index'])->middleware('permission:view products');
     Route::post('/products', [ProductController::class, 'store'])->middleware('permission:create products');
+    Route::get('/products/search', [ProductController::class, 'search'])->middleware('permission:view products'); // يجب أن يكون قبل {id}
     Route::get('/products/{id}', [ProductController::class, 'show'])->middleware('permission:view products');
     Route::put('/products/{id}', [ProductController::class, 'update'])->middleware('permission:edit products');
     Route::delete('/products/{id}', [ProductController::class, 'destroy'])->middleware('permission:delete products');
-    Route::get('/products/search', [ProductController::class, 'search'])->middleware('permission:view products');
     
     // Sales
     Route::get('/sales', [SaleController::class, 'index'])->middleware('permission:view sales');
