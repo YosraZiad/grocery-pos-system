@@ -2,9 +2,14 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class SaleItem extends BaseModel
+/**
+ * SaleItem Model
+ * لا يحتاج tenant_id لأنه مرتبط بـ Sale الذي يحتوي على tenant_id
+ */
+class SaleItem extends Model
 {
     protected $fillable = [
         'sale_id',
