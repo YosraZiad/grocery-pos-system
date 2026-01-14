@@ -2,14 +2,20 @@ import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useI18n } from '../context/I18nContext';
+import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 
 /**
- * صفحة الرئيسية - Dashboard حديث واحترافي
+ * صفحة الرئيسية - Dashboard مخصص حسب نوع المستخدم
  */
 function Home() {
   const { t } = useI18n();
+  const { user } = useAuth();
   const [period, setPeriod] = useState('today'); // today, week, month, year
+
+  // التحقق من نوع المستخدم
+  const isAdmin = user?.roles?.some(role => role.name === 'admin');
+  const isCashier = user?.roles?.some(role => role.name === 'cashier');
 
   // جلب إحصائيات Dashboard
   const { data: dashboardData, isLoading } = useQuery({
@@ -64,16 +70,180 @@ function Home() {
     );
   }
 
+  // Dashboard للـ Admin
+  if (isAdmin) {
+    return (
+      <div className="space-y-6">
+        {/* Header */}
+        <div>
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+            {t('adminDashboard')}
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400">
+            {t('adminDashboardDesc')}
+          </p>
+        </div>
+
+        {/* Admin Quick Actions */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Link
+            to="/users"
+            className="card bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 border-purple-200 dark:border-purple-800 hover:shadow-lg transition-all duration-200"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                  {t('usersManagement')}
+                </p>
+                <p className="text-xl font-bold text-gray-900 dark:text-white">
+                  {t('manageUsers')}
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center text-2xl">
+                👥
+              </div>
+            </div>
+          </Link>
+
+          <Link
+            to="/roles"
+            className="card bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-900/20 dark:to-indigo-800/20 border-indigo-200 dark:border-indigo-800 hover:shadow-lg transition-all duration-200"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                  {t('rolesAndPermissions')}
+                </p>
+                <p className="text-xl font-bold text-gray-900 dark:text-white">
+                  {t('manageRoles')}
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-indigo-500 rounded-lg flex items-center justify-center text-2xl">
+                🔐
+              </div>
+            </div>
+          </Link>
+
+          <Link
+            to="/settings"
+            className="card bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900/20 dark:to-gray-800/20 border-gray-200 dark:border-gray-800 hover:shadow-lg transition-all duration-200"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                  {t('settings')}
+                </p>
+                <p className="text-xl font-bold text-gray-900 dark:text-white">
+                  {t('systemSettings')}
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-gray-500 rounded-lg flex items-center justify-center text-2xl">
+                ⚙️
+              </div>
+            </div>
+          </Link>
+
+          <Link
+            to="/reports"
+            className="card bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 border-orange-200 dark:border-orange-800 hover:shadow-lg transition-all duration-200"
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                  {t('reports')}
+                </p>
+                <p className="text-xl font-bold text-gray-900 dark:text-white">
+                  {t('viewReports')}
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center text-2xl">
+                📊
+              </div>
+            </div>
+          </Link>
+        </div>
+
+        {/* Admin Statistics */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="card bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 border-green-200 dark:border-green-800">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                  {t('totalSales')}
+                </p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                  {(Number(sales.total) || 0).toFixed(2)} ر.س
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center text-2xl">
+                💰
+              </div>
+            </div>
+          </div>
+
+          <div className="card bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border-blue-200 dark:border-blue-800">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                  {t('profit')}
+                </p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                  {(Number(stats.profit) || 0).toFixed(2)} ر.س
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center text-2xl">
+                📈
+              </div>
+            </div>
+          </div>
+
+          <div className="card bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 border-red-200 dark:border-red-800">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                  {t('expenses')}
+                </p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                  {(Number(expenses.total) || 0).toFixed(2)} ر.س
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-red-500 rounded-lg flex items-center justify-center text-2xl">
+                💸
+              </div>
+            </div>
+          </div>
+
+          <div className="card bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-800/20 border-yellow-200 dark:border-yellow-800">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
+                  {t('itemsSold')}
+                </p>
+                <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                  {stats.items_sold || 0}
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-yellow-500 rounded-lg flex items-center justify-center text-2xl">
+                📦
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Dashboard للـ Cashier
   return (
     <div className="space-y-6">
       {/* Header with Period Selector */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            {t('dashboard')}
+            {t('cashierDashboard')}
           </h2>
           <p className="text-gray-600 dark:text-gray-400">
-            {t('dashboardDesc')}
+            {t('cashierDashboardDesc')}
           </p>
         </div>
         <div className="flex items-center space-x-2 rtl:space-x-reverse">

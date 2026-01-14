@@ -17,6 +17,8 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SettingController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\BackupController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\RoleController;
 
 /*
 |--------------------------------------------------------------------------
@@ -128,6 +130,22 @@ Route::middleware('auth:sanctum')->group(function () {
     
     // Dashboard
     Route::get('/dashboard/stats', [DashboardController::class, 'stats']);
+    
+    // Users Management (Admin only)
+    Route::get('/users', [UserController::class, 'index'])->middleware('permission:view users');
+    Route::post('/users', [UserController::class, 'store'])->middleware('permission:create users');
+    Route::get('/users/{id}', [UserController::class, 'show'])->middleware('permission:view users');
+    Route::put('/users/{id}', [UserController::class, 'update'])->middleware('permission:edit users');
+    Route::put('/users/{id}/password', [UserController::class, 'updatePassword'])->middleware('auth:sanctum'); // يمكن للمستخدم تحديث كلمة مروره
+    Route::delete('/users/{id}', [UserController::class, 'destroy'])->middleware('permission:delete users');
+    
+    // Roles & Permissions Management (Admin only)
+    Route::get('/roles', [RoleController::class, 'index'])->middleware('permission:view roles');
+    Route::post('/roles', [RoleController::class, 'store'])->middleware('permission:create roles');
+    Route::get('/roles/{id}', [RoleController::class, 'show'])->middleware('permission:view roles');
+    Route::put('/roles/{id}', [RoleController::class, 'update'])->middleware('permission:edit roles');
+    Route::delete('/roles/{id}', [RoleController::class, 'destroy'])->middleware('permission:delete roles');
+    Route::get('/permissions', [RoleController::class, 'permissions'])->middleware('permission:view roles');
     
     // Backup
     Route::post('/backup/create', [BackupController::class, 'create'])->middleware('permission:edit settings');

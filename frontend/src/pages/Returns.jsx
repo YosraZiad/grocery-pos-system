@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useI18n } from '../context/I18nContext';
+import { toast } from 'react-hot-toast';
+import ConfirmationModal from '../components/ConfirmationModal';
 import api from '../services/api';
 
 function Returns() {
@@ -11,6 +13,9 @@ function Returns() {
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
   const [showModal, setShowModal] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [confirmAction, setConfirmAction] = useState(null);
+  const [confirmStatus, setConfirmStatus] = useState(null);
   const [formData, setFormData] = useState({
     type: 'customer',
     sale_id: '',
@@ -75,10 +80,10 @@ function Returns() {
         amount: 0,
         auto_approve: false,
       });
-      alert(t('returnCreatedSuccessfully'));
+      toast.success(t('returnCreatedSuccessfully'));
     },
     onError: (error) => {
-      alert(error.response?.data?.message || t('error'));
+      toast.error(error.response?.data?.message || t('error'));
     },
   });
 
@@ -92,10 +97,10 @@ function Returns() {
       queryClient.invalidateQueries(['returns']);
       queryClient.invalidateQueries(['inventory']);
       queryClient.invalidateQueries(['products']);
-      alert(t('returnUpdatedSuccessfully'));
+      toast.success(t('returnUpdatedSuccessfully'));
     },
     onError: (error) => {
-      alert(error.response?.data?.message || t('error'));
+      toast.error(error.response?.data?.message || t('error'));
     },
   });
 
@@ -105,9 +110,9 @@ function Returns() {
   };
 
   const handleUpdateStatus = (id, status) => {
-    if (window.confirm(t(`confirm${status.charAt(0).toUpperCase() + status.slice(1)}Return`))) {
-      updateStatusMutation.mutate({ id, status });
-    }
+    setConfirmAction(() => () => updateStatusMutation.mutate({ id, status }));
+    setConfirmStatus(status);
+    setShowConfirmModal(true);
   };
 
   const handleProductChange = (productId) => {
@@ -539,6 +544,33 @@ function Returns() {
           </div>
         </div>
       )}
+
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showConfirmModal}
+        onClose={() => {
+          setShowConfirmModal(false);
+          setConfirmAction(null);
+          setConfirmStatus(null);
+        }}
+        onConfirm={() => {
+          if (confirmAction) {
+            confirmAction();
+          }
+          setShowConfirmModal(false);
+          setConfirmAction(null);
+          setConfirmStatus(null);
+        }}
+        title={t('confirmAction')}
+        message={confirmStatus === 'approved' 
+          ? t('confirmApprovedReturn')
+          : confirmStatus === 'rejected'
+          ? t('confirmRejectedReturn')
+          : t('areYouSure')}
+        confirmText={t('confirm')}
+        cancelText={t('cancel')}
+        type="warning"
+      />
     </div>
   );
 }

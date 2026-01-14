@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { useI18n } from '../context/I18nContext';
+import { toast } from 'react-hot-toast';
+import ConfirmationModal from '../components/ConfirmationModal';
 import api from '../services/api';
 
 function SalesList() {
@@ -12,6 +14,8 @@ function SalesList() {
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
   const [page, setPage] = useState(1);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [saleToCancel, setSaleToCancel] = useState(null);
 
   // جلب المبيعات
   const { data: salesData, isLoading } = useQuery({
@@ -38,17 +42,16 @@ function SalesList() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['sales']);
-      alert(t('saleCancelledSuccessfully'));
+      toast.success(t('saleCancelledSuccessfully'));
     },
     onError: (error) => {
-      alert(error.response?.data?.message || t('error'));
+      toast.error(error.response?.data?.message || t('error'));
     },
   });
 
   const handleCancelSale = (saleId) => {
-    if (window.confirm(t('confirmCancelSale'))) {
-      cancelSaleMutation.mutate(saleId);
-    }
+    setSaleToCancel(saleId);
+    setShowCancelModal(true);
   };
 
   const formatDate = (dateString) => {
@@ -304,6 +307,27 @@ function SalesList() {
           </div>
         )}
       </div>
+
+      {/* Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showCancelModal}
+        onClose={() => {
+          setShowCancelModal(false);
+          setSaleToCancel(null);
+        }}
+        onConfirm={() => {
+          if (saleToCancel) {
+            cancelSaleMutation.mutate(saleToCancel);
+          }
+          setShowCancelModal(false);
+          setSaleToCancel(null);
+        }}
+        title={t('confirmAction')}
+        message={t('confirmCancelSale')}
+        confirmText={t('confirm')}
+        cancelText={t('cancel')}
+        type="warning"
+      />
     </div>
   );
 }

@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useI18n } from '../context/I18nContext';
+import { toast } from 'react-hot-toast';
+import ConfirmationModal from '../components/ConfirmationModal';
 import api from '../services/api';
 
 function Expenses() {
@@ -15,6 +17,10 @@ function Expenses() {
   const [showSummary, setShowSummary] = useState(false);
   const [editingExpense, setEditingExpense] = useState(null);
   const [editingCategory, setEditingCategory] = useState(null);
+  const [showDeleteExpenseModal, setShowDeleteExpenseModal] = useState(false);
+  const [showDeleteCategoryModal, setShowDeleteCategoryModal] = useState(false);
+  const [expenseToDelete, setExpenseToDelete] = useState(null);
+  const [categoryToDelete, setCategoryToDelete] = useState(null);
   const [expenseFormData, setExpenseFormData] = useState({
     category_id: '',
     amount: 0,
@@ -79,10 +85,10 @@ function Expenses() {
         date: new Date().toISOString().split('T')[0],
       });
       setEditingExpense(null);
-      alert(t('expenseCreatedSuccessfully'));
+      toast.success(t('expenseCreatedSuccessfully'));
     },
     onError: (error) => {
-      alert(error.response?.data?.message || t('error'));
+      toast.error(error.response?.data?.message || t('error'));
     },
   });
 
@@ -103,10 +109,10 @@ function Expenses() {
         date: new Date().toISOString().split('T')[0],
       });
       setEditingExpense(null);
-      alert(t('expenseUpdatedSuccessfully'));
+      toast.success(t('expenseUpdatedSuccessfully'));
     },
     onError: (error) => {
-      alert(error.response?.data?.message || t('error'));
+      toast.error(error.response?.data?.message || t('error'));
     },
   });
 
@@ -119,10 +125,10 @@ function Expenses() {
     onSuccess: () => {
       queryClient.invalidateQueries(['expenses']);
       queryClient.invalidateQueries(['expenses-summary']);
-      alert(t('expenseDeletedSuccessfully'));
+      toast.success(t('expenseDeletedSuccessfully'));
     },
     onError: (error) => {
-      alert(error.response?.data?.message || t('error'));
+      toast.error(error.response?.data?.message || t('error'));
     },
   });
 
@@ -137,10 +143,10 @@ function Expenses() {
       setShowCategoryModal(false);
       setCategoryFormData({ name: '', description: '' });
       setEditingCategory(null);
-      alert(t('categoryCreatedSuccessfully'));
+      toast.success(t('categoryCreatedSuccessfully'));
     },
     onError: (error) => {
-      alert(error.response?.data?.message || t('error'));
+      toast.error(error.response?.data?.message || t('error'));
     },
   });
 
@@ -155,10 +161,10 @@ function Expenses() {
       setShowCategoryModal(false);
       setCategoryFormData({ name: '', description: '' });
       setEditingCategory(null);
-      alert(t('categoryUpdatedSuccessfully'));
+      toast.success(t('categoryUpdatedSuccessfully'));
     },
     onError: (error) => {
-      alert(error.response?.data?.message || t('error'));
+      toast.error(error.response?.data?.message || t('error'));
     },
   });
 
@@ -170,10 +176,10 @@ function Expenses() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['expense-categories']);
-      alert(t('categoryDeletedSuccessfully'));
+      toast.success(t('categoryDeletedSuccessfully'));
     },
     onError: (error) => {
-      alert(error.response?.data?.message || t('error'));
+      toast.error(error.response?.data?.message || t('error'));
     },
   });
 
@@ -216,15 +222,13 @@ function Expenses() {
   };
 
   const handleDeleteExpense = (id) => {
-    if (window.confirm(t('confirmDeleteExpense'))) {
-      deleteExpenseMutation.mutate(id);
-    }
+    setExpenseToDelete(id);
+    setShowDeleteExpenseModal(true);
   };
 
   const handleDeleteCategory = (id) => {
-    if (window.confirm(t('confirmDeleteCategory'))) {
-      deleteCategoryMutation.mutate(id);
-    }
+    setCategoryToDelete(id);
+    setShowDeleteCategoryModal(true);
   };
 
   const formatDate = (dateString) => {
@@ -680,6 +684,47 @@ function Expenses() {
           </div>
         </div>
       )}
+
+      {/* Confirmation Modals */}
+      <ConfirmationModal
+        isOpen={showDeleteExpenseModal}
+        onClose={() => {
+          setShowDeleteExpenseModal(false);
+          setExpenseToDelete(null);
+        }}
+        onConfirm={() => {
+          if (expenseToDelete) {
+            deleteExpenseMutation.mutate(expenseToDelete);
+          }
+          setShowDeleteExpenseModal(false);
+          setExpenseToDelete(null);
+        }}
+        title={t('confirmAction')}
+        message={t('confirmDeleteExpense')}
+        confirmText={t('delete')}
+        cancelText={t('cancel')}
+        type="danger"
+      />
+
+      <ConfirmationModal
+        isOpen={showDeleteCategoryModal}
+        onClose={() => {
+          setShowDeleteCategoryModal(false);
+          setCategoryToDelete(null);
+        }}
+        onConfirm={() => {
+          if (categoryToDelete) {
+            deleteCategoryMutation.mutate(categoryToDelete);
+          }
+          setShowDeleteCategoryModal(false);
+          setCategoryToDelete(null);
+        }}
+        title={t('confirmAction')}
+        message={t('confirmDeleteCategory')}
+        confirmText={t('delete')}
+        cancelText={t('cancel')}
+        type="danger"
+      />
     </div>
   );
 }

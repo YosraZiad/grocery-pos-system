@@ -17,6 +17,7 @@ function Layout() {
   const [salesMenuOpen, setSalesMenuOpen] = useState(false);
   const [managementMenuOpen, setManagementMenuOpen] = useState(false);
   const [reportsMenuOpen, setReportsMenuOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   const handleLogout = async () => {
     await logout();
@@ -30,7 +31,23 @@ function Layout() {
     setSalesMenuOpen(false);
     setManagementMenuOpen(false);
     setReportsMenuOpen(false);
+    setUserMenuOpen(false);
   }, [location.pathname]);
+
+  // إغلاق قائمة المستخدم عند الضغط خارجها
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (userMenuOpen && !event.target.closest('.user-menu-container')) {
+        setUserMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [userMenuOpen]);
+
+  // التحقق من نوع المستخدم
+  const isAdmin = user?.roles?.some(role => role.name === 'admin');
+  const isCashier = user?.roles?.some(role => role.name === 'cashier');
 
   // Navigation Groups
   const navigationGroups = {
@@ -39,6 +56,10 @@ function Layout() {
       { path: '/categories', label: t('categories'), icon: '📁' },
       { path: '/products', label: t('products'), icon: '📦' },
     ],
+    admin: isAdmin ? [
+      { path: '/users', label: t('usersManagement'), icon: '👥' },
+      { path: '/roles', label: t('rolesAndPermissions'), icon: '🔐' },
+    ] : [],
     sales: [
       { path: '/sales', label: t('sales'), icon: '💰' },
       { path: '/sales-list', label: t('salesList'), icon: '📋' },
@@ -210,6 +231,48 @@ function Layout() {
                 )}
               </div>
 
+              {/* Admin Dropdown */}
+              {isAdmin && navigationGroups.admin.length > 0 && (
+                <div className="relative group">
+                  <button
+                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center space-x-1 rtl:space-x-reverse ${
+                      navigationGroups.admin.some(item => isActive(item.path))
+                        ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300'
+                        : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                    }`}
+                    onMouseEnter={() => setManagementMenuOpen(true)}
+                    onMouseLeave={() => setManagementMenuOpen(false)}
+                  >
+                    <span>👑</span>
+                    <span>{t('admin')}</span>
+                    <span>▼</span>
+                  </button>
+                  {managementMenuOpen && (
+                    <div
+                      className="absolute top-full left-0 rtl:left-auto rtl:right-0 mt-1 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50"
+                      onMouseEnter={() => setManagementMenuOpen(true)}
+                      onMouseLeave={() => setManagementMenuOpen(false)}
+                    >
+                      {navigationGroups.admin.map((item) => (
+                        <Link
+                          key={item.path}
+                          to={item.path}
+                          onClick={() => setManagementMenuOpen(false)}
+                          className={`block px-4 py-2 text-sm transition-colors ${
+                            isActive(item.path)
+                              ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
+                              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                          }`}
+                        >
+                          <span className="mr-2 rtl:ml-2">{item.icon}</span>
+                          {item.label}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Settings */}
               <Link
                 to="/settings"
@@ -252,21 +315,109 @@ function Layout() {
                 {theme === 'light' ? '🌙' : '☀️'}
               </button>
 
-              {/* User Info - Compact */}
-              <div className="hidden md:flex items-center space-x-2 rtl:space-x-reverse">
-                <div className="w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">
-                  {user?.name?.charAt(0)?.toUpperCase() || 'U'}
-                </div>
+              {/* User Menu - Dropdown */}
+              <div className="hidden md:flex items-center user-menu-container relative">
                 <button
-                  onClick={handleLogout}
-                  className="px-3 py-1 text-sm font-medium text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-200"
+                  onClick={() => setUserMenuOpen(!userMenuOpen)}
+                  className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-700 rounded-full flex items-center justify-center text-white text-sm font-semibold hover:from-primary-600 hover:to-primary-800 transition-all duration-200 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+                  title={user?.name || 'User'}
                 >
-                  {t('logout')}
+                  {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+                </button>
+
+                {/* User Dropdown Menu */}
+                {userMenuOpen && (
+                  <div className="absolute top-full left-0 rtl:left-auto rtl:right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 py-2 z-50">
+                    {/* User Info */}
+                    <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+                      <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                        {user?.name || 'User'}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                        {user?.email || ''}
+                      </p>
+                    </div>
+
+                    {/* Menu Items */}
+                    <div className="py-1">
+                      <Link
+                        to="/profile"
+                        onClick={() => setUserMenuOpen(false)}
+                        className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                      >
+                        <span className="mr-3 rtl:ml-3">👤</span>
+                        <span>{t('profile') || 'Profile'}</span>
+                      </Link>
+                      <button
+                        onClick={() => {
+                          setUserMenuOpen(false);
+                          handleLogout();
+                        }}
+                        className="w-full flex items-center px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-right rtl:text-left"
+                      >
+                        <span className="mr-3 rtl:ml-3">🚪</span>
+                        <span>{t('logout')}</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Mobile User Menu Button */}
+              <div className="md:hidden user-menu-container relative">
+                <button
+                  onClick={() => setUserMenuOpen(!userMenuOpen)}
+                  className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-700 rounded-full flex items-center justify-center text-white text-sm font-semibold"
+                >
+                  {user?.name?.charAt(0)?.toUpperCase() || 'U'}
                 </button>
               </div>
             </div>
           </div>
         </div>
+
+        {/* Mobile User Dropdown Menu */}
+        {userMenuOpen && (
+          <div className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-50" onClick={() => setUserMenuOpen(false)}>
+            <div className="absolute top-16 right-4 rtl:right-auto rtl:left-4 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 py-2" onClick={(e) => e.stopPropagation()}>
+              {/* User Info */}
+              <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+                <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                  {user?.name || 'User'}
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                  {user?.email || ''}
+                </p>
+              </div>
+
+              {/* Menu Items */}
+              <div className="py-1">
+                <Link
+                  to="/profile"
+                  onClick={() => {
+                    setUserMenuOpen(false);
+                    setMobileMenuOpen(false);
+                  }}
+                  className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                >
+                  <span className="mr-3 rtl:ml-3">👤</span>
+                  <span>{t('profile') || 'Profile'}</span>
+                </Link>
+                <button
+                  onClick={() => {
+                    setUserMenuOpen(false);
+                    setMobileMenuOpen(false);
+                    handleLogout();
+                  }}
+                  className="w-full flex items-center px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-right rtl:text-left"
+                >
+                  <span className="mr-3 rtl:ml-3">🚪</span>
+                  <span>{t('logout')}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
@@ -351,6 +502,30 @@ function Layout() {
                 ))}
               </div>
 
+              {isAdmin && navigationGroups.admin.length > 0 && (
+                <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
+                  <p className="px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
+                    {t('admin')}
+                  </p>
+                  {navigationGroups.admin.map((item) => (
+                    <Link
+                      key={item.path}
+                      to={item.path}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={`block px-3 py-2 rounded-lg text-sm font-medium ${
+                        isActive(item.path)
+                          ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300'
+                          : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                      }`}
+                    >
+                      <span className="mr-2 rtl:ml-2">{item.icon}</span>
+                      {item.label}
+                    </Link>
+                  ))}
+                </div>
+              )}
+
+              {/* Settings */}
               <Link
                 to="/settings"
                 onClick={() => setMobileMenuOpen(false)}

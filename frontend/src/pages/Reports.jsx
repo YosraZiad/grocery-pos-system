@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useI18n } from '../context/I18nContext';
+import { toast } from 'react-hot-toast';
 import api from '../services/api';
 
 function Reports() {
@@ -127,8 +128,9 @@ function Reports() {
       document.body.appendChild(link);
       link.click();
       link.remove();
+      toast.success(t('exportPDF') || 'PDF exported successfully');
     } catch (error) {
-      alert(t('exportError') || 'Error exporting PDF');
+      toast.error(t('exportError') || 'Error exporting PDF');
     }
   };
 

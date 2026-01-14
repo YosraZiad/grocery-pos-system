@@ -1,148 +1,160 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useI18n } from '../context/I18nContext';
+import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import ConfirmationModal from '../components/ConfirmationModal';
 import api from '../services/api';
 
-function Suppliers() {
+function Users() {
   const { t } = useI18n();
+  const { user: currentUser } = useAuth();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [supplierToDelete, setSupplierToDelete] = useState(null);
-  const [editingSupplier, setEditingSupplier] = useState(null);
+  const [userToDelete, setUserToDelete] = useState(null);
+  const [editingUser, setEditingUser] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
-    phone: '',
     email: '',
-    address: '',
+    password: '',
+    role: 'cashier',
   });
 
-  // جلب الموردين
-  const { data: suppliersData, isLoading } = useQuery({
-    queryKey: ['suppliers', search],
+  // جلب المستخدمين
+  const { data: usersData, isLoading } = useQuery({
+    queryKey: ['users', search],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (search) params.append('search', search);
-      const response = await api.get(`/suppliers?${params.toString()}`);
+      const response = await api.get(`/users?${params.toString()}`);
       return response.data;
     },
   });
 
-  // إضافة مورد
+  // جلب الرول
+  const { data: rolesData } = useQuery({
+    queryKey: ['roles'],
+    queryFn: async () => {
+      const response = await api.get('/roles');
+      return response.data.data;
+    },
+  });
+
+  // إضافة مستخدم
   const createMutation = useMutation({
     mutationFn: async (data) => {
-      const response = await api.post('/suppliers', data);
+      const response = await api.post('/users', data);
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['suppliers']);
+      queryClient.invalidateQueries(['users']);
       setShowModal(false);
-      setFormData({ name: '', phone: '', email: '', address: '' });
-      setEditingSupplier(null);
-      toast.success(t('supplierCreatedSuccessfully') || 'Supplier created successfully');
+      setFormData({ name: '', email: '', password: '', role: 'cashier' });
+      setEditingUser(null);
+      toast.success(t('userCreatedSuccessfully') || 'User created successfully');
     },
     onError: (error) => {
       const message = error.response?.data?.message || 
         (error.response?.data?.errors ? Object.values(error.response.data.errors).flat().join(', ') : null) ||
-        t('errorCreatingSupplier') || 'Error creating supplier';
+        t('errorCreatingUser') || 'Error creating user';
       toast.error(message);
     },
   });
 
-  // تحديث مورد
+  // تحديث مستخدم
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }) => {
-      const response = await api.put(`/suppliers/${id}`, data);
+      const response = await api.put(`/users/${id}`, data);
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['suppliers']);
+      queryClient.invalidateQueries(['users']);
       setShowModal(false);
-      setFormData({ name: '', phone: '', email: '', address: '' });
-      setEditingSupplier(null);
-      toast.success(t('supplierUpdatedSuccessfully') || 'Supplier updated successfully');
+      setFormData({ name: '', email: '', password: '', role: 'cashier' });
+      setEditingUser(null);
+      toast.success(t('userUpdatedSuccessfully') || 'User updated successfully');
     },
     onError: (error) => {
       const message = error.response?.data?.message || 
         (error.response?.data?.errors ? Object.values(error.response.data.errors).flat().join(', ') : null) ||
-        t('errorUpdatingSupplier') || 'Error updating supplier';
+        t('errorUpdatingUser') || 'Error updating user';
       toast.error(message);
     },
   });
 
-  // حذف مورد
+  // حذف مستخدم
   const deleteMutation = useMutation({
     mutationFn: async (id) => {
-      const response = await api.delete(`/suppliers/${id}`);
+      const response = await api.delete(`/users/${id}`);
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['suppliers']);
-      toast.success(t('supplierDeletedSuccessfully') || 'Supplier deleted successfully');
+      queryClient.invalidateQueries(['users']);
+      toast.success(t('userDeletedSuccessfully') || 'User deleted successfully');
     },
     onError: (error) => {
-      const message = error.response?.data?.message || t('errorDeletingSupplier') || 'Error deleting supplier';
+      const message = error.response?.data?.message || t('errorDeletingUser') || 'Error deleting user';
       toast.error(message);
     },
   });
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (editingSupplier) {
-      updateMutation.mutate({ id: editingSupplier.id, data: formData });
+    const submitData = { ...formData };
+    if (!submitData.password) {
+      delete submitData.password;
+    }
+    
+    if (editingUser) {
+      updateMutation.mutate({ id: editingUser.id, data: submitData });
     } else {
-      createMutation.mutate(formData);
+      createMutation.mutate(submitData);
     }
   };
 
-  const handleEdit = (supplier) => {
-    setEditingSupplier(supplier);
+  const handleEdit = (user) => {
+    setEditingUser(user);
     setFormData({
-      name: supplier.name,
-      phone: supplier.phone || '',
-      email: supplier.email || '',
-      address: supplier.address || '',
+      name: user.name,
+      email: user.email,
+      password: '',
+      role: user.roles?.[0]?.name || 'cashier',
     });
     setShowModal(true);
   };
 
   const handleDelete = (id) => {
-    setSupplierToDelete(id);
+    setUserToDelete(id);
     setShowDeleteModal(true);
   };
 
   const confirmDelete = () => {
-    if (!supplierToDelete) return;
-
+    if (!userToDelete) return;
+    
     toast.promise(
       new Promise((resolve, reject) => {
-        deleteMutation.mutate(supplierToDelete, {
+        deleteMutation.mutate(userToDelete, {
           onSuccess: () => resolve(),
           onError: (error) => reject(error),
         });
       }),
       {
-        loading: t('deletingSupplier') || 'Deleting supplier...',
-        success: t('supplierDeletedSuccessfully') || 'Supplier deleted successfully',
-        error: (err) => err.response?.data?.message || t('errorDeletingSupplier') || 'Error deleting supplier',
+        loading: t('deletingUser') || 'Deleting user...',
+        success: t('userDeletedSuccessfully') || 'User deleted successfully',
+        error: (err) => err.response?.data?.message || t('errorDeletingUser') || 'Error deleting user',
       }
     );
-
+    
     setShowDeleteModal(false);
-    setSupplierToDelete(null);
+    setUserToDelete(null);
   };
 
   const handleCloseModal = () => {
     setShowModal(false);
-    setEditingSupplier(null);
-    setFormData({ name: '', phone: '', email: '', address: '' });
-  };
-
-  const formatCurrency = (amount) => {
-    return `${parseFloat(amount).toFixed(2)} ر.س`;
+    setEditingUser(null);
+    setFormData({ name: '', email: '', password: '', role: 'cashier' });
   };
 
   if (isLoading) {
@@ -156,7 +168,7 @@ function Suppliers() {
     );
   }
 
-  const suppliers = suppliersData?.data || [];
+  const users = usersData?.data || [];
 
   return (
     <div className="space-y-6">
@@ -164,10 +176,10 @@ function Suppliers() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            {t('suppliersManagement')}
+            {t('usersManagement')}
           </h2>
           <p className="text-gray-600 dark:text-gray-400">
-            {t('manageSuppliers')}
+            {t('manageUsersAndRoles')}
           </p>
         </div>
         <button
@@ -175,7 +187,7 @@ function Suppliers() {
           className="btn-primary flex items-center space-x-2 rtl:space-x-reverse"
         >
           <span>+</span>
-          <span>{t('addSupplier')}</span>
+          <span>{t('addUser')}</span>
         </button>
       </div>
 
@@ -185,12 +197,12 @@ function Suppliers() {
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder={t('searchSuppliers')}
+          placeholder={t('searchUsers')}
           className="input"
         />
       </div>
 
-      {/* Suppliers Table */}
+      {/* Users Table */}
       <div className="card p-0 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -200,19 +212,13 @@ function Suppliers() {
                   {t('name')}
                 </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  {t('phone')}
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   {t('email')}
                 </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  {t('address')}
+                  {t('role')}
                 </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  {t('totalBalance')}
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  {t('invoicesCount')}
+                  {t('createdAt')}
                 </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                   {t('actions')}
@@ -220,71 +226,68 @@ function Suppliers() {
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
-              {suppliers.length === 0 ? (
+              {users.length === 0 ? (
                 <tr>
-                  <td colSpan="7" className="px-6 py-12 text-center">
+                  <td colSpan="5" className="px-6 py-12 text-center">
                     <div className="text-gray-500 dark:text-gray-400">
-                      <div className="text-4xl mb-4">🏪</div>
-                      <p className="text-lg">{t('noSuppliersFound')}</p>
+                      <div className="text-4xl mb-4">👥</div>
+                      <p className="text-lg">{t('noUsersFound')}</p>
                     </div>
                   </td>
                 </tr>
               ) : (
-                suppliers.map((supplier) => (
+                users.map((user) => (
                   <tr
-                    key={supplier.id}
+                    key={user.id}
                     className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-150"
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900 dark:text-white">
-                        {supplier.name}
+                      <div className="flex items-center">
+                        <div className="w-10 h-10 bg-primary-500 rounded-full flex items-center justify-center text-white font-semibold mr-3 rtl:mr-0 rtl:ml-3">
+                          {user.name.charAt(0).toUpperCase()}
+                        </div>
+                        <div className="text-sm font-medium text-gray-900 dark:text-white">
+                          {user.name}
+                        </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-600 dark:text-gray-400">
-                        {supplier.phone || '-'}
+                        {user.email}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-600 dark:text-gray-400">
-                        {supplier.email || '-'}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm text-gray-600 dark:text-gray-400 max-w-xs truncate">
-                        {supplier.address || '-'}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className={`text-sm font-semibold ${
-                        (supplier.total_balance || 0) > 0 
-                          ? 'text-red-600 dark:text-red-400' 
-                          : 'text-green-600 dark:text-green-400'
+                      <span className={`px-3 py-1 text-xs font-medium rounded-full ${
+                        user.roles?.[0]?.name === 'admin'
+                          ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'
+                          : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
                       }`}>
-                        {formatCurrency(supplier.total_balance || 0)}
-                      </div>
+                        {user.roles?.[0]?.name || '-'}
+                      </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-600 dark:text-gray-400">
-                        {supplier.purchase_invoices_count || 0}
+                        {new Date(user.created_at).toLocaleDateString()}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex items-center space-x-2 rtl:space-x-reverse">
                         <button
-                          onClick={() => handleEdit(supplier)}
+                          onClick={() => handleEdit(user)}
                           className="text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300"
                           title={t('edit')}
                         >
                           ✏️
                         </button>
-                        <button
-                          onClick={() => handleDelete(supplier.id)}
-                          className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
-                          title={t('delete')}
-                        >
-                          🗑️
-                        </button>
+                        {user.id !== currentUser?.id && (
+                          <button
+                            onClick={() => handleDelete(user.id)}
+                            className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
+                            title={t('delete')}
+                          >
+                            🗑️
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -301,7 +304,7 @@ function Suppliers() {
           <div className="card max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                {editingSupplier ? t('editSupplier') : t('addSupplier')}
+                {editingUser ? t('editUser') : t('addUser')}
               </h3>
               <button
                 onClick={handleCloseModal}
@@ -322,31 +325,42 @@ function Suppliers() {
                 />
               </div>
               <div>
-                <label className="label">{t('phone')}</label>
-                <input
-                  type="text"
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  className="input"
-                />
-              </div>
-              <div>
-                <label className="label">{t('email')}</label>
+                <label className="label">{t('email')} *</label>
                 <input
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   className="input"
+                  required
                 />
               </div>
               <div>
-                <label className="label">{t('address')}</label>
-                <textarea
-                  value={formData.address}
-                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                <label className="label">
+                  {t('password')} {editingUser ? `(${t('leaveEmptyToKeepCurrent')})` : '*'}
+                </label>
+                <input
+                  type="password"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   className="input"
-                  rows="3"
+                  required={!editingUser}
+                  minLength={8}
                 />
+              </div>
+              <div>
+                <label className="label">{t('role')} *</label>
+                <select
+                  value={formData.role}
+                  onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                  className="input"
+                  required
+                >
+                  {rolesData?.map((role) => (
+                    <option key={role.id} value={role.name}>
+                      {role.name}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div className="flex items-center justify-end space-x-3 rtl:space-x-reverse pt-4">
                 <button
@@ -374,11 +388,11 @@ function Suppliers() {
         isOpen={showDeleteModal}
         onClose={() => {
           setShowDeleteModal(false);
-          setSupplierToDelete(null);
+          setUserToDelete(null);
         }}
         onConfirm={confirmDelete}
         title={t('confirmDelete') || 'Confirm Delete'}
-        message={t('confirmDeleteSupplier') || 'Are you sure you want to delete this supplier?'}
+        message={t('confirmDeleteUser') || 'Are you sure you want to delete this user?'}
         confirmText={t('delete') || 'Delete'}
         cancelText={t('cancel') || 'Cancel'}
         type="danger"
@@ -387,4 +401,4 @@ function Suppliers() {
   );
 }
 
-export default Suppliers;
+export default Users;

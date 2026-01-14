@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useI18n } from '../context/I18nContext';
+import { toast } from 'react-hot-toast';
+import ConfirmationModal from '../components/ConfirmationModal';
 import api from '../services/api';
 
 function Settings() {
@@ -54,10 +56,10 @@ function Settings() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['settings']);
-      alert(t('settingsUpdatedSuccessfully'));
+      toast.success(t('settingsUpdatedSuccessfully'));
     },
     onError: (error) => {
-      alert(error.response?.data?.message || t('error'));
+      toast.error(error.response?.data?.message || t('error'));
     },
   });
 
@@ -77,10 +79,10 @@ function Settings() {
       queryClient.invalidateQueries(['settings']);
       setLogoPreview(data.data.logo);
       setLogoFile(null);
-      alert(t('logoUploadedSuccessfully'));
+      toast.success(t('logoUploadedSuccessfully'));
     },
     onError: (error) => {
-      alert(error.response?.data?.message || t('error'));
+      toast.error(error.response?.data?.message || t('error'));
     },
   });
 
@@ -393,10 +395,10 @@ function BackupManager() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['backups']);
-      alert(t('backupCreatedSuccessfully'));
+      toast.success(t('backupCreatedSuccessfully'));
     },
     onError: (error) => {
-      alert(error.response?.data?.message || t('error'));
+      toast.error(error.response?.data?.message || t('error'));
     },
   });
 
@@ -407,10 +409,10 @@ function BackupManager() {
       return response.data;
     },
     onSuccess: () => {
-      alert(t('backupRestoredSuccessfully'));
+      toast.success(t('backupRestoredSuccessfully'));
     },
     onError: (error) => {
-      alert(error.response?.data?.message || t('error'));
+      toast.error(error.response?.data?.message || t('error'));
     },
   });
 
@@ -422,29 +424,25 @@ function BackupManager() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries(['backups']);
-      alert(t('backupDeletedSuccessfully'));
+      toast.success(t('backupDeletedSuccessfully'));
     },
     onError: (error) => {
-      alert(error.response?.data?.message || t('error'));
+      toast.error(error.response?.data?.message || t('error'));
     },
   });
 
   const handleCreateBackup = () => {
-    if (window.confirm(t('confirmCreateBackup'))) {
-      createBackupMutation.mutate();
-    }
+    setShowCreateConfirm(true);
   };
 
   const handleRestore = (path) => {
-    if (window.confirm(t('confirmRestoreBackup'))) {
-      restoreBackupMutation.mutate(path);
-    }
+    setSelectedBackupPath(path);
+    setShowRestoreConfirm(true);
   };
 
   const handleDelete = (path) => {
-    if (window.confirm(t('confirmDeleteBackup'))) {
-      deleteBackupMutation.mutate(path);
-    }
+    setSelectedBackupPath(path);
+    setShowDeleteConfirm(true);
   };
 
   const handleDownload = (path) => {
@@ -532,6 +530,61 @@ function BackupManager() {
           </div>
         )}
       </div>
+
+      {/* Confirmation Modals */}
+      <ConfirmationModal
+        isOpen={showCreateConfirm}
+        onClose={() => setShowCreateConfirm(false)}
+        onConfirm={() => {
+          createBackupMutation.mutate();
+          setShowCreateConfirm(false);
+        }}
+        title={t('confirmAction')}
+        message={t('confirmCreateBackup')}
+        confirmText={t('confirm')}
+        cancelText={t('cancel')}
+        type="info"
+      />
+
+      <ConfirmationModal
+        isOpen={showRestoreConfirm}
+        onClose={() => {
+          setShowRestoreConfirm(false);
+          setSelectedBackupPath(null);
+        }}
+        onConfirm={() => {
+          if (selectedBackupPath) {
+            restoreBackupMutation.mutate(selectedBackupPath);
+          }
+          setShowRestoreConfirm(false);
+          setSelectedBackupPath(null);
+        }}
+        title={t('confirmAction')}
+        message={t('confirmRestoreBackup')}
+        confirmText={t('confirm')}
+        cancelText={t('cancel')}
+        type="warning"
+      />
+
+      <ConfirmationModal
+        isOpen={showDeleteConfirm}
+        onClose={() => {
+          setShowDeleteConfirm(false);
+          setSelectedBackupPath(null);
+        }}
+        onConfirm={() => {
+          if (selectedBackupPath) {
+            deleteBackupMutation.mutate(selectedBackupPath);
+          }
+          setShowDeleteConfirm(false);
+          setSelectedBackupPath(null);
+        }}
+        title={t('confirmAction')}
+        message={t('confirmDeleteBackup')}
+        confirmText={t('delete')}
+        cancelText={t('cancel')}
+        type="danger"
+      />
     </div>
   );
 }

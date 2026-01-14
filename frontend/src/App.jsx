@@ -18,6 +18,9 @@ import Expenses from './pages/Expenses'
 import ProfitLoss from './pages/ProfitLoss'
 import Reports from './pages/Reports'
 import Settings from './pages/Settings'
+import Users from './pages/Users'
+import Roles from './pages/Roles'
+import Profile from './pages/Profile'
 import ProtectedRoute from './components/ProtectedRoute'
 import './App.css'
 import './styles/print.css'
@@ -55,6 +58,9 @@ function App() {
             <Route path="profit-loss" element={<ProfitLoss />} />
             <Route path="reports" element={<Reports />} />
             <Route path="settings" element={<Settings />} />
+            <Route path="users" element={<Users />} />
+            <Route path="roles" element={<Roles />} />
+            <Route path="profile" element={<Profile />} />
           </Route>
         </Routes>
       </BrowserRouter>

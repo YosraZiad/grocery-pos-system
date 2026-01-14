@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useI18n } from '../context/I18nContext';
+import { toast } from 'react-hot-toast';
 import api from '../services/api';
 
 function PurchaseInvoices() {
@@ -71,10 +72,10 @@ function PurchaseInvoices() {
         paid_amount: 0,
         items: [{ product_id: '', quantity: 1, price: 0 }],
       });
-      alert(t('purchaseInvoiceCreatedSuccessfully'));
+      toast.success(t('purchaseInvoiceCreatedSuccessfully'));
     },
     onError: (error) => {
-      alert(error.response?.data?.message || t('error'));
+      toast.error(error.response?.data?.message || t('error'));
     },
   });
 
@@ -90,10 +91,10 @@ function PurchaseInvoices() {
       setShowPayModal(false);
       setSelectedInvoice(null);
       setPayAmount(0);
-      alert(t('paymentProcessedSuccessfully'));
+      toast.success(t('paymentProcessedSuccessfully'));
     },
     onError: (error) => {
-      alert(error.response?.data?.message || t('error'));
+      toast.error(error.response?.data?.message || t('error'));
     },
   });
 
@@ -131,11 +132,11 @@ function PurchaseInvoices() {
 
   const handlePay = () => {
     if (payAmount <= 0) {
-      alert(t('amountMustBeGreaterThanZero'));
+      toast.error(t('amountMustBeGreaterThanZero'));
       return;
     }
     if (payAmount > selectedInvoice.balance) {
-      alert(t('amountCannotExceedBalance'));
+      toast.error(t('amountCannotExceedBalance'));
       return;
     }
     payMutation.mutate({ id: selectedInvoice.id, amount: payAmount });
