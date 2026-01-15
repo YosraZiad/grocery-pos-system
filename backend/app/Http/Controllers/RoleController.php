@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\DB;
 
 class RoleController extends Controller
 {
@@ -15,10 +17,24 @@ class RoleController extends Controller
     public function index()
     {
         try {
+            $tenantId = config('tenant_id');
+            
             $roles = Role::where('guard_name', 'sanctum')
                 ->with('permissions')
-                ->withCount('users')
-                ->get();
+                ->get()
+                ->map(function ($role) use ($tenantId) {
+                    // حساب عدد المستخدمين يدوياً لتجنب مشاكل Global Scope
+                    // استخدام model_has_roles table مباشرة
+                    $usersCount = \DB::table('model_has_roles')
+                        ->join('users', 'model_has_roles.model_id', '=', 'users.id')
+                        ->where('model_has_roles.role_id', $role->id)
+                        ->where('model_has_roles.model_type', User::class)
+                        ->where('users.tenant_id', $tenantId)
+                        ->count();
+                    
+                    $role->users_count = $usersCount;
+                    return $role;
+                });
 
             return response()->json([
                 'data' => $roles,
@@ -26,6 +42,7 @@ class RoleController extends Controller
             ], 200);
         } catch (\Exception $e) {
             \Log::error('Error fetching roles: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
             return response()->json([
                 'message' => 'Error fetching roles',
                 'error' => $e->getMessage(),

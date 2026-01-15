@@ -23,8 +23,9 @@ class CheckPermission
             ], 401);
         }
 
-        // التحقق من الصلاحية
-        if (!$user->can($permission)) {
+        // التحقق من الصلاحية باستخدام guard 'sanctum'
+        // استخدام hasPermissionTo مع guard محدد لضمان استخدام guard الصحيح
+        if (!$user->hasPermissionTo($permission, 'sanctum')) {
             return response()->json([
                 'message' => 'You do not have permission to perform this action',
                 'required_permission' => $permission,

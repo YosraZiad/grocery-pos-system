@@ -36,8 +36,13 @@ function Roles() {
         return [];
       } catch (error) {
         console.error('Error fetching roles:', error);
-        toast.error(t('errorLoadingRoles') || 'Error loading roles');
-        return [];
+        // معالجة أخطاء الرول بشكل خاص
+        if (error.response?.status === 403) {
+          toast.error(t('noPermissionToViewRoles') || 'You do not have permission to view roles. Please contact your administrator.');
+        } else {
+          toast.error(t('errorLoadingRoles') || 'Error loading roles');
+        }
+        throw error; // إعادة رمي الخطأ لـ react-query
       }
     },
   });

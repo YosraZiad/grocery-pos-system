@@ -77,8 +77,9 @@ class RolePermissionSeeder extends Seeder
         $adminRole = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'sanctum']);
         $cashierRole = Role::firstOrCreate(['name' => 'cashier', 'guard_name' => 'sanctum']);
 
-        // تعيين جميع الصلاحيات للمدير
-        $adminRole->givePermissionTo(Permission::all());
+        // تعيين جميع الصلاحيات للمدير (فقط صلاحيات guard 'sanctum')
+        $sanctumPermissions = Permission::where('guard_name', 'sanctum')->get();
+        $adminRole->syncPermissions($sanctumPermissions);
 
         // تعيين صلاحيات محدودة للكاشير
         $cashierPermissions = [
@@ -90,6 +91,11 @@ class RolePermissionSeeder extends Seeder
             'create returns',
         ];
 
-        $cashierRole->givePermissionTo($cashierPermissions);
+        // جلب الصلاحيات من guard 'sanctum' فقط
+        $cashierPermissionModels = Permission::where('guard_name', 'sanctum')
+            ->whereIn('name', $cashierPermissions)
+            ->get();
+        
+        $cashierRole->syncPermissions($cashierPermissionModels);
     }
 }

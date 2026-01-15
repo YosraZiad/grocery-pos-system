@@ -16,6 +16,20 @@ class User extends Authenticatable
     use HasFactory, Notifiable, HasApiTokens, HasRoles;
 
     /**
+     * Guard name للصلاحيات - يستخدم مع Spatie Permission
+     */
+    protected $guard_name = 'sanctum';
+
+    /**
+     * إرجاع guard name للصلاحيات
+     * يستخدم من قبل Spatie Permission لتحديد guard الصحيح
+     */
+    public function guardName(): string
+    {
+        return 'sanctum';
+    }
+
+    /**
      * The attributes that are mass assignable.
      *
      * @var list<string>
