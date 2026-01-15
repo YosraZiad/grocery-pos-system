@@ -12,6 +12,10 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+* {
+  font-family: Cairo, san-serif;
+}
+
   [dir="rtl"] {
     direction: rtl;
 }
