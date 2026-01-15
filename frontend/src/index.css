@@ -10,19 +10,19 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  }
+
+  [dir="rtl"] {
+    direction: rtl;
+  }
+
+  [dir="ltr"] {
+    direction: ltr;
+  }
 }
 
 * {
   font-family: Cairo, san-serif;
-}
-
-  [dir="rtl"] {
-    direction: rtl;
-}
-
-  [dir="ltr"] {
-    direction: ltr;
-}
 }
 
 @layer components {
