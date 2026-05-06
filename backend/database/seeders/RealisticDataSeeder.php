@@ -97,6 +97,56 @@ class RealisticDataSeeder extends Seeder
             $categoryIds[$cat['name']] = $category->id;
         }
 
+        // شجرة أقسام 3 مستويات للاختبار
+        $snacksCategory = Category::updateOrCreate(
+            ['name' => 'السناكس', 'tenant_id' => $tenant->id],
+            [
+                'description' => 'سناكس خفيفة',
+                'tenant_id' => $tenant->id,
+                'parent_id' => $categoryIds['المواد الغذائية'],
+            ]
+        );
+
+        $chipsCategory = Category::updateOrCreate(
+            ['name' => 'الشيبس', 'tenant_id' => $tenant->id],
+            [
+                'description' => 'شيبس بنكهات مختلفة',
+                'tenant_id' => $tenant->id,
+                'parent_id' => $snacksCategory->id,
+            ]
+        );
+
+        $biscuitsCategory = Category::updateOrCreate(
+            ['name' => 'البسكويت', 'tenant_id' => $tenant->id],
+            [
+                'description' => 'بسكويت بأنواع متعددة',
+                'tenant_id' => $tenant->id,
+                'parent_id' => $snacksCategory->id,
+            ]
+        );
+
+        $coldDrinksCategory = Category::updateOrCreate(
+            ['name' => 'المشروبات الباردة', 'tenant_id' => $tenant->id],
+            [
+                'description' => 'مشروبات باردة متنوعة',
+                'tenant_id' => $tenant->id,
+                'parent_id' => $categoryIds['المشروبات'],
+            ]
+        );
+
+        $energyDrinksCategory = Category::updateOrCreate(
+            ['name' => 'مشروبات الطاقة', 'tenant_id' => $tenant->id],
+            [
+                'description' => 'مشروبات الطاقة',
+                'tenant_id' => $tenant->id,
+                'parent_id' => $coldDrinksCategory->id,
+            ]
+        );
+
+        $categoryIds['الشيبس'] = $chipsCategory->id;
+        $categoryIds['البسكويت'] = $biscuitsCategory->id;
+        $categoryIds['مشروبات الطاقة'] = $energyDrinksCategory->id;
+
         // إنشاء المنتجات
         $products = [
             // المشروبات
@@ -202,6 +252,37 @@ class RealisticDataSeeder extends Seeder
                 'min_stock_alert' => 5,
                 'expiry_date' => '2028-12-31',
                 'barcode' => '6224007710109',
+            ],
+            // بيانات أقسام المستوى الثالث
+            [
+                'name' => 'شيبس ملح البحر 40 جرام',
+                'category_id' => $categoryIds['الشيبس'],
+                'sale_price' => 6.00,
+                'purchase_price' => 4.00,
+                'quantity' => 70,
+                'min_stock_alert' => 15,
+                'expiry_date' => '2027-08-30',
+                'barcode' => '6224007710201',
+            ],
+            [
+                'name' => 'بسكويت بالشوكولاتة 12 قطعة',
+                'category_id' => $categoryIds['البسكويت'],
+                'sale_price' => 10.00,
+                'purchase_price' => 7.25,
+                'quantity' => 55,
+                'min_stock_alert' => 10,
+                'expiry_date' => '2027-10-12',
+                'barcode' => '6224007710202',
+            ],
+            [
+                'name' => 'مشروب طاقة 250 مل',
+                'category_id' => $categoryIds['مشروبات الطاقة'],
+                'sale_price' => 12.00,
+                'purchase_price' => 8.75,
+                'quantity' => 40,
+                'min_stock_alert' => 8,
+                'expiry_date' => '2027-04-20',
+                'barcode' => '6224007710203',
             ],
         ];
 

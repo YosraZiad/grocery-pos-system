@@ -6,19 +6,24 @@ use App\Models\Category;
 use App\Http\Requests\StoreCategoryRequest;
 use App\Http\Requests\UpdateCategoryRequest;
 use Illuminate\Http\Request;
+use App\Services\CategoryService;
 
 class CategoryController extends Controller
 {
+    protected CategoryService $service;
+
+    public function __construct(CategoryService $service)
+    {
+        $this->service = $service;
+    }
     /**
      * عرض جميع الأقسام
      */
     public function index()
     {
-        $categories = Category::withCount('products')->get();
+        $categories = $this->service->index();
 
-        return response()->json([
-            'data' => $categories,
-        ], 200);
+        return response()->json($categories, 200);
     }
 
     /**
@@ -26,11 +31,14 @@ class CategoryController extends Controller
      */
     public function store(StoreCategoryRequest $request)
     {
-        $category = Category::create([
-            'tenant_id' => config('tenant_id'),
-            'name' => $request->name,
-            'description' => $request->description,
-        ]);
+        $data = $request->only(['name', 'description', 'parent_id']);
+        $data['tenant_id'] = config('tenant_id');
+
+        try {
+            $category = $this->service->create($data);
+        } catch (\RuntimeException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
 
         return response()->json([
             'message' => 'Category created successfully',
@@ -43,11 +51,9 @@ class CategoryController extends Controller
      */
     public function show(string $id)
     {
-        $category = Category::with('products')->findOrFail($id);
+        $category = $this->service->show($id);
 
-        return response()->json([
-            'data' => $category,
-        ], 200);
+        return response()->json([ 'data' => $category ], 200);
     }
 
     /**
@@ -55,12 +61,13 @@ class CategoryController extends Controller
      */
     public function update(UpdateCategoryRequest $request, string $id)
     {
-        $category = Category::findOrFail($id);
+        $data = $request->only(['name', 'description', 'parent_id']);
 
-        $category->update([
-            'name' => $request->name,
-            'description' => $request->description,
-        ]);
+        try {
+            $category = $this->service->update($id, $data);
+        } catch (\RuntimeException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
 
         return response()->json([
             'message' => 'Category updated successfully',
@@ -73,19 +80,11 @@ class CategoryController extends Controller
      */
     public function destroy(string $id)
     {
-        $category = Category::findOrFail($id);
-
-        // التحقق من وجود منتجات في القسم
-        if ($category->products()->count() > 0) {
-            return response()->json([
-                'message' => 'Cannot delete category with existing products',
-            ], 422);
+        try {
+            $this->service->delete($id);
+            return response()->json([ 'message' => 'Category deleted successfully' ], 200);
+        } catch (\RuntimeException $e) {
+            return response()->json([ 'message' => $e->getMessage() ], 422);
         }
-
-        $category->delete();
-
-        return response()->json([
-            'message' => 'Category deleted successfully',
-        ], 200);
     }
 }

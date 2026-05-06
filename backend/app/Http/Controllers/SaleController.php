@@ -6,6 +6,7 @@ use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\Product;
 use App\Models\InventoryTransaction;
+use App\Services\SaleService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
@@ -13,29 +14,19 @@ use Illuminate\Validation\Rule;
 
 class SaleController extends Controller
 {
+    protected SaleService $service;
+
+    public function __construct(SaleService $service)
+    {
+        $this->service = $service;
+    }
     /**
      * عرض جميع المبيعات
      */
     public function index(Request $request)
     {
-        $query = Sale::with(['user', 'items.product']);
-
-        // البحث برقم الفاتورة
-        if ($request->has('search')) {
-            $search = $request->search;
-            $query->where('invoice_number', 'like', "%{$search}%");
-        }
-
-        // فلترة حسب التاريخ
-        if ($request->has('from')) {
-            $query->whereDate('created_at', '>=', $request->from);
-        }
-        if ($request->has('to')) {
-            $query->whereDate('created_at', '<=', $request->to);
-        }
-
-        $perPage = $request->get('per_page', 20);
-        $sales = $query->orderBy('created_at', 'desc')->paginate($perPage);
+        $filters = $request->only(['search', 'from', 'to', 'per_page']);
+        $sales = $this->service->index($filters);
 
         return response()->json($sales, 200);
     }
@@ -81,118 +72,37 @@ class SaleController extends Controller
             ], 422);
         }
 
-        DB::beginTransaction();
+        $userId = $request->user()->id;
+        
+        if (!$tenantId) {
+            return response()->json(['message' => 'Tenant ID is required'], 400);
+        }
+        
+        if (!$userId) {
+            return response()->json(['message' => 'User authentication required'], 401);
+        }
+
         try {
-            $userId = $request->user()->id;
-            
-            if (!$tenantId) {
-                DB::rollBack();
-                return response()->json([
-                    'message' => 'Tenant ID is required',
-                ], 400);
-            }
-            
-            if (!$userId) {
-                DB::rollBack();
-                return response()->json([
-                    'message' => 'User authentication required',
-                ], 401);
-            }
-            
-            // التحقق من توفر الكمية
-            foreach ($request->items as $item) {
-                $product = Product::findOrFail($item['product_id']);
-                if ($product->quantity < $item['quantity']) {
-                    DB::rollBack();
-                    return response()->json([
-                        'message' => "الكمية المتاحة غير كافية للمنتج: {$product->name}",
-                        'product' => $product->name,
-                        'available' => $product->quantity,
-                        'requested' => $item['quantity'],
-                    ], 422);
-                }
-            }
-
-            // حساب الإجمالي
-            $subtotal = 0;
-            foreach ($request->items as $item) {
-                $product = Product::findOrFail($item['product_id']);
-                $subtotal += $product->sale_price * $item['quantity'];
-            }
-
-            // حساب الخصم
-            $discount = $request->discount ?? 0;
-            $discountType = $request->discount_type ?? 'fixed';
-            
-            if ($discountType === 'percentage') {
-                $discountAmount = ($subtotal * $discount) / 100;
-            } else {
-                $discountAmount = $discount;
-            }
-
-            $total = $subtotal - $discountAmount;
-
-            // إنشاء البيع
-            $sale = Sale::create([
-                'tenant_id' => $tenantId,
-                'invoice_number' => Sale::generateInvoiceNumber(),
-                'user_id' => $userId,
-                'total' => $total,
-                'discount' => $discountAmount,
-                'discount_type' => $discountType,
-                'payment_method' => $request->payment_method,
-                'status' => 'completed',
-            ]);
-
-            // إنشاء عناصر البيع وخصم الكمية من المخزون
-            foreach ($request->items as $item) {
-                $product = Product::findOrFail($item['product_id']);
-                $price = $product->sale_price;
-                $quantity = $item['quantity'];
-                $itemSubtotal = $price * $quantity;
-
-                // إنشاء عنصر البيع
-                SaleItem::create([
-                    'sale_id' => $sale->id,
-                    'product_id' => $product->id,
-                    'quantity' => $quantity,
-                    'price' => $price,
-                    'subtotal' => $itemSubtotal,
-                ]);
-
-                // خصم الكمية من المخزون
-                $product->decrement('quantity', $quantity);
-
-                // إنشاء Inventory Transaction
-                InventoryTransaction::create([
-                    'tenant_id' => $tenantId,
-                    'product_id' => $product->id,
-                    'type' => 'out',
-                    'quantity' => $quantity,
-                    'reference_type' => 'Sale',
-                    'reference_id' => $sale->id,
-                    'notes' => "بيع - فاتورة رقم: {$sale->invoice_number}",
-                ]);
-            }
-
-            DB::commit();
+            $data = $request->only(['items', 'discount', 'discount_type', 'payment_method']);
+            $sale = $this->service->create($data, $userId, $tenantId);
 
             return response()->json([
                 'message' => 'Sale created successfully',
-                'data' => $sale->load(['user', 'items.product']),
+                'data' => $sale,
             ], 201);
 
+        } catch (\RuntimeException $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+            ], 422);
         } catch (\Exception $e) {
-            DB::rollBack();
-            
-            // Log the error for debugging
             \Log::error('Sale creation error: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
                 'request' => $request->all(),
             ]);
             
             return response()->json([
-                'message' => 'Error creating sale: ' . $e->getMessage(),
+                'message' => 'Error creating sale',
                 'error' => config('app.debug') ? $e->getMessage() : 'An error occurred while creating the sale',
             ], 500);
         }
@@ -203,8 +113,7 @@ class SaleController extends Controller
      */
     public function show(string $id)
     {
-        $sale = Sale::with(['user', 'items.product.category'])
-            ->findOrFail($id);
+        $sale = $this->service->show($id);
 
         return response()->json([
             'data' => $sale,
@@ -216,8 +125,7 @@ class SaleController extends Controller
      */
     public function invoice(string $id)
     {
-        $sale = Sale::with(['user', 'items.product.category'])
-            ->findOrFail($id);
+        $sale = $this->service->invoice($id);
 
         $html = view('invoice', compact('sale'))->render();
 
@@ -229,48 +137,19 @@ class SaleController extends Controller
      */
     public function cancel(string $id)
     {
-        DB::beginTransaction();
         try {
-            $sale = Sale::with('items.product')->findOrFail($id);
-
-            // التحقق من أن البيع مكتمل
-            if ($sale->status !== 'completed') {
-                return response()->json([
-                    'message' => 'Cannot cancel a sale that is not completed',
-                ], 422);
-            }
-
-            // إرجاع الكمية للمخزون وإنشاء Inventory Transaction
-            foreach ($sale->items as $item) {
-                $product = $item->product;
-                
-                // إرجاع الكمية للمخزون
-                $product->increment('quantity', $item->quantity);
-
-                // إنشاء Inventory Transaction للإرجاع
-                InventoryTransaction::create([
-                    'tenant_id' => config('tenant_id'),
-                    'product_id' => $product->id,
-                    'type' => 'return',
-                    'quantity' => $item->quantity,
-                    'reference_type' => 'Sale',
-                    'reference_id' => $sale->id,
-                    'notes' => "إلغاء بيع - فاتورة رقم: {$sale->invoice_number}",
-                ]);
-            }
-
-            // تحديث حالة البيع
-            $sale->update(['status' => 'cancelled']);
-
-            DB::commit();
+            $sale = $this->service->cancel($id);
 
             return response()->json([
                 'message' => 'Sale cancelled successfully',
-                'data' => $sale->load(['user', 'items.product']),
+                'data' => $sale,
             ], 200);
 
+        } catch (\RuntimeException $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+            ], 422);
         } catch (\Exception $e) {
-            DB::rollBack();
             return response()->json([
                 'message' => 'Error cancelling sale',
                 'error' => $e->getMessage(),

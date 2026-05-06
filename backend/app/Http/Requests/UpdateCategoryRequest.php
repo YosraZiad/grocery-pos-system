@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateCategoryRequest extends FormRequest
 {
@@ -21,9 +22,19 @@ class UpdateCategoryRequest extends FormRequest
      */
     public function rules(): array
     {
+        $tenantId = config('tenant_id');
+        $categoryId = $this->route('id');
+
         return [
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
+            'parent_id' => [
+                'nullable',
+                Rule::exists('categories', 'id')->where(function ($query) use ($tenantId) {
+                    $query->where('tenant_id', $tenantId);
+                }),
+                Rule::notIn([$categoryId]),
+            ],
         ];
     }
 
@@ -39,6 +50,8 @@ class UpdateCategoryRequest extends FormRequest
             'name.string' => 'Category name must be a string',
             'name.max' => 'Category name must not exceed 255 characters',
             'description.string' => 'Description must be a string',
+            'parent_id.exists' => 'Selected parent category does not exist',
+            'parent_id.not_in' => 'Category cannot be its own parent',
         ];
     }
 }

@@ -5,35 +5,26 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Http\Requests\StoreProductRequest;
 use App\Http\Requests\UpdateProductRequest;
+use App\Services\ProductService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
 class ProductController extends Controller
 {
+    protected ProductService $service;
+
+    public function __construct(ProductService $service)
+    {
+        $this->service = $service;
+    }
+
     /**
      * عرض جميع المنتجات (مع pagination & search)
      */
     public function index(Request $request)
     {
-        $query = Product::with('category');
-
-        // البحث بالاسم أو الباركود
-        if ($request->has('search')) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('barcode', 'like', "%{$search}%");
-            });
-        }
-
-        // الفلترة حسب القسم
-        if ($request->has('category_id')) {
-            $query->where('category_id', $request->category_id);
-        }
-
-        // Pagination
-        $perPage = $request->get('per_page', 20);
-        $products = $query->paginate($perPage);
+        $filters = $request->only(['search', 'category_id', 'per_page']);
+        $products = $this->service->index($filters);
 
         return response()->json($products, 200);
     }
@@ -43,22 +34,16 @@ class ProductController extends Controller
      */
     public function store(StoreProductRequest $request)
     {
-        $product = Product::create([
-            'tenant_id' => config('tenant_id'),
-            'category_id' => $request->category_id,
-            'name' => $request->name,
-            'barcode' => $request->barcode,
-            'purchase_price' => $request->purchase_price,
-            'sale_price' => $request->sale_price,
-            'quantity' => $request->quantity,
-            'expiry_date' => $request->expiry_date,
-            'min_stock_alert' => $request->min_stock_alert ?? 5,
-            'min_expiry_alert' => $request->min_expiry_alert ?? 7,
-        ]);
+        $data = $request->validated();
+        $data['tenant_id'] = config('tenant_id');
+        $data['min_stock_alert'] = $request->min_stock_alert ?? 5;
+        $data['min_expiry_alert'] = $request->min_expiry_alert ?? 7;
+
+        $product = $this->service->create($data);
 
         return response()->json([
             'message' => 'Product created successfully',
-            'data' => $product->load('category'),
+            'data' => $product,
         ], 201);
     }
 
@@ -67,7 +52,7 @@ class ProductController extends Controller
      */
     public function show(string $id)
     {
-        $product = Product::with('category')->findOrFail($id);
+        $product = $this->service->show($id);
 
         return response()->json([
             'data' => $product,
@@ -79,13 +64,12 @@ class ProductController extends Controller
      */
     public function update(UpdateProductRequest $request, string $id)
     {
-        $product = Product::findOrFail($id);
-
-        $product->update($request->all());
+        $data = $request->validated();
+        $product = $this->service->update($id, $data);
 
         return response()->json([
             'message' => 'Product updated successfully',
-            'data' => $product->load('category'),
+            'data' => $product,
         ], 200);
     }
 
@@ -94,8 +78,7 @@ class ProductController extends Controller
      */
     public function destroy(string $id)
     {
-        $product = Product::findOrFail($id);
-        $product->delete();
+        $this->service->delete($id);
 
         return response()->json([
             'message' => 'Product deleted successfully',
@@ -118,14 +101,7 @@ class ProductController extends Controller
             ], 422);
         }
 
-        $query = $request->q;
-        $products = Product::with('category')
-            ->where(function ($q) use ($query) {
-                $q->where('name', 'like', "%{$query}%")
-                  ->orWhere('barcode', 'like', "%{$query}%");
-            })
-            ->limit(20)
-            ->get();
+        $products = $this->service->search($request->q);
 
         return response()->json([
             'data' => $products,

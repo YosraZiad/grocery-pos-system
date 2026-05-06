@@ -22,6 +22,9 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\TenantMiddleware::class,
         ]);
         
+        // API Rate Limiting
+        $middleware->throttleApi();
+        
         // Register permission middleware
         $middleware->alias([
             'permission' => \App\Http\Middleware\CheckPermission::class,

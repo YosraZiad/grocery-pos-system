@@ -1,285 +1,666 @@
-import { useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useI18n } from '../context/I18nContext';
-import toast from 'react-hot-toast';
-import ConfirmationModal from '../components/ConfirmationModal';
-import api from '../services/api';
+import { useEffect, useMemo, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useI18n } from "../context/I18nContext";
+import toast from "react-hot-toast";
+import ConfirmationModal from "../components/ConfirmationModal";
+import api from "../services/api";
+
+const MAX_LEVEL = 3;
+
+function findTreeNodeById(nodes, id) {
+  for (const node of nodes) {
+    if (node.id === id) {
+      return node;
+    }
+
+    if (node.children?.length) {
+      const found = findTreeNodeById(node.children, id);
+      if (found) {
+        return found;
+      }
+    }
+  }
+
+  return null;
+}
+
+function flattenTree(nodes, level = 1, accumulator = []) {
+  nodes.forEach((node) => {
+    accumulator.push({ ...node, level });
+
+    if (node.children?.length) {
+      flattenTree(node.children, level + 1, accumulator);
+    }
+  });
+
+  return accumulator;
+}
+
+function collectDescendantIds(node, set = new Set()) {
+  if (!node?.children?.length) {
+    return set;
+  }
+
+  node.children.forEach((child) => {
+    set.add(child.id);
+    collectDescendantIds(child, set);
+  });
+
+  return set;
+}
 
 function Categories() {
-  const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [parentId, setParentId] = useState("");
   const [editingId, setEditingId] = useState(null);
-  const [showModal, setShowModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [showDeleteCategoryModal, setShowDeleteCategoryModal] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState(null);
+  const [selectedCategoryId, setSelectedCategoryId] = useState(null);
+  const [expandedIds, setExpandedIds] = useState(new Set());
+
+  const [showProductModal, setShowProductModal] = useState(false);
+  const [showDeleteProductModal, setShowDeleteProductModal] = useState(false);
+  const [editingProductId, setEditingProductId] = useState(null);
+  const [productToDelete, setProductToDelete] = useState(null);
+  const [productForm, setProductForm] = useState({
+    name: "",
+    barcode: "",
+    purchase_price: "",
+    sale_price: "",
+    quantity: "",
+  });
+
   const queryClient = useQueryClient();
   const { t } = useI18n();
 
-  // جلب الأقسام
   const { data, isLoading } = useQuery({
-    queryKey: ['categories'],
+    queryKey: ["categories"],
     queryFn: async () => {
-      const response = await api.get('/categories');
-      return response.data.data;
+      const response = await api.get("/categories");
+      return response.data;
     },
   });
 
-  // إضافة قسم
-  const createMutation = useMutation({
-    mutationFn: async (data) => {
-      const response = await api.post('/categories', data);
+  const categories = data?.data || [];
+  const categoryTree = data?.tree || [];
+
+  const categoriesMap = useMemo(() => {
+    const map = new Map();
+    categories.forEach((category) => map.set(category.id, category));
+    return map;
+  }, [categories]);
+
+  const flattenedTree = useMemo(() => flattenTree(categoryTree), [categoryTree]);
+
+  useEffect(() => {
+    if (!selectedCategoryId && categoryTree.length > 0) {
+      setSelectedCategoryId(categoryTree[0].id);
+    }
+  }, [categoryTree, selectedCategoryId]);
+
+  useEffect(() => {
+    if (!categoryTree.length) {
+      return;
+    }
+
+    setExpandedIds((previous) => {
+      if (previous.size > 0) {
+        return previous;
+      }
+
+      const initial = new Set();
+      categoryTree.forEach((node) => initial.add(node.id));
+      return initial;
+    });
+  }, [categoryTree]);
+
+  const selectedTreeNode = selectedCategoryId
+    ? findTreeNodeById(categoryTree, selectedCategoryId)
+    : null;
+
+  const selectedCategory = selectedTreeNode
+    ? categoriesMap.get(selectedTreeNode.id)
+    : null;
+
+  const editingNode = editingId ? findTreeNodeById(categoryTree, editingId) : null;
+  const editingDescendants = useMemo(
+    () => collectDescendantIds(editingNode),
+    [editingNode],
+  );
+
+  const parentOptions = useMemo(() => {
+    return flattenedTree.filter((node) => {
+      if (node.level >= MAX_LEVEL) {
+        return false;
+      }
+
+      if (editingId && node.id === editingId) {
+        return false;
+      }
+
+      if (editingId && editingDescendants.has(node.id)) {
+        return false;
+      }
+
+      return true;
+    });
+  }, [flattenedTree, editingId, editingDescendants]);
+
+  const createCategoryMutation = useMutation({
+    mutationFn: async (payload) => {
+      const response = await api.post("/categories", payload);
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['categories']);
-      setShowModal(false);
-      setName('');
-      setDescription('');
-      toast.success(t('categoryCreatedSuccessfully') || 'Category created successfully');
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+      closeCategoryModal();
+      toast.success(t("categoryCreatedSuccessfully"));
     },
     onError: (error) => {
-      const message = error.response?.data?.message || t('errorCreatingCategory') || 'Error creating category';
-      toast.error(message);
+      toast.error(error.response?.data?.message || t("errorCreatingCategory"));
     },
   });
 
-  // تحديث قسم
-  const updateMutation = useMutation({
-    mutationFn: async ({ id, data }) => {
-      const response = await api.put(`/categories/${id}`, data);
+  const updateCategoryMutation = useMutation({
+    mutationFn: async ({ id, payload }) => {
+      const response = await api.put(`/categories/${id}`, payload);
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['categories']);
-      setShowModal(false);
-      setEditingId(null);
-      setName('');
-      setDescription('');
-      toast.success(t('categoryUpdatedSuccessfully') || 'Category updated successfully');
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+      closeCategoryModal();
+      toast.success(t("categoryUpdatedSuccessfully"));
     },
     onError: (error) => {
-      const message = error.response?.data?.message || t('errorUpdatingCategory') || 'Error updating category';
-      toast.error(message);
+      toast.error(error.response?.data?.message || t("errorUpdatingCategory"));
     },
   });
 
-  // حذف قسم
-  const deleteMutation = useMutation({
+  const deleteCategoryMutation = useMutation({
     mutationFn: async (id) => {
       const response = await api.delete(`/categories/${id}`);
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['categories']);
-      toast.success(t('categoryDeletedSuccessfully') || 'Category deleted successfully');
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+      toast.success(t("categoryDeletedSuccessfully"));
     },
     onError: (error) => {
-      const message = error.response?.data?.message || t('errorDeletingCategory') || 'Error deleting category';
-      toast.error(message);
+      toast.error(error.response?.data?.message || t("errorDeletingCategory"));
     },
   });
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const formData = { name, description };
+  const createProductMutation = useMutation({
+    mutationFn: async (payload) => {
+      const response = await api.post("/products", payload);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+      closeProductModal();
+      toast.success(t("productCreatedSuccessfully"));
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.message || t("errorCreatingProduct"));
+    },
+  });
 
-    if (editingId) {
-      updateMutation.mutate({ id: editingId, data: formData });
-    } else {
-      createMutation.mutate(formData);
-    }
-  };
+  const updateProductMutation = useMutation({
+    mutationFn: async ({ id, payload }) => {
+      const response = await api.put(`/products/${id}`, payload);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+      closeProductModal();
+      toast.success(t("productUpdatedSuccessfully"));
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.message || t("errorUpdatingProduct"));
+    },
+  });
 
-  const handleEdit = (category) => {
-    setEditingId(category.id);
-    setName(category.name);
-    setDescription(category.description || '');
-    setShowModal(true);
-  };
+  const deleteProductMutation = useMutation({
+    mutationFn: async (id) => {
+      const response = await api.delete(`/products/${id}`);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+      setShowDeleteProductModal(false);
+      setProductToDelete(null);
+      toast.success(t("productDeletedSuccessfully"));
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.message || t("errorDeletingProduct"));
+    },
+  });
 
-  const handleDelete = (id) => {
-    const category = data?.find(cat => cat.id === id);
-    const hasProducts = category?.products_count > 0;
-    
-    if (hasProducts) {
-      toast.error(
-        t('cannotDeleteCategoryWithProducts') || 
-        `Cannot delete category. It has ${category.products_count} product(s). Please remove products first.`,
-        { duration: 5000 }
-      );
+  function closeCategoryModal() {
+    setShowCategoryModal(false);
+    setEditingId(null);
+    setName("");
+    setDescription("");
+    setParentId("");
+  }
+
+  function closeProductModal() {
+    setShowProductModal(false);
+    setEditingProductId(null);
+    setProductForm({
+      name: "",
+      barcode: "",
+      purchase_price: "",
+      sale_price: "",
+      quantity: "",
+    });
+  }
+
+  function openCreateCategoryModal() {
+    closeCategoryModal();
+    setShowCategoryModal(true);
+  }
+
+  function openEditCategoryModal(category) {
+    if (!category) {
       return;
     }
-    
-    // فتح modal التأكيد
+
+    setEditingId(category.id);
+    setName(category.name || "");
+    setDescription(category.description || "");
+    setParentId(category.parent_id ? String(category.parent_id) : "");
+    setShowCategoryModal(true);
+  }
+
+  function submitCategory(event) {
+    event.preventDefault();
+
+    const payload = {
+      name,
+      description,
+      parent_id: parentId ? Number(parentId) : null,
+    };
+
+    if (editingId) {
+      updateCategoryMutation.mutate({ id: editingId, payload });
+      return;
+    }
+
+    createCategoryMutation.mutate(payload);
+  }
+
+  function requestDeleteCategory(id) {
+    const node = findTreeNodeById(categoryTree, id);
+
+    if (node?.children?.length) {
+      toast.error(t("cannotDeleteCategoryWithChildren"));
+      return;
+    }
+
+    if ((node?.products_count || 0) > 0) {
+      toast.error(t("cannotDeleteCategoryWithProducts"));
+      return;
+    }
+
     setCategoryToDelete(id);
-    setShowDeleteModal(true);
-  };
+    setShowDeleteCategoryModal(true);
+  }
 
-  const confirmDelete = () => {
-    if (!categoryToDelete) return;
-    
-    toast.promise(
-      new Promise((resolve, reject) => {
-        deleteMutation.mutate(categoryToDelete, {
-          onSuccess: () => resolve(),
-          onError: (error) => reject(error),
-        });
-      }),
-      {
-        loading: t('deletingCategory') || 'Deleting category...',
-        success: t('categoryDeletedSuccessfully') || 'Category deleted successfully',
-        error: (err) => err.response?.data?.message || t('errorDeletingCategory') || 'Error deleting category',
-      }
-    );
-    
-    setShowDeleteModal(false);
+  function confirmDeleteCategory() {
+    if (!categoryToDelete) {
+      return;
+    }
+
+    deleteCategoryMutation.mutate(categoryToDelete);
+    setShowDeleteCategoryModal(false);
     setCategoryToDelete(null);
-  };
+  }
 
-  const handleCloseModal = () => {
-    setShowModal(false);
-    setEditingId(null);
-    setName('');
-    setDescription('');
-  };
+  function openCreateProductModal() {
+    if (!selectedTreeNode) {
+      toast.error(t("selectCategoryFirst"));
+      return;
+    }
+
+    closeProductModal();
+    setShowProductModal(true);
+  }
+
+  function openEditProductModal(product) {
+    setEditingProductId(product.id);
+    setProductForm({
+      name: product.name || "",
+      barcode: product.barcode || "",
+      purchase_price: String(product.purchase_price || ""),
+      sale_price: String(product.sale_price || ""),
+      quantity: String(product.quantity || 0),
+    });
+    setShowProductModal(true);
+  }
+
+  function submitProduct(event) {
+    event.preventDefault();
+
+    if (!selectedTreeNode) {
+      toast.error(t("selectCategoryFirst"));
+      return;
+    }
+
+    const payload = {
+      category_id: selectedTreeNode.id,
+      name: productForm.name,
+      barcode: productForm.barcode || null,
+      purchase_price: Number(productForm.purchase_price),
+      sale_price: Number(productForm.sale_price),
+      quantity: Number(productForm.quantity),
+      min_stock_alert: 5,
+      min_expiry_alert: 7,
+    };
+
+    if (editingProductId) {
+      updateProductMutation.mutate({ id: editingProductId, payload });
+      return;
+    }
+
+    createProductMutation.mutate(payload);
+  }
+
+  function requestDeleteProduct(id) {
+    setProductToDelete(id);
+    setShowDeleteProductModal(true);
+  }
+
+  function confirmDeleteProduct() {
+    if (!productToDelete) {
+      return;
+    }
+
+    deleteProductMutation.mutate(productToDelete);
+  }
+
+  function toggleExpand(id) {
+    setExpandedIds((previous) => {
+      const next = new Set(previous);
+
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+
+      return next;
+    });
+  }
+
+  function renderTree(nodes, level = 1) {
+    return nodes.map((node) => {
+      const hasChildren = node.children?.length > 0;
+      const isExpanded = expandedIds.has(node.id);
+      const isSelected = selectedCategoryId === node.id;
+
+      return (
+        <div key={node.id} className="space-y-1">
+          <button
+            type="button"
+            onClick={() => setSelectedCategoryId(node.id)}
+            className={`w-full rounded-xl px-3 py-2 text-start transition-all border ${
+              isSelected
+                ? "border-primary-300 bg-primary-50 dark:bg-primary-900/20 dark:border-primary-700"
+                : "border-transparent hover:border-gray-200 dark:hover:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
+            }`}
+            style={{ marginInlineStart: `${(level - 1) * 12}px` }}
+          >
+            <div className="flex items-center justify-between gap-2">
+              <div className="min-w-0 flex items-center gap-2">
+                <span
+                  className="inline-flex h-6 w-6 items-center justify-center rounded-lg bg-gray-200 dark:bg-gray-700 text-xs"
+                  onClick={(event) => {
+                    event.stopPropagation();
+
+                    if (hasChildren) {
+                      toggleExpand(node.id);
+                    }
+                  }}
+                >
+                  {hasChildren ? (isExpanded ? "-" : "+") : "•"}
+                </span>
+                <span className="truncate font-semibold text-gray-800 dark:text-gray-100">
+                  {node.name}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <span className="text-[11px] px-2 py-1 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200">
+                  {t("level")} {Math.min(level, MAX_LEVEL)}
+                </span>
+                <span className="text-[11px] px-2 py-1 rounded-full bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-200">
+                  {node.products_count || 0}
+                </span>
+              </div>
+            </div>
+          </button>
+
+          {hasChildren && isExpanded && (
+            <div className="space-y-1">{renderTree(node.children, level + 1)}</div>
+          )}
+        </div>
+      );
+    });
+  }
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-400">{t('loading')}</p>
-        </div>
+      <div className="flex items-center justify-center py-20">
+        <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-primary-600" />
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
-            {t('manageCategories')}
+            {t("manageCategories")}
           </h2>
           <p className="text-gray-600 dark:text-gray-400 mt-1">
-            {data?.length || 0} {t('categories').toLowerCase()}
+            {categories.length} {t("categories")}
           </p>
         </div>
         <button
-          onClick={() => setShowModal(true)}
-          className="btn-primary flex items-center space-x-2 rtl:space-x-reverse"
+          onClick={openCreateCategoryModal}
+          className="btn-primary flex items-center gap-2"
         >
           <span>+</span>
-          <span>{t('addCategory')}</span>
+          <span>{t("addCategory")}</span>
         </button>
       </div>
 
-      {/* Categories Grid */}
-      {data && data.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {data.map((category) => (
-            <div key={category.id} className="card group hover:shadow-xl transition-all duration-300">
-              <div className="flex items-start justify-between mb-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-primary-500 to-primary-700 rounded-lg flex items-center justify-center text-white text-xl font-bold shadow-lg">
-                  {category.name.charAt(0).toUpperCase()}
-                </div>
-                <div className="flex space-x-2 rtl:space-x-reverse">
-                  <button
-                    onClick={() => handleEdit(category)}
-                    className="p-2 text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-lg transition-colors duration-200"
-                    title={t('edit')}
-                  >
-                    ✏️
-                  </button>
-                  <button
-                    onClick={() => handleDelete(category.id)}
-                    className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors duration-200"
-                    title={t('delete')}
-                  >
-                    🗑️
-                  </button>
-                </div>
-              </div>
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
-                {category.name}
+      {categoryTree.length > 0 ? (
+        <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+          <div className="card xl:col-span-4 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                {t("categoryTree")}
               </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 line-clamp-2">
-                {category.description || '-'}
-              </p>
-              <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-700">
-                <span className="text-xs text-gray-500 dark:text-gray-400">
-                  {t('productsCount')}
-                </span>
-                <span className="px-3 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded-full text-sm font-semibold">
-                  {category.products_count || 0}
-                </span>
-              </div>
+              <span className="text-xs px-2 py-1 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">
+                {MAX_LEVEL} {t("levels")}
+              </span>
             </div>
-          ))}
+
+            <div className="max-h-[620px] overflow-auto pe-1 space-y-1">
+              {renderTree(categoryTree)}
+            </div>
+          </div>
+
+          <div className="card xl:col-span-8 space-y-4">
+            {selectedTreeNode ? (
+              <>
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                  <div>
+                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                      {selectedTreeNode.name}
+                    </h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                      {selectedTreeNode.description || t("description")} - {t("productsCount")}: {selectedTreeNode.products_count || 0}
+                    </p>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      className="btn-secondary"
+                      onClick={() => openEditCategoryModal(selectedCategory)}
+                    >
+                      {t("editCategory")}
+                    </button>
+                    <button
+                      className="btn-secondary text-red-600"
+                      onClick={() => requestDeleteCategory(selectedTreeNode.id)}
+                    >
+                      {t("delete")}
+                    </button>
+                    <button className="btn-primary" onClick={openCreateProductModal}>
+                      {t("addProduct")}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700">
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full text-sm">
+                      <thead className="bg-gray-50 dark:bg-gray-800">
+                        <tr>
+                          <th className="px-4 py-3 text-start font-semibold">{t("productName")}</th>
+                          <th className="px-4 py-3 text-start font-semibold">{t("barcode")}</th>
+                          <th className="px-4 py-3 text-start font-semibold">{t("purchasePrice")}</th>
+                          <th className="px-4 py-3 text-start font-semibold">{t("salePrice")}</th>
+                          <th className="px-4 py-3 text-start font-semibold">{t("quantity")}</th>
+                          <th className="px-4 py-3 text-start font-semibold">{t("actions")}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {selectedTreeNode.products?.length > 0 ? (
+                          selectedTreeNode.products.map((product) => (
+                            <tr
+                              key={product.id}
+                              className="border-t border-gray-200 dark:border-gray-700"
+                            >
+                              <td className="px-4 py-3 font-medium">{product.name}</td>
+                              <td className="px-4 py-3 text-gray-600 dark:text-gray-300">
+                                {product.barcode || "-"}
+                              </td>
+                              <td className="px-4 py-3">{Number(product.purchase_price || 0).toFixed(2)}</td>
+                              <td className="px-4 py-3">{Number(product.sale_price || 0).toFixed(2)}</td>
+                              <td className="px-4 py-3">{product.quantity || 0}</td>
+                              <td className="px-4 py-3">
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    className="px-3 py-1 rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-200"
+                                    onClick={() => openEditProductModal(product)}
+                                  >
+                                    {t("edit")}
+                                  </button>
+                                  <button
+                                    className="px-3 py-1 rounded-lg bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-200"
+                                    onClick={() => requestDeleteProduct(product.id)}
+                                  >
+                                    {t("delete")}
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td
+                              colSpan={6}
+                              className="px-4 py-8 text-center text-gray-500 dark:text-gray-400"
+                            >
+                              {t("noProductsInCategory")}
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="rounded-xl border border-dashed border-gray-300 dark:border-gray-700 p-10 text-center text-gray-500 dark:text-gray-400">
+                {t("selectCategoryHint")}
+              </div>
+            )}
+          </div>
         </div>
       ) : (
         <div className="card text-center py-12">
-          <div className="text-6xl mb-4">📦</div>
-          <p className="text-gray-600 dark:text-gray-400">{t('noCategories')}</p>
-      </div>
+          <p className="text-gray-600 dark:text-gray-400">{t("noCategories")}</p>
+        </div>
       )}
 
-      {/* Modal */}
-      {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="card max-w-md w-full max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-6">
+      {showCategoryModal && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="card max-w-lg w-full">
+            <div className="flex items-center justify-between mb-5">
               <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                {editingId ? t('editCategory') : t('addCategory')}
-            </h3>
-              <button
-                onClick={handleCloseModal}
-                className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
-              >
-                ✕
-              </button>
+                {editingId ? t("editCategory") : t("addCategory")}
+              </h3>
+              <button onClick={closeCategoryModal} className="text-gray-500">X</button>
             </div>
-            <form onSubmit={handleSubmit} className="space-y-4">
+
+            <form onSubmit={submitCategory} className="space-y-4">
               <div>
-                <label className="label">
-                  {t('categoryName')} *
-                </label>
+                <label className="label">{t("categoryName")}</label>
                 <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  required
                   className="input"
-                  placeholder={t('categoryName')}
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
+                  required
                 />
               </div>
+
               <div>
-                <label className="label">
-                  {t('description')}
-                </label>
+                <label className="label">{t("description")}</label>
                 <textarea
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  rows="3"
                   className="input resize-none"
-                  placeholder={t('description')}
+                  rows={3}
+                  value={description}
+                  onChange={(event) => setDescription(event.target.value)}
                 />
               </div>
-              <div className="flex justify-end space-x-3 rtl:space-x-reverse pt-4">
-                <button
-                  type="button"
-                  onClick={handleCloseModal}
-                  className="btn-secondary"
+
+              <div>
+                <label className="label">{t("parentCategory")}</label>
+                <select
+                  className="input"
+                  value={parentId}
+                  onChange={(event) => setParentId(event.target.value)}
                 >
-                  {t('cancel')}
+                  <option value="">{t("noParentRoot")}</option>
+                  {parentOptions.map((node) => {
+                    const indent = "- ".repeat(Math.max(0, node.level - 1));
+                    return (
+                      <option key={node.id} value={node.id}>
+                        {indent}{node.name}
+                      </option>
+                    );
+                  })}
+                </select>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t("maxThreeLevelsMessage")}</p>
+              </div>
+
+              <div className="flex justify-end gap-2">
+                <button type="button" className="btn-secondary" onClick={closeCategoryModal}>
+                  {t("cancel")}
                 </button>
                 <button
                   type="submit"
-                  disabled={createMutation.isPending || updateMutation.isPending}
-                  className="btn-primary disabled:opacity-50"
+                  className="btn-primary"
+                  disabled={createCategoryMutation.isPending || updateCategoryMutation.isPending}
                 >
-                  {editingId ? t('update') : t('save')}
+                  {editingId ? t("update") : t("save")}
                 </button>
               </div>
             </form>
@@ -287,18 +668,134 @@ function Categories() {
         </div>
       )}
 
-      {/* Delete Confirmation Modal */}
+      {showProductModal && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="card max-w-lg w-full">
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                {editingProductId ? t("editProduct") : t("addProduct")}
+              </h3>
+              <button onClick={closeProductModal} className="text-gray-500">X</button>
+            </div>
+
+            <form onSubmit={submitProduct} className="space-y-4">
+              <div>
+                <label className="label">{t("productName")}</label>
+                <input
+                  className="input"
+                  value={productForm.name}
+                  onChange={(event) =>
+                    setProductForm((previous) => ({ ...previous, name: event.target.value }))
+                  }
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="label">{t("barcode")}</label>
+                <input
+                  className="input"
+                  value={productForm.barcode}
+                  onChange={(event) =>
+                    setProductForm((previous) => ({ ...previous, barcode: event.target.value }))
+                  }
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div>
+                  <label className="label">{t("purchasePrice")}</label>
+                  <input
+                    className="input"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={productForm.purchase_price}
+                    onChange={(event) =>
+                      setProductForm((previous) => ({
+                        ...previous,
+                        purchase_price: event.target.value,
+                      }))
+                    }
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="label">{t("salePrice")}</label>
+                  <input
+                    className="input"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={productForm.sale_price}
+                    onChange={(event) =>
+                      setProductForm((previous) => ({
+                        ...previous,
+                        sale_price: event.target.value,
+                      }))
+                    }
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="label">{t("quantity")}</label>
+                  <input
+                    className="input"
+                    type="number"
+                    min="0"
+                    value={productForm.quantity}
+                    onChange={(event) =>
+                      setProductForm((previous) => ({ ...previous, quantity: event.target.value }))
+                    }
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2">
+                <button type="button" className="btn-secondary" onClick={closeProductModal}>
+                  {t("cancel")}
+                </button>
+                <button
+                  type="submit"
+                  className="btn-primary"
+                  disabled={createProductMutation.isPending || updateProductMutation.isPending}
+                >
+                  {editingProductId ? t("update") : t("save")}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       <ConfirmationModal
-        isOpen={showDeleteModal}
+        isOpen={showDeleteCategoryModal}
         onClose={() => {
-          setShowDeleteModal(false);
+          setShowDeleteCategoryModal(false);
           setCategoryToDelete(null);
         }}
-        onConfirm={confirmDelete}
-        title={t('confirmDelete') || 'Confirm Delete'}
-        message={t('confirmDeleteCategory') || 'Are you sure you want to delete this category?'}
-        confirmText={t('delete') || 'Delete'}
-        cancelText={t('cancel') || 'Cancel'}
+        onConfirm={confirmDeleteCategory}
+        title={t("confirmDelete")}
+        message={t("confirmDeleteCategory")}
+        confirmText={t("delete")}
+        cancelText={t("cancel")}
+        type="danger"
+      />
+
+      <ConfirmationModal
+        isOpen={showDeleteProductModal}
+        onClose={() => {
+          setShowDeleteProductModal(false);
+          setProductToDelete(null);
+        }}
+        onConfirm={confirmDeleteProduct}
+        title={t("confirmDelete")}
+        message={t("confirmDeleteProduct")}
+        confirmText={t("delete")}
+        cancelText={t("cancel")}
         type="danger"
       />
     </div>

@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Carbon\Carbon;
 
 class Product extends BaseModel
 {
+    use HasFactory;
     protected $fillable = [
         'tenant_id',
         'category_id',

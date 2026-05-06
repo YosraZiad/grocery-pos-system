@@ -51,6 +51,16 @@ const translations = {
     save: 'Save',
     update: 'Update',
     confirmDelete: 'Are you sure you want to delete this category?',
+    categoryTree: 'Category Tree',
+    levels: 'levels',
+    level: 'Level',
+    parentCategory: 'Parent Category',
+    noParentRoot: 'No parent (root category)',
+    maxThreeLevelsMessage: 'Category hierarchy supports up to 3 levels.',
+    selectCategoryHint: 'Select a category from the tree to view its products.',
+    selectCategoryFirst: 'Please select a category first',
+    noProductsInCategory: 'No products in this category yet.',
+    cannotDeleteCategoryWithChildren: 'Cannot delete category with existing subcategories',
     
     // Products
     manageProducts: 'Manage Products',
@@ -532,6 +542,16 @@ const translations = {
     save: 'حفظ',
     update: 'تحديث',
     confirmDelete: 'هل أنت متأكد من حذف هذا القسم؟',
+    categoryTree: 'شجرة الأقسام',
+    levels: 'مستويات',
+    level: 'مستوى',
+    parentCategory: 'القسم الأب',
+    noParentRoot: 'بدون أب (قسم رئيسي)',
+    maxThreeLevelsMessage: 'هيكل الأقسام يدعم حتى 3 مستويات فقط.',
+    selectCategoryHint: 'اختَر قسمًا من الشجرة لعرض منتجاته.',
+    selectCategoryFirst: 'يرجى اختيار قسم أولاً',
+    noProductsInCategory: 'لا توجد منتجات داخل هذا القسم بعد.',
+    cannotDeleteCategoryWithChildren: 'لا يمكن حذف قسم يحتوي على أقسام فرعية',
     
     // Products
     manageProducts: 'إدارة المنتجات',
@@ -980,7 +1000,7 @@ export function I18nProvider({ children }) {
   }, [language]);
 
   const t = (key) => {
-    return translations[language]?.[key] || key;
+    return translations[language]?.[key] || translations.en?.[key] || key;
   };
 
   const toggleLanguage = () => {

@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreCategoryRequest extends FormRequest
 {
@@ -21,9 +22,17 @@ class StoreCategoryRequest extends FormRequest
      */
     public function rules(): array
     {
+        $tenantId = config('tenant_id');
+
         return [
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
+            'parent_id' => [
+                'nullable',
+                Rule::exists('categories', 'id')->where(function ($query) use ($tenantId) {
+                    $query->where('tenant_id', $tenantId);
+                }),
+            ],
         ];
     }
 
@@ -39,6 +48,7 @@ class StoreCategoryRequest extends FormRequest
             'name.string' => 'Category name must be a string',
             'name.max' => 'Category name must not exceed 255 characters',
             'description.string' => 'Description must be a string',
+            'parent_id.exists' => 'Selected parent category does not exist',
         ];
     }
 }
