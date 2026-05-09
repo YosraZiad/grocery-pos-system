@@ -14,6 +14,9 @@ class Product extends BaseModel
         'category_id',
         'name',
         'barcode',
+        'description',
+        'unit_id',
+        'provider',
         'purchase_price',
         'sale_price',
         'quantity',
@@ -25,6 +28,7 @@ class Product extends BaseModel
     protected $casts = [
         'purchase_price' => 'decimal:2',
         'sale_price' => 'decimal:2',
+        'unit_id' => 'integer',
         'quantity' => 'integer',
         'expiry_date' => 'date',
         'min_stock_alert' => 'integer',

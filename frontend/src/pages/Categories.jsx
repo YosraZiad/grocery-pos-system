@@ -92,7 +92,10 @@ function Categories() {
     return map;
   }, [categories]);
 
-  const flattenedTree = useMemo(() => flattenTree(categoryTree), [categoryTree]);
+  const flattenedTree = useMemo(
+    () => flattenTree(categoryTree),
+    [categoryTree],
+  );
 
   useEffect(() => {
     if (!selectedCategoryId && categoryTree.length > 0) {
@@ -124,7 +127,9 @@ function Categories() {
     ? categoriesMap.get(selectedTreeNode.id)
     : null;
 
-  const editingNode = editingId ? findTreeNodeById(categoryTree, editingId) : null;
+  const editingNode = editingId
+    ? findTreeNodeById(categoryTree, editingId)
+    : null;
   const editingDescendants = useMemo(
     () => collectDescendantIds(editingNode),
     [editingNode],
@@ -443,7 +448,9 @@ function Categories() {
           </button>
 
           {hasChildren && isExpanded && (
-            <div className="space-y-1">{renderTree(node.children, level + 1)}</div>
+            <div className="space-y-1">
+              {renderTree(node.children, level + 1)}
+            </div>
           )}
         </div>
       );
@@ -504,7 +511,9 @@ function Categories() {
                       {selectedTreeNode.name}
                     </h3>
                     <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                      {selectedTreeNode.description || t("description")} - {t("productsCount")}: {selectedTreeNode.products_count || 0}
+                      {selectedTreeNode.description || t("description")} -{" "}
+                      {t("productsCount")}:{" "}
+                      {selectedTreeNode.products_count || 0}
                     </p>
                   </div>
 
@@ -521,7 +530,10 @@ function Categories() {
                     >
                       {t("delete")}
                     </button>
-                    <button className="btn-primary" onClick={openCreateProductModal}>
+                    <button
+                      className="btn-primary"
+                      onClick={openCreateProductModal}
+                    >
                       {t("addProduct")}
                     </button>
                   </div>
@@ -532,12 +544,24 @@ function Categories() {
                     <table className="min-w-full text-sm">
                       <thead className="bg-gray-50 dark:bg-gray-800">
                         <tr>
-                          <th className="px-4 py-3 text-start font-semibold">{t("productName")}</th>
-                          <th className="px-4 py-3 text-start font-semibold">{t("barcode")}</th>
-                          <th className="px-4 py-3 text-start font-semibold">{t("purchasePrice")}</th>
-                          <th className="px-4 py-3 text-start font-semibold">{t("salePrice")}</th>
-                          <th className="px-4 py-3 text-start font-semibold">{t("quantity")}</th>
-                          <th className="px-4 py-3 text-start font-semibold">{t("actions")}</th>
+                          <th className="px-4 py-3 text-start font-semibold">
+                            {t("productName")}
+                          </th>
+                          <th className="px-4 py-3 text-start font-semibold">
+                            {t("barcode")}
+                          </th>
+                          <th className="px-4 py-3 text-start font-semibold">
+                            {t("purchasePrice")}
+                          </th>
+                          <th className="px-4 py-3 text-start font-semibold">
+                            {t("salePrice")}
+                          </th>
+                          <th className="px-4 py-3 text-start font-semibold">
+                            {t("quantity")}
+                          </th>
+                          <th className="px-4 py-3 text-start font-semibold">
+                            {t("actions")}
+                          </th>
                         </tr>
                       </thead>
                       <tbody>
@@ -547,24 +571,36 @@ function Categories() {
                               key={product.id}
                               className="border-t border-gray-200 dark:border-gray-700"
                             >
-                              <td className="px-4 py-3 font-medium">{product.name}</td>
+                              <td className="px-4 py-3 font-medium">
+                                {product.name}
+                              </td>
                               <td className="px-4 py-3 text-gray-600 dark:text-gray-300">
                                 {product.barcode || "-"}
                               </td>
-                              <td className="px-4 py-3">{Number(product.purchase_price || 0).toFixed(2)}</td>
-                              <td className="px-4 py-3">{Number(product.sale_price || 0).toFixed(2)}</td>
-                              <td className="px-4 py-3">{product.quantity || 0}</td>
+                              <td className="px-4 py-3">
+                                {Number(product.purchase_price || 0).toFixed(2)}
+                              </td>
+                              <td className="px-4 py-3">
+                                {Number(product.sale_price || 0).toFixed(2)}
+                              </td>
+                              <td className="px-4 py-3">
+                                {product.quantity || 0}
+                              </td>
                               <td className="px-4 py-3">
                                 <div className="flex items-center gap-2">
                                   <button
                                     className="px-3 py-1 rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-200"
-                                    onClick={() => openEditProductModal(product)}
+                                    onClick={() =>
+                                      openEditProductModal(product)
+                                    }
                                   >
                                     {t("edit")}
                                   </button>
                                   <button
                                     className="px-3 py-1 rounded-lg bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-200"
-                                    onClick={() => requestDeleteProduct(product.id)}
+                                    onClick={() =>
+                                      requestDeleteProduct(product.id)
+                                    }
                                   >
                                     {t("delete")}
                                   </button>
@@ -596,7 +632,9 @@ function Categories() {
         </div>
       ) : (
         <div className="card text-center py-12">
-          <p className="text-gray-600 dark:text-gray-400">{t("noCategories")}</p>
+          <p className="text-gray-600 dark:text-gray-400">
+            {t("noCategories")}
+          </p>
         </div>
       )}
 
@@ -607,7 +645,9 @@ function Categories() {
               <h3 className="text-xl font-bold text-gray-900 dark:text-white">
                 {editingId ? t("editCategory") : t("addCategory")}
               </h3>
-              <button onClick={closeCategoryModal} className="text-gray-500">X</button>
+              <button onClick={closeCategoryModal} className="text-gray-500">
+                X
+              </button>
             </div>
 
             <form onSubmit={submitCategory} className="space-y-4">
@@ -643,22 +683,32 @@ function Categories() {
                     const indent = "- ".repeat(Math.max(0, node.level - 1));
                     return (
                       <option key={node.id} value={node.id}>
-                        {indent}{node.name}
+                        {indent}
+                        {node.name}
                       </option>
                     );
                   })}
                 </select>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t("maxThreeLevelsMessage")}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  {t("maxThreeLevelsMessage")}
+                </p>
               </div>
 
               <div className="flex justify-end gap-2">
-                <button type="button" className="btn-secondary" onClick={closeCategoryModal}>
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={closeCategoryModal}
+                >
                   {t("cancel")}
                 </button>
                 <button
                   type="submit"
                   className="btn-primary"
-                  disabled={createCategoryMutation.isPending || updateCategoryMutation.isPending}
+                  disabled={
+                    createCategoryMutation.isPending ||
+                    updateCategoryMutation.isPending
+                  }
                 >
                   {editingId ? t("update") : t("save")}
                 </button>
@@ -675,7 +725,9 @@ function Categories() {
               <h3 className="text-xl font-bold text-gray-900 dark:text-white">
                 {editingProductId ? t("editProduct") : t("addProduct")}
               </h3>
-              <button onClick={closeProductModal} className="text-gray-500">X</button>
+              <button onClick={closeProductModal} className="text-gray-500">
+                X
+              </button>
             </div>
 
             <form onSubmit={submitProduct} className="space-y-4">
@@ -685,7 +737,10 @@ function Categories() {
                   className="input"
                   value={productForm.name}
                   onChange={(event) =>
-                    setProductForm((previous) => ({ ...previous, name: event.target.value }))
+                    setProductForm((previous) => ({
+                      ...previous,
+                      name: event.target.value,
+                    }))
                   }
                   required
                 />
@@ -697,7 +752,10 @@ function Categories() {
                   className="input"
                   value={productForm.barcode}
                   onChange={(event) =>
-                    setProductForm((previous) => ({ ...previous, barcode: event.target.value }))
+                    setProductForm((previous) => ({
+                      ...previous,
+                      barcode: event.target.value,
+                    }))
                   }
                 />
               </div>
@@ -747,7 +805,10 @@ function Categories() {
                     min="0"
                     value={productForm.quantity}
                     onChange={(event) =>
-                      setProductForm((previous) => ({ ...previous, quantity: event.target.value }))
+                      setProductForm((previous) => ({
+                        ...previous,
+                        quantity: event.target.value,
+                      }))
                     }
                     required
                   />
@@ -755,13 +816,20 @@ function Categories() {
               </div>
 
               <div className="flex justify-end gap-2">
-                <button type="button" className="btn-secondary" onClick={closeProductModal}>
+                <button
+                  type="button"
+                  className="btn-secondary"
+                  onClick={closeProductModal}
+                >
                   {t("cancel")}
                 </button>
                 <button
                   type="submit"
                   className="btn-primary"
-                  disabled={createProductMutation.isPending || updateProductMutation.isPending}
+                  disabled={
+                    createProductMutation.isPending ||
+                    updateProductMutation.isPending
+                  }
                 >
                   {editingProductId ? t("update") : t("save")}
                 </button>

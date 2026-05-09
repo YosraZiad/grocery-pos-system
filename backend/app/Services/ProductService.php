@@ -32,6 +32,44 @@ class ProductService
             $query->where('category_id', $filters['category_id']);
         }
 
+        if (!empty($filters['created_from'])) {
+            $query->whereDate('created_at', '>=', $filters['created_from']);
+        }
+
+        if (!empty($filters['created_to'])) {
+            $query->whereDate('created_at', '<=', $filters['created_to']);
+        }
+
+        if (isset($filters['min_quantity']) && $filters['min_quantity'] !== '') {
+            $query->where('quantity', '>=', (int) $filters['min_quantity']);
+        }
+
+        if (isset($filters['max_quantity']) && $filters['max_quantity'] !== '') {
+            $query->where('quantity', '<=', (int) $filters['max_quantity']);
+        }
+
+        if (isset($filters['min_price']) && $filters['min_price'] !== '') {
+            $query->where('sale_price', '>=', (float) $filters['min_price']);
+        }
+
+        if (isset($filters['max_price']) && $filters['max_price'] !== '') {
+            $query->where('sale_price', '<=', (float) $filters['max_price']);
+        }
+
+        $allowedSorts = ['name', 'purchase_price', 'sale_price', 'quantity', 'created_at'];
+        $sortBy = $filters['sort_by'] ?? 'name';
+        $sortDirection = strtolower($filters['sort_direction'] ?? 'asc');
+
+        if (!in_array($sortBy, $allowedSorts, true)) {
+            $sortBy = 'name';
+        }
+
+        if (!in_array($sortDirection, ['asc', 'desc'], true)) {
+            $sortDirection = 'asc';
+        }
+
+        $query->orderBy($sortBy, $sortDirection);
+
         $perPage = $filters['per_page'] ?? 20;
         return $query->paginate($perPage);
     }

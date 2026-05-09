@@ -1,29 +1,30 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import { AuthProvider } from './context/AuthContext'
-import Layout from './layouts/Layout'
-import Home from './pages/Home'
-import Login from './pages/Login'
-import Register from './pages/Register'
-import Categories from './pages/Categories'
-import Products from './pages/Products'
-import Sales from './pages/Sales'
-import SalesList from './pages/SalesList'
-import SaleDetails from './pages/SaleDetails'
-import Invoice from './pages/Invoice'
-import Inventory from './pages/Inventory'
-import Returns from './pages/Returns'
-import Suppliers from './pages/Suppliers'
-import PurchaseInvoices from './pages/PurchaseInvoices'
-import Expenses from './pages/Expenses'
-import ProfitLoss from './pages/ProfitLoss'
-import Reports from './pages/Reports'
-import Settings from './pages/Settings'
-import Users from './pages/Users'
-import Roles from './pages/Roles'
-import Profile from './pages/Profile'
-import ProtectedRoute from './components/ProtectedRoute'
-import './App.css'
-import './styles/print.css'
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "./context/AuthContext";
+import Layout from "./layouts/Layout";
+import Home from "./pages/Home";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import Categories from "./pages/Categories";
+import Products from "./pages/Products";
+import ProductCard from "./pages/ProductCard";
+import Sales from "./pages/Sales";
+import SalesList from "./pages/SalesList";
+import SaleDetails from "./pages/SaleDetails";
+import Invoice from "./pages/Invoice";
+import Inventory from "./pages/Inventory";
+import Returns from "./pages/Returns";
+import Suppliers from "./pages/Suppliers";
+import PurchaseInvoices from "./pages/PurchaseInvoices";
+import Expenses from "./pages/Expenses";
+import ProfitLoss from "./pages/ProfitLoss";
+import Reports from "./pages/Reports";
+import Settings from "./pages/Settings";
+import Users from "./pages/Users";
+import Roles from "./pages/Roles";
+import Profile from "./pages/Profile";
+import ProtectedRoute from "./components/ProtectedRoute";
+import "./App.css";
+import "./styles/print.css";
 
 function App() {
   return (
@@ -33,7 +34,7 @@ function App() {
           {/* Public routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          
+
           {/* Protected routes */}
           <Route
             path="/"
@@ -46,6 +47,7 @@ function App() {
             <Route index element={<Home />} />
             <Route path="categories" element={<Categories />} />
             <Route path="products" element={<Products />} />
+            <Route path="products/:id" element={<ProductCard />} />
             <Route path="sales" element={<Sales />} />
             <Route path="sales-list" element={<SalesList />} />
             <Route path="sales/:id" element={<SaleDetails />} />
@@ -65,7 +67,7 @@ function App() {
         </Routes>
       </BrowserRouter>
     </AuthProvider>
-  )
+  );
 }
 
-export default App
+export default App;

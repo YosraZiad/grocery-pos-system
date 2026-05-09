@@ -23,7 +23,19 @@ class ProductController extends Controller
      */
     public function index(Request $request)
     {
-        $filters = $request->only(['search', 'category_id', 'per_page']);
+        $filters = $request->only([
+            'search',
+            'category_id',
+            'per_page',
+            'created_from',
+            'created_to',
+            'min_quantity',
+            'max_quantity',
+            'min_price',
+            'max_price',
+            'sort_by',
+            'sort_direction',
+        ]);
         $products = $this->service->index($filters);
 
         return response()->json($products, 200);
@@ -36,6 +48,9 @@ class ProductController extends Controller
     {
         $data = $request->validated();
         $data['tenant_id'] = config('tenant_id');
+        $data['purchase_price'] = $request->purchase_price ?? 0;
+        $data['sale_price'] = $request->sale_price ?? 0;
+        $data['quantity'] = $request->quantity ?? 0;
         $data['min_stock_alert'] = $request->min_stock_alert ?? 5;
         $data['min_expiry_alert'] = $request->min_expiry_alert ?? 7;
 
@@ -65,6 +80,9 @@ class ProductController extends Controller
     public function update(UpdateProductRequest $request, string $id)
     {
         $data = $request->validated();
+        $data['purchase_price'] = $request->purchase_price ?? 0;
+        $data['sale_price'] = $request->sale_price ?? 0;
+        $data['quantity'] = $request->quantity ?? 0;
         $product = $this->service->update($id, $data);
 
         return response()->json([
