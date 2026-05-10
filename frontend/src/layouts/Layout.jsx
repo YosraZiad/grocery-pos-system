@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
-import { Outlet, useNavigate, Link, useLocation } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { useI18n } from '../context/I18nContext';
-import { useTheme } from '../context/ThemeContext';
+import { useState, useEffect } from "react";
+import { Outlet, useNavigate, Link, useLocation } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import { useI18n } from "../context/I18nContext";
+import { useTheme } from "../context/ThemeContext";
 
 /**
  * Layout حديث واحترافي مع Navigation محسّن
@@ -17,11 +17,12 @@ function Layout() {
   const [salesMenuOpen, setSalesMenuOpen] = useState(false);
   const [managementMenuOpen, setManagementMenuOpen] = useState(false);
   const [reportsMenuOpen, setReportsMenuOpen] = useState(false);
+  const [adminMenuOpen, setAdminMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   const handleLogout = async () => {
     await logout();
-    navigate('/login');
+    navigate("/login");
   };
 
   const isActive = (path) => location.pathname === path;
@@ -31,54 +32,57 @@ function Layout() {
     setSalesMenuOpen(false);
     setManagementMenuOpen(false);
     setReportsMenuOpen(false);
+    setAdminMenuOpen(false);
     setUserMenuOpen(false);
   }, [location.pathname]);
 
   // إغلاق قائمة المستخدم عند الضغط خارجها
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (userMenuOpen && !event.target.closest('.user-menu-container')) {
+      if (userMenuOpen && !event.target.closest(".user-menu-container")) {
         setUserMenuOpen(false);
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [userMenuOpen]);
 
   // التحقق من نوع المستخدم
-  const isAdmin = user?.roles?.some(role => role.name === 'admin');
-  const isCashier = user?.roles?.some(role => role.name === 'cashier');
+  const isAdmin = user?.roles?.some((role) => role.name === "admin");
+  const isCashier = user?.roles?.some((role) => role.name === "cashier");
 
   // Navigation Groups
   const navigationGroups = {
     main: [
-      { path: '/', label: t('home'), icon: '🏠' },
-      { path: '/categories', label: t('categories'), icon: '📁' },
-      { path: '/products', label: t('products'), icon: '📦' },
+      { path: "/", label: t("home"), icon: "🏠" },
+      { path: "/categories", label: t("categories"), icon: "📁" },
+      { path: "/products", label: t("products"), icon: "📦" },
     ],
-    admin: isAdmin ? [
-      { path: '/users', label: t('usersManagement'), icon: '👥' },
-      { path: '/roles', label: t('rolesAndPermissions'), icon: '🔐' },
-    ] : [],
+    admin: isAdmin
+      ? [
+          { path: "/users", label: t("usersManagement"), icon: "👥" },
+          { path: "/roles", label: t("rolesAndPermissions"), icon: "🔐" },
+        ]
+      : [],
     sales: [
-      { path: '/sales', label: t('sales'), icon: '💰' },
-      { path: '/sales-list', label: t('salesList'), icon: '📋' },
+      { path: "/sales", label: t("sales"), icon: "💰" },
+      { path: "/sales-list", label: t("salesList"), icon: "📋" },
     ],
     management: [
-      { path: '/inventory', label: t('inventory'), icon: '📊' },
-      { path: '/returns', label: t('returnsManagement'), icon: '🔄' },
-      { path: '/suppliers', label: t('suppliersManagement'), icon: '👥' },
-      { path: '/purchase-invoices', label: t('purchaseInvoices'), icon: '📄' },
-      { path: '/expenses', label: t('expensesManagement'), icon: '💸' },
+      { path: "/inventory", label: t("inventory"), icon: "📊" },
+      { path: "/returns", label: t("returnsManagement"), icon: "🔄" },
+      { path: "/suppliers", label: t("suppliersManagement"), icon: "👥" },
+      { path: "/purchase-invoices", label: t("purchaseInvoices"), icon: "📄" },
+      { path: "/expenses", label: t("expensesManagement"), icon: "💸" },
     ],
     reports: [
-      { path: '/profit-loss', label: t('profitLoss'), icon: '📈' },
-      { path: '/reports', label: t('reports'), icon: '📊' },
+      { path: "/profit-loss", label: t("profitLoss"), icon: "📈" },
+      { path: "/reports", label: t("reports"), icon: "📊" },
     ],
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+    <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
       {/* Header */}
       <header className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50 transition-colors duration-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -102,8 +106,8 @@ function Layout() {
                   to={item.path}
                   className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center space-x-1 rtl:space-x-reverse ${
                     isActive(item.path)
-                      ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300'
-                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                      ? "bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300"
+                      : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                   }`}
                 >
                   <span>{item.icon}</span>
@@ -112,26 +116,29 @@ function Layout() {
               ))}
 
               {/* Sales Dropdown */}
-              <div className="relative group">
+              <div
+                className="relative group"
+                onMouseEnter={() => {
+                  setSalesMenuOpen(true);
+                  setManagementMenuOpen(false);
+                  setReportsMenuOpen(false);
+                  setAdminMenuOpen(false);
+                }}
+                onMouseLeave={() => setSalesMenuOpen(false)}
+              >
                 <button
                   className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center space-x-1 rtl:space-x-reverse ${
-                    isActive('/sales') || isActive('/sales-list')
-                      ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300'
-                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                    isActive("/sales") || isActive("/sales-list")
+                      ? "bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300"
+                      : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                   }`}
-                  onMouseEnter={() => setSalesMenuOpen(true)}
-                  onMouseLeave={() => setSalesMenuOpen(false)}
                 >
                   <span>💰</span>
-                  <span>{t('sales')}</span>
+                  <span>{t("sales")}</span>
                   <span>▼</span>
                 </button>
                 {salesMenuOpen && (
-                  <div
-                    className="absolute top-full left-0 rtl:left-auto rtl:right-0 mt-1 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50"
-                    onMouseEnter={() => setSalesMenuOpen(true)}
-                    onMouseLeave={() => setSalesMenuOpen(false)}
-                  >
+                  <div className="absolute top-full left-0 rtl:left-auto rtl:right-0 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
                     {navigationGroups.sales.map((item) => (
                       <Link
                         key={item.path}
@@ -139,8 +146,8 @@ function Layout() {
                         onClick={() => setSalesMenuOpen(false)}
                         className={`block px-4 py-2 text-sm transition-colors ${
                           isActive(item.path)
-                            ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
-                            : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                            ? "bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300"
+                            : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                         }`}
                       >
                         <span className="mr-2 rtl:ml-2">{item.icon}</span>
@@ -152,26 +159,31 @@ function Layout() {
               </div>
 
               {/* Management Dropdown */}
-              <div className="relative group">
+              <div
+                className="relative group"
+                onMouseEnter={() => {
+                  setManagementMenuOpen(true);
+                  setSalesMenuOpen(false);
+                  setReportsMenuOpen(false);
+                  setAdminMenuOpen(false);
+                }}
+                onMouseLeave={() => setManagementMenuOpen(false)}
+              >
                 <button
                   className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center space-x-1 rtl:space-x-reverse ${
-                    navigationGroups.management.some(item => isActive(item.path))
-                      ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300'
-                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                    navigationGroups.management.some((item) =>
+                      isActive(item.path),
+                    )
+                      ? "bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300"
+                      : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                   }`}
-                  onMouseEnter={() => setManagementMenuOpen(true)}
-                  onMouseLeave={() => setManagementMenuOpen(false)}
                 >
                   <span>⚙️</span>
-                  <span>{t('management')}</span>
+                  <span>{t("management")}</span>
                   <span>▼</span>
                 </button>
                 {managementMenuOpen && (
-                  <div
-                    className="absolute top-full left-0 rtl:left-auto rtl:right-0 mt-1 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50"
-                    onMouseEnter={() => setManagementMenuOpen(true)}
-                    onMouseLeave={() => setManagementMenuOpen(false)}
-                  >
+                  <div className="absolute top-full left-0 rtl:left-auto rtl:right-0 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
                     {navigationGroups.management.map((item) => (
                       <Link
                         key={item.path}
@@ -179,8 +191,8 @@ function Layout() {
                         onClick={() => setManagementMenuOpen(false)}
                         className={`block px-4 py-2 text-sm transition-colors ${
                           isActive(item.path)
-                            ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
-                            : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                            ? "bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300"
+                            : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                         }`}
                       >
                         <span className="mr-2 rtl:ml-2">{item.icon}</span>
@@ -192,26 +204,29 @@ function Layout() {
               </div>
 
               {/* Reports Dropdown */}
-              <div className="relative group">
+              <div
+                className="relative group"
+                onMouseEnter={() => {
+                  setReportsMenuOpen(true);
+                  setSalesMenuOpen(false);
+                  setManagementMenuOpen(false);
+                  setAdminMenuOpen(false);
+                }}
+                onMouseLeave={() => setReportsMenuOpen(false)}
+              >
                 <button
                   className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center space-x-1 rtl:space-x-reverse ${
-                    navigationGroups.reports.some(item => isActive(item.path))
-                      ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300'
-                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                    navigationGroups.reports.some((item) => isActive(item.path))
+                      ? "bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300"
+                      : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                   }`}
-                  onMouseEnter={() => setReportsMenuOpen(true)}
-                  onMouseLeave={() => setReportsMenuOpen(false)}
                 >
                   <span>📊</span>
-                  <span>{t('reports')}</span>
+                  <span>{t("reports")}</span>
                   <span>▼</span>
                 </button>
                 {reportsMenuOpen && (
-                  <div
-                    className="absolute top-full left-0 rtl:left-auto rtl:right-0 mt-1 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50"
-                    onMouseEnter={() => setReportsMenuOpen(true)}
-                    onMouseLeave={() => setReportsMenuOpen(false)}
-                  >
+                  <div className="absolute top-full left-0 rtl:left-auto rtl:right-0 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
                     {navigationGroups.reports.map((item) => (
                       <Link
                         key={item.path}
@@ -219,8 +234,8 @@ function Layout() {
                         onClick={() => setReportsMenuOpen(false)}
                         className={`block px-4 py-2 text-sm transition-colors ${
                           isActive(item.path)
-                            ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
-                            : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                            ? "bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300"
+                            : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                         }`}
                       >
                         <span className="mr-2 rtl:ml-2">{item.icon}</span>
@@ -236,32 +251,32 @@ function Layout() {
                 <div className="relative group">
                   <button
                     className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center space-x-1 rtl:space-x-reverse ${
-                      navigationGroups.admin.some(item => isActive(item.path))
-                        ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300'
-                        : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                      navigationGroups.admin.some((item) => isActive(item.path))
+                        ? "bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300"
+                        : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                     }`}
-                    onMouseEnter={() => setManagementMenuOpen(true)}
-                    onMouseLeave={() => setManagementMenuOpen(false)}
+                    onClick={() => {
+                      setAdminMenuOpen((open) => !open);
+                      setSalesMenuOpen(false);
+                      setManagementMenuOpen(false);
+                      setReportsMenuOpen(false);
+                    }}
                   >
                     <span>👑</span>
-                    <span>{t('admin')}</span>
+                    <span>{t("admin")}</span>
                     <span>▼</span>
                   </button>
-                  {managementMenuOpen && (
-                    <div
-                      className="absolute top-full left-0 rtl:left-auto rtl:right-0 mt-1 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50"
-                      onMouseEnter={() => setManagementMenuOpen(true)}
-                      onMouseLeave={() => setManagementMenuOpen(false)}
-                    >
+                  {adminMenuOpen && (
+                    <div className="absolute top-full left-0 rtl:left-auto rtl:right-0 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
                       {navigationGroups.admin.map((item) => (
                         <Link
                           key={item.path}
                           to={item.path}
-                          onClick={() => setManagementMenuOpen(false)}
+                          onClick={() => setAdminMenuOpen(false)}
                           className={`block px-4 py-2 text-sm transition-colors ${
                             isActive(item.path)
-                              ? 'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
-                              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
+                              ? "bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300"
+                              : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                           }`}
                         >
                           <span className="mr-2 rtl:ml-2">{item.icon}</span>
@@ -277,13 +292,13 @@ function Layout() {
               <Link
                 to="/settings"
                 className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center space-x-1 rtl:space-x-reverse ${
-                  isActive('/settings')
-                    ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300'
-                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  isActive("/settings")
+                    ? "bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300"
+                    : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                 }`}
               >
                 <span>⚙️</span>
-                <span>{t('settings')}</span>
+                <span>{t("settings")}</span>
               </Link>
             </nav>
 
@@ -301,18 +316,22 @@ function Layout() {
               <button
                 onClick={toggleLanguage}
                 className="p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
-                title={language === 'en' ? 'Switch to Arabic' : 'التبديل إلى الإنجليزية'}
+                title={
+                  language === "en"
+                    ? "Switch to Arabic"
+                    : "التبديل إلى الإنجليزية"
+                }
               >
-                {language === 'en' ? '🇸🇦' : '🇬🇧'}
+                {language === "en" ? "🇸🇦" : "🇬🇧"}
               </button>
 
               {/* Theme Toggle */}
               <button
                 onClick={toggleTheme}
                 className="p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
-                title={theme === 'light' ? 'Dark Mode' : 'Light Mode'}
+                title={theme === "light" ? "Dark Mode" : "Light Mode"}
               >
-                {theme === 'light' ? '🌙' : '☀️'}
+                {theme === "light" ? "🌙" : "☀️"}
               </button>
 
               {/* User Menu - Dropdown */}
@@ -320,9 +339,9 @@ function Layout() {
                 <button
                   onClick={() => setUserMenuOpen(!userMenuOpen)}
                   className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-700 rounded-full flex items-center justify-center text-white text-sm font-semibold hover:from-primary-600 hover:to-primary-800 transition-all duration-200 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
-                  title={user?.name || 'User'}
+                  title={user?.name || "User"}
                 >
-                  {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+                  {user?.name?.charAt(0)?.toUpperCase() || "U"}
                 </button>
 
                 {/* User Dropdown Menu */}
@@ -331,10 +350,10 @@ function Layout() {
                     {/* User Info */}
                     <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
                       <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
-                        {user?.name || 'User'}
+                        {user?.name || "User"}
                       </p>
                       <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                        {user?.email || ''}
+                        {user?.email || ""}
                       </p>
                     </div>
 
@@ -346,7 +365,7 @@ function Layout() {
                         className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                       >
                         <span className="mr-3 rtl:ml-3">👤</span>
-                        <span>{t('profile') || 'Profile'}</span>
+                        <span>{t("profile") || "Profile"}</span>
                       </Link>
                       <button
                         onClick={() => {
@@ -356,7 +375,7 @@ function Layout() {
                         className="w-full flex items-center px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-right rtl:text-left"
                       >
                         <span className="mr-3 rtl:ml-3">🚪</span>
-                        <span>{t('logout')}</span>
+                        <span>{t("logout")}</span>
                       </button>
                     </div>
                   </div>
@@ -369,7 +388,7 @@ function Layout() {
                   onClick={() => setUserMenuOpen(!userMenuOpen)}
                   className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-700 rounded-full flex items-center justify-center text-white text-sm font-semibold"
                 >
-                  {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+                  {user?.name?.charAt(0)?.toUpperCase() || "U"}
                 </button>
               </div>
             </div>
@@ -378,15 +397,21 @@ function Layout() {
 
         {/* Mobile User Dropdown Menu */}
         {userMenuOpen && (
-          <div className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-50" onClick={() => setUserMenuOpen(false)}>
-            <div className="absolute top-16 right-4 rtl:right-auto rtl:left-4 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 py-2" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-50"
+            onClick={() => setUserMenuOpen(false)}
+          >
+            <div
+              className="absolute top-16 right-4 rtl:right-auto rtl:left-4 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 py-2"
+              onClick={(e) => e.stopPropagation()}
+            >
               {/* User Info */}
               <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
                 <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
-                  {user?.name || 'User'}
+                  {user?.name || "User"}
                 </p>
                 <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                  {user?.email || ''}
+                  {user?.email || ""}
                 </p>
               </div>
 
@@ -401,7 +426,7 @@ function Layout() {
                   className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                 >
                   <span className="mr-3 rtl:ml-3">👤</span>
-                  <span>{t('profile') || 'Profile'}</span>
+                  <span>{t("profile") || "Profile"}</span>
                 </Link>
                 <button
                   onClick={() => {
@@ -412,7 +437,7 @@ function Layout() {
                   className="w-full flex items-center px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-right rtl:text-left"
                 >
                   <span className="mr-3 rtl:ml-3">🚪</span>
-                  <span>{t('logout')}</span>
+                  <span>{t("logout")}</span>
                 </button>
               </div>
             </div>
@@ -430,18 +455,18 @@ function Layout() {
                   onClick={() => setMobileMenuOpen(false)}
                   className={`block px-3 py-2 rounded-lg text-sm font-medium ${
                     isActive(item.path)
-                      ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300'
-                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                      ? "bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300"
+                      : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                   }`}
                 >
                   <span className="mr-2 rtl:ml-2">{item.icon}</span>
                   {item.label}
                 </Link>
               ))}
-              
+
               <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
                 <p className="px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
-                  {t('sales')}
+                  {t("sales")}
                 </p>
                 {navigationGroups.sales.map((item) => (
                   <Link
@@ -450,8 +475,8 @@ function Layout() {
                     onClick={() => setMobileMenuOpen(false)}
                     className={`block px-3 py-2 rounded-lg text-sm font-medium ${
                       isActive(item.path)
-                        ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300'
-                        : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                        ? "bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300"
+                        : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                     }`}
                   >
                     <span className="mr-2 rtl:ml-2">{item.icon}</span>
@@ -462,7 +487,7 @@ function Layout() {
 
               <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
                 <p className="px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
-                  {t('management')}
+                  {t("management")}
                 </p>
                 {navigationGroups.management.map((item) => (
                   <Link
@@ -471,8 +496,8 @@ function Layout() {
                     onClick={() => setMobileMenuOpen(false)}
                     className={`block px-3 py-2 rounded-lg text-sm font-medium ${
                       isActive(item.path)
-                        ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300'
-                        : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                        ? "bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300"
+                        : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                     }`}
                   >
                     <span className="mr-2 rtl:ml-2">{item.icon}</span>
@@ -483,7 +508,7 @@ function Layout() {
 
               <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
                 <p className="px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
-                  {t('reports')}
+                  {t("reports")}
                 </p>
                 {navigationGroups.reports.map((item) => (
                   <Link
@@ -492,8 +517,8 @@ function Layout() {
                     onClick={() => setMobileMenuOpen(false)}
                     className={`block px-3 py-2 rounded-lg text-sm font-medium ${
                       isActive(item.path)
-                        ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300'
-                        : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                        ? "bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300"
+                        : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                     }`}
                   >
                     <span className="mr-2 rtl:ml-2">{item.icon}</span>
@@ -505,7 +530,7 @@ function Layout() {
               {isAdmin && navigationGroups.admin.length > 0 && (
                 <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
                   <p className="px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
-                    {t('admin')}
+                    {t("admin")}
                   </p>
                   {navigationGroups.admin.map((item) => (
                     <Link
@@ -514,8 +539,8 @@ function Layout() {
                       onClick={() => setMobileMenuOpen(false)}
                       className={`block px-3 py-2 rounded-lg text-sm font-medium ${
                         isActive(item.path)
-                          ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300'
-                          : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                          ? "bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300"
+                          : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                       }`}
                     >
                       <span className="mr-2 rtl:ml-2">{item.icon}</span>
@@ -530,13 +555,13 @@ function Layout() {
                 to="/settings"
                 onClick={() => setMobileMenuOpen(false)}
                 className={`block px-3 py-2 rounded-lg text-sm font-medium ${
-                  isActive('/settings')
-                    ? 'bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300'
-                    : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  isActive("/settings")
+                    ? "bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-300"
+                    : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                 }`}
               >
                 <span className="mr-2 rtl:ml-2">⚙️</span>
-                {t('settings')}
+                {t("settings")}
               </Link>
             </div>
           </div>
@@ -544,15 +569,15 @@ function Layout() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
         <Outlet />
       </main>
 
       {/* Footer */}
-      <footer className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-auto transition-colors duration-200">
+      <footer className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 transition-colors duration-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <p className="text-center text-sm text-gray-500 dark:text-gray-400">
-            {t('copyright')}
+            {t("copyright")}
           </p>
         </div>
       </footer>

@@ -14,12 +14,19 @@ class UserControllerTest extends TestCase
 
     public function test_admin_can_view_all_users()
     {
-        $this->actingAsAdmin();
+        $admin = $this->actingAsAdmin();
 
         $response = $this->getJson('/api/users');
 
-        $response->assertStatus(200)
-            ->assertJsonStructure([
+        $response->assertStatus(200);
+
+        $data = $response->json('data');
+        $this->assertIsArray($data);
+
+        $returnedIds = array_column($data, 'id');
+        $this->assertNotContains($admin->id, $returnedIds);
+
+        $response->assertJsonStructure([
                 'data' => [
                     '*' => [
                         'id',

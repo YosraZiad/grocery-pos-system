@@ -18,6 +18,10 @@ class UserService
     {
         $query = User::with('roles');
 
+        if (auth()->check()) {
+            $query->whereKeyNot(auth()->id());
+        }
+
         // Search by name or email
         if (isset($filters['search'])) {
             $search = $filters['search'];
