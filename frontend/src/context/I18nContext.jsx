@@ -46,6 +46,7 @@ const translations = {
     description: "Description",
     productsCount: "Products Count",
     actions: "Actions",
+    view: "View",
     edit: "Edit",
     delete: "Delete",
     cancel: "Cancel",
@@ -200,6 +201,7 @@ const translations = {
     results: "results",
     previous: "Previous",
     next: "Next",
+    page: "page",
 
     // Confirmation Modal
     confirmAction: "Confirm Action",
@@ -562,6 +564,7 @@ const translations = {
     description: "الوصف",
     productsCount: "عدد المنتجات",
     actions: "الإجراءات",
+    view: "عرض",
     edit: "تعديل",
     delete: "حذف",
     cancel: "إلغاء",
@@ -715,6 +718,7 @@ const translations = {
     results: "نتيجة",
     previous: "السابق",
     next: "التالي",
+    page: "صفحة",
 
     // Confirmation Modal
     confirmAction: "تأكيد الإجراء",

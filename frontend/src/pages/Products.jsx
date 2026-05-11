@@ -942,9 +942,9 @@ function Products() {
             }}
             className="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
           >
-            <option value={10}>10 / page</option>
-            <option value={20}>20 / page</option>
-            <option value={50}>50 / page</option>
+            <option value={10}>10 / {t("page")}</option>
+            <option value={20}>20 / {t("page")}</option>
+            <option value={50}>50 / {t("page")}</option>
           </select>
           <Tooltip label={t("reset") || "Reset"}>
             <button
