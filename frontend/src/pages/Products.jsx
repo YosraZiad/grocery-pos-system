@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import ConfirmationModal from "../components/ConfirmationModal";
 import ProductForm from "../components/ProductForm";
+import Tooltip from "../components/Tooltip";
 import { useI18n } from "../context/I18nContext";
 import api from "../services/api";
 
@@ -42,10 +43,38 @@ function findPathToCategory(nodes, id, path = []) {
   return null;
 }
 
+function buildPagination(currentPage, lastPage) {
+  if (!lastPage || lastPage <= 1) {
+    return [];
+  }
+
+  const pages = new Set([
+    1,
+    lastPage,
+    currentPage - 1,
+    currentPage,
+    currentPage + 1,
+  ]);
+  const normalized = [...pages]
+    .filter((page) => page >= 1 && page <= lastPage)
+    .sort((a, b) => a - b);
+
+  const withEllipsis = [];
+  normalized.forEach((page, index) => {
+    const previous = normalized[index - 1];
+    if (index > 0 && page - previous > 1) {
+      withEllipsis.push(`ellipsis-${previous}-${page}`);
+    }
+    withEllipsis.push(page);
+  });
+
+  return withEllipsis;
+}
+
 function Products() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { t } = useI18n();
+  const { t, language } = useI18n();
 
   const [selectedCategoryId, setSelectedCategoryId] = useState(null);
   const [expandedIds, setExpandedIds] = useState(new Set());
@@ -96,28 +125,9 @@ function Products() {
     }
   }, [categoryTree, selectedCategoryId]);
 
-  useEffect(() => {
-    if (!categoryTree.length) {
-      return;
-    }
-
-    setExpandedIds((previous) => {
-      if (previous.size > 0) {
-        return previous;
-      }
-
-      const initial = new Set();
-      categoryTree.forEach((node) => initial.add(node.id));
-      return initial;
-    });
-  }, [categoryTree]);
-
   const selectedNode = selectedCategoryId
     ? findTreeNodeById(categoryTree, selectedCategoryId)
     : null;
-
-  const isLeafCategory =
-    Boolean(selectedNode) && (selectedNode.children?.length || 0) === 0;
 
   const selectedCategoryPath = useMemo(() => {
     if (!selectedCategoryId) {
@@ -126,6 +136,13 @@ function Products() {
 
     return findPathToCategory(categoryTree, selectedCategoryId) || [];
   }, [categoryTree, selectedCategoryId]);
+
+  const selectedCategoryLevel = selectedCategoryPath.length;
+  const canCreateSubCategory =
+    Boolean(selectedNode) &&
+    selectedCategoryLevel > 0 &&
+    selectedCategoryLevel < 3;
+  const canCreateProduct = Boolean(selectedNode) && selectedCategoryLevel === 3;
 
   const { data: productsResponse, isLoading: loadingProducts } = useQuery({
     queryKey: [
@@ -147,6 +164,7 @@ function Products() {
       const response = await api.get("/products", {
         params: {
           category_id: selectedCategoryId || undefined,
+          include_descendants: true,
           search: searchTerm || undefined,
           per_page: perPage,
           page,
@@ -368,9 +386,37 @@ function Products() {
     setSelectedCategoryId(id);
     setSearchTerm("");
     setPage(1);
+
+    const path = findPathToCategory(categoryTree, id) || [];
+    const node = findTreeNodeById(categoryTree, id);
+    const hasChildren = (node?.children?.length || 0) > 0;
+    const ids = hasChildren
+      ? path.map((pathNode) => pathNode.id)
+      : path.slice(0, -1).map((pathNode) => pathNode.id);
+
+    setExpandedIds(new Set(ids));
   };
 
   const openCreateCategory = (parentCategoryId) => {
+    if (!parentCategoryId) {
+      setEditingCategory(null);
+      setCategoryForm({
+        name: "",
+        description: "",
+        parent_id: "",
+      });
+      setShowCategoryModal(true);
+      setOpenActionMenuCategoryId(null);
+      return;
+    }
+
+    const parentPath = findPathToCategory(categoryTree, parentCategoryId) || [];
+    if (parentPath.length >= 3) {
+      toast.error(t("maxThreeLevelsMessage"));
+      setOpenActionMenuCategoryId(null);
+      return;
+    }
+
     setEditingCategory(null);
     setCategoryForm({
       name: "",
@@ -452,7 +498,8 @@ function Products() {
       return;
     }
 
-    if ((node.children?.length || 0) > 0) {
+    const path = findPathToCategory(categoryTree, categoryId) || [];
+    if (path.length !== 3) {
       toast.error(t("leafOnlyProducts"));
       setOpenActionMenuCategoryId(null);
       return;
@@ -481,91 +528,193 @@ function Products() {
 
   const toggleExpand = (id) => {
     setExpandedIds((previous) => {
-      const next = new Set(previous);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
+      const path = findPathToCategory(categoryTree, id) || [];
+      if (!path.length) {
+        return previous;
       }
-      return next;
+
+      if (previous.has(id)) {
+        return new Set(path.slice(0, -1).map((pathNode) => pathNode.id));
+      }
+
+      return new Set(path.map((pathNode) => pathNode.id));
     });
   };
 
   const renderTree = (nodes, level = 1) => {
-    return nodes.map((node) => {
+    return nodes.map((node, index) => {
       const hasChildren = node.children?.length > 0;
       const isExpanded = expandedIds.has(node.id);
       const isSelected = selectedCategoryId === node.id;
+      const isLast = index === nodes.length - 1;
+      const canAddCategoryAtLevel = level < 3;
+      const canAddProductAtLevel = level === 3;
+      const indentStep = 64;
+      const rowHeight = 56;
+      const iconSize = 36;
+      const nodeStart = (level - 1) * indentStep;
+      const nodeCenter = nodeStart + iconSize / 2;
+      const parentCenter = nodeCenter - indentStep;
+      const midY = rowHeight / 2;
+      const elbowWidth = Math.max(18, indentStep - 34);
 
       return (
-        <div key={node.id} className="space-y-1">
-          <div className="relative">
+        <div key={node.id} className="relative pb-1">
+          {hasChildren && isExpanded && (
+            <>
+              <span
+                className="pointer-events-none absolute z-0 h-px bg-sky-600/90 dark:bg-sky-300/90"
+                style={{
+                  insetInlineStart: `${nodeCenter}px`,
+                  top: `${midY}px`,
+                  width: `${elbowWidth}px`,
+                }}
+              />
+              <span
+                className="pointer-events-none absolute z-0 w-px bg-sky-600/90 dark:bg-sky-300/90"
+                style={{
+                  insetInlineStart: `${nodeCenter}px`,
+                  top: `${midY}px`,
+                  height: `calc(100% - ${midY}px)`,
+                }}
+              />
+            </>
+          )}
+
+          {level > 1 && (
+            <>
+              <span
+                className="pointer-events-none absolute z-0 w-px bg-sky-600/80 dark:bg-sky-400/80"
+                style={{
+                  insetInlineStart: `${parentCenter}px`,
+                  top: 0,
+                  height: isLast ? `${midY}px` : "100%",
+                }}
+              />
+              <span
+                className="pointer-events-none absolute z-0 h-px bg-sky-600/80 dark:bg-sky-400/80"
+                style={{
+                  top: `${midY}px`,
+                  insetInlineStart: `${parentCenter}px`,
+                  width: `${elbowWidth}px`,
+                }}
+              />
+            </>
+          )}
+
+          <div
+            className="relative z-10 flex items-center justify-between gap-2"
+            style={{
+              minHeight: `${rowHeight}px`,
+              marginInlineStart: `${nodeStart}px`,
+              width: `calc(100% - ${nodeStart}px)`,
+            }}
+          >
             <button
               type="button"
               onClick={() => handleSelectCategory(node.id)}
-              className={`w-full rounded-xl px-3 py-2 text-start transition-all border ${
+              className={`flex min-w-0 items-center gap-3 rounded-md px-1.5 py-1.5 text-start transition-all border bg-white/95 dark:bg-gray-900/70 ${
                 isSelected
-                  ? "border-primary-300 bg-primary-50 dark:bg-primary-900/20 dark:border-primary-700"
-                  : "border-transparent hover:border-gray-200 dark:hover:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800"
+                  ? "border-gray-900 bg-slate-100 dark:border-gray-200 dark:bg-gray-800/70"
+                  : "border-transparent hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800"
               }`}
-              style={{ marginInlineStart: `${(level - 1) * 16}px` }}
             >
-              <div className="flex items-center justify-between gap-2">
-                <div className="min-w-0 flex items-center gap-2">
-                  <span
-                    className="inline-flex h-6 w-6 items-center justify-center rounded-lg bg-gray-200 dark:bg-gray-700 text-xs"
-                    onClick={(event) => {
+              <span
+                className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-sm border border-gray-400 bg-gray-100 text-gray-900 dark:border-gray-500 dark:bg-gray-700 dark:text-gray-100"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  if (hasChildren) {
+                    toggleExpand(node.id);
+                  }
+                }}
+              >
+                <svg
+                  className="h-5 w-5"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <path d="M3 6a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v1H3V6Zm0 4h18v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-8Z" />
+                </svg>
+              </span>
+              <span
+                dir="auto"
+                className="truncate text-base font-semibold text-gray-800 dark:text-gray-100"
+              >
+                {node.name}
+              </span>
+              {hasChildren && (
+                <span
+                  role="button"
+                  tabIndex={0}
+                  className="inline-flex h-6 w-6 shrink-0 cursor-pointer items-center justify-center rounded-md border border-gray-300 bg-gray-100 text-xs dark:border-gray-600 dark:bg-gray-700"
+                  onClick={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    toggleExpand(node.id);
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
                       event.stopPropagation();
-                      if (hasChildren) {
-                        toggleExpand(node.id);
-                      }
-                    }}
-                  >
-                    {hasChildren ? (isExpanded ? "-" : "+") : "•"}
-                  </span>
-                  <span className="truncate font-semibold text-gray-800 dark:text-gray-100">
-                    {node.name}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-[11px] px-2 py-1 rounded-full bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-200">
-                    {node.products_count || 0}
-                  </span>
-                  <span
-                    role="button"
-                    tabIndex={0}
-                    className="inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-md border border-gray-300 dark:border-gray-700 text-xs"
-                    onClick={(event) => {
+                      toggleExpand(node.id);
+                    }
+                  }}
+                >
+                  {isExpanded ? "-" : "+"}
+                </span>
+              )}
+            </button>
+
+            <div className="flex shrink-0 items-center gap-2">
+              <span className="text-[11px] px-2 py-1 rounded-full bg-primary-100 dark:bg-primary-900/40 text-primary-700 dark:text-primary-200">
+                {node.products_count || 0}
+              </span>
+              <Tooltip label={t("actions")}>
+                <span
+                  role="button"
+                  tabIndex={0}
+                  className="inline-flex h-7 w-7 cursor-pointer items-center justify-center rounded-md border border-gray-300 dark:border-gray-700 text-xs"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setOpenActionMenuCategoryId((previous) =>
+                      previous === node.id ? null : node.id,
+                    );
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
                       event.stopPropagation();
                       setOpenActionMenuCategoryId((previous) =>
                         previous === node.id ? null : node.id,
                       );
-                    }}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter" || event.key === " ") {
-                        event.preventDefault();
-                        event.stopPropagation();
-                        setOpenActionMenuCategoryId((previous) =>
-                          previous === node.id ? null : node.id,
-                        );
-                      }
-                    }}
-                  >
-                    ...
-                  </span>
-                </div>
-              </div>
-            </button>
+                    }
+                  }}
+                >
+                  ...
+                </span>
+              </Tooltip>
+            </div>
 
             {openActionMenuCategoryId === node.id && (
               <div className="absolute z-20 mt-1 end-0 w-44 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg p-1">
-                <button
-                  type="button"
-                  className="w-full text-start px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 text-sm"
-                  onClick={() => openCreateCategory(node.id)}
-                >
-                  {t("addCategory")}
-                </button>
+                {canAddCategoryAtLevel ? (
+                  <button
+                    type="button"
+                    className="w-full text-start px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 text-sm"
+                    onClick={() => openCreateCategory(node.id)}
+                  >
+                    {t("addCategory")}
+                  </button>
+                ) : null}
+                {canAddProductAtLevel ? (
+                  <button
+                    type="button"
+                    className="w-full text-start px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 text-sm"
+                    onClick={() => openCreateProductForCategory(node.id)}
+                  >
+                    {t("addProduct")}
+                  </button>
+                ) : null}
                 <button
                   type="button"
                   className="w-full text-start px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 text-sm"
@@ -580,19 +729,12 @@ function Products() {
                 >
                   {t("delete")}
                 </button>
-                <button
-                  type="button"
-                  className="w-full text-start px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 text-sm"
-                  onClick={() => openCreateProductForCategory(node.id)}
-                >
-                  {t("addProduct")}
-                </button>
               </div>
             )}
           </div>
 
           {hasChildren && isExpanded && (
-            <div className="ms-2 ps-3 border-s-2 border-dashed border-gray-300 dark:border-gray-700 space-y-1">
+            <div className="space-y-2">
               {renderTree(node.children, level + 1)}
             </div>
           )}
@@ -632,19 +774,207 @@ function Products() {
               return;
             }
 
-            if (!isLeafCategory) {
-              toast.error(t("leafOnlyProducts"));
+            if (canCreateProduct) {
+              setEditingProduct(null);
+              setShowProductModal(true);
               return;
             }
 
-            setEditingProduct(null);
-            setShowProductModal(true);
+            toast.error(t("leafOnlyProducts"));
           }}
           className="btn-primary flex items-center gap-2"
+          aria-label={t("addProduct")}
         >
-          <span>+</span>
-          <span>{t("addProduct")}</span>
+          <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white/20">
+            <svg
+              className="h-3.5 w-3.5"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path d="M12 5v14" />
+              <path d="M5 12h14" />
+            </svg>
+          </span>
         </button>
+      </div>
+
+      <div className="card space-y-3">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-3">
+          <div className="lg:col-span-2">
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(event) => {
+                setSearchTerm(event.target.value);
+                setPage(1);
+              }}
+              placeholder={t("searchPlaceholder")}
+              className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
+            />
+          </div>
+          <select
+            value={sortBy}
+            onChange={(event) => {
+              setSortBy(event.target.value);
+              setPage(1);
+            }}
+            className="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
+          >
+            <option value="name">{t("productName")}</option>
+            <option value="purchase_price">{t("purchasePrice")}</option>
+            <option value="sale_price">{t("salePrice")}</option>
+            <option value="quantity">{t("quantity")}</option>
+            <option value="created_at">{t("createdAt")}</option>
+          </select>
+          <Tooltip label={t("sort") || "Sort"}>
+            <button
+              type="button"
+              onClick={() => {
+                setSortDirection((previous) =>
+                  previous === "asc" ? "desc" : "asc",
+                );
+                setPage(1);
+              }}
+              className="inline-flex h-[42px] w-[42px] items-center justify-center rounded-lg border border-gray-300 dark:border-gray-700"
+              aria-label={t("sort") || "Sort"}
+            >
+              {sortDirection === "asc" ? (
+                <svg
+                  className="h-4 w-4"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path d="M7 17V7" />
+                  <path d="m4 10 3-3 3 3" />
+                  <path d="M14 7h6" />
+                  <path d="M14 12h5" />
+                  <path d="M14 17h4" />
+                </svg>
+              ) : (
+                <svg
+                  className="h-4 w-4"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path d="M7 7v10" />
+                  <path d="m4 14 3 3 3-3" />
+                  <path d="M14 7h4" />
+                  <path d="M14 12h5" />
+                  <path d="M14 17h6" />
+                </svg>
+              )}
+            </button>
+          </Tooltip>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
+          <input
+            type="date"
+            value={createdFrom}
+            onChange={(event) => {
+              setCreatedFrom(event.target.value);
+              setPage(1);
+            }}
+            className="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
+          />
+          <input
+            type="date"
+            value={createdTo}
+            onChange={(event) => {
+              setCreatedTo(event.target.value);
+              setPage(1);
+            }}
+            className="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
+          />
+          <input
+            type="number"
+            value={minQty}
+            onChange={(event) => {
+              setMinQty(event.target.value);
+              setPage(1);
+            }}
+            placeholder={t("minQuantity")}
+            className="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
+          />
+          <input
+            type="number"
+            value={maxQty}
+            onChange={(event) => {
+              setMaxQty(event.target.value);
+              setPage(1);
+            }}
+            placeholder={t("maxQuantity")}
+            className="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
+          />
+          <input
+            type="number"
+            step="0.01"
+            value={minPrice}
+            onChange={(event) => {
+              setMinPrice(event.target.value);
+              setPage(1);
+            }}
+            placeholder={t("minPrice")}
+            className="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
+          />
+          <input
+            type="number"
+            step="0.01"
+            value={maxPrice}
+            onChange={(event) => {
+              setMaxPrice(event.target.value);
+              setPage(1);
+            }}
+            placeholder={t("maxPrice")}
+            className="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
+          />
+          <select
+            value={perPage}
+            onChange={(event) => {
+              setPerPage(Number(event.target.value));
+              setPage(1);
+            }}
+            className="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
+          >
+            <option value={10}>10 / page</option>
+            <option value={20}>20 / page</option>
+            <option value={50}>50 / page</option>
+          </select>
+          <Tooltip label={t("reset") || "Reset"}>
+            <button
+              type="button"
+              className="inline-flex h-[42px] w-[42px] items-center justify-center rounded-lg border border-gray-300 dark:border-gray-700"
+              onClick={() => {
+                setSearchTerm("");
+                setCreatedFrom("");
+                setCreatedTo("");
+                setMinQty("");
+                setMaxQty("");
+                setMinPrice("");
+                setMaxPrice("");
+                setPage(1);
+              }}
+              aria-label={t("reset") || "Reset"}
+            >
+              <svg
+                className="h-4 w-4"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path d="M3 12a9 9 0 1 0 3-6.7" />
+                <path d="M3 4v5h5" />
+              </svg>
+            </button>
+          </Tooltip>
+        </div>
       </div>
 
       {categoryTree.length > 0 ? (
@@ -654,15 +984,32 @@ function Products() {
               <h3 className="text-xl font-bold text-gray-900 dark:text-white">
                 {t("categoryTree")}
               </h3>
-              <button
-                type="button"
-                className="btn-secondary text-sm"
-                onClick={() => openCreateCategory(null)}
-              >
-                {t("addCategory")}
-              </button>
+              <Tooltip label={t("addCategory")}>
+                <button
+                  type="button"
+                  className="btn-secondary text-sm"
+                  onClick={() => openCreateCategory(null)}
+                  aria-label={t("addCategory")}
+                >
+                  <span className="inline-flex h-5 w-5 items-center justify-center">
+                    <svg
+                      className="h-4 w-4"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                    >
+                      <path d="M12 5v14" />
+                      <path d="M5 12h14" />
+                    </svg>
+                  </span>
+                </button>
+              </Tooltip>
             </div>
-            <div className="max-h-[620px] overflow-auto pe-1 space-y-1">
+            <div
+              dir={language === "ar" ? "rtl" : "ltr"}
+              className="max-h-[620px] overflow-auto pe-1 space-y-1"
+            >
               {renderTree(categoryTree)}
             </div>
           </div>
@@ -693,147 +1040,52 @@ function Products() {
                       ))}
                     </div>
                   </div>
-                  <button
-                    onClick={() => {
-                      if (!isLeafCategory) {
-                        toast.error(t("leafOnlyProducts"));
-                        return;
-                      }
-
-                      setEditingProduct(null);
-                      setShowProductModal(true);
-                    }}
-                    className="btn-primary"
+                  <Tooltip
+                    label={
+                      canCreateProduct ? t("addProduct") : t("addCategory")
+                    }
                   >
-                    {t("addProduct")}
-                  </button>
+                    <button
+                      onClick={() => {
+                        if (canCreateProduct) {
+                          setEditingProduct(null);
+                          setShowProductModal(true);
+                          return;
+                        }
+
+                        if (canCreateSubCategory) {
+                          openCreateCategory(selectedNode.id);
+                          return;
+                        }
+
+                        toast.error(t("leafOnlyProducts"));
+                      }}
+                      className="btn-primary inline-flex items-center justify-center"
+                      aria-label={
+                        canCreateProduct ? t("addProduct") : t("addCategory")
+                      }
+                    >
+                      <span className="inline-flex h-5 w-5 items-center justify-center">
+                        <svg
+                          className="h-4 w-4"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                        >
+                          <path d="M12 5v14" />
+                          <path d="M5 12h14" />
+                        </svg>
+                      </span>
+                    </button>
+                  </Tooltip>
                 </div>
 
-                {!isLeafCategory && (
+                {!canCreateProduct && (
                   <div className="rounded-lg border border-amber-300 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-700 px-3 py-2 text-sm text-amber-800 dark:text-amber-200">
                     {t("leafOnlyProducts")}
                   </div>
                 )}
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  <div className="md:col-span-2">
-                    <input
-                      type="text"
-                      value={searchTerm}
-                      onChange={(event) => {
-                        setSearchTerm(event.target.value);
-                        setPage(1);
-                      }}
-                      placeholder={t("searchPlaceholder")}
-                      className="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
-                    />
-                  </div>
-                  <div className="flex gap-2">
-                    <select
-                      value={sortBy}
-                      onChange={(event) => {
-                        setSortBy(event.target.value);
-                        setPage(1);
-                      }}
-                      className="flex-1 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
-                    >
-                      <option value="name">{t("productName")}</option>
-                      <option value="purchase_price">
-                        {t("purchasePrice")}
-                      </option>
-                      <option value="sale_price">{t("salePrice")}</option>
-                      <option value="quantity">{t("quantity")}</option>
-                      <option value="created_at">{t("createdAt")}</option>
-                    </select>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSortDirection((previous) =>
-                          previous === "asc" ? "desc" : "asc",
-                        );
-                        setPage(1);
-                      }}
-                      className="rounded-lg border border-gray-300 dark:border-gray-700 px-3 py-2 text-sm font-semibold"
-                    >
-                      {sortDirection === "asc" ? "A-Z" : "Z-A"}
-                    </button>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  <input
-                    type="date"
-                    value={createdFrom}
-                    onChange={(event) => {
-                      setCreatedFrom(event.target.value);
-                      setPage(1);
-                    }}
-                    className="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
-                  />
-                  <input
-                    type="date"
-                    value={createdTo}
-                    onChange={(event) => {
-                      setCreatedTo(event.target.value);
-                      setPage(1);
-                    }}
-                    className="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
-                  />
-                  <select
-                    value={perPage}
-                    onChange={(event) => {
-                      setPerPage(Number(event.target.value));
-                      setPage(1);
-                    }}
-                    className="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
-                  >
-                    <option value={10}>10 / page</option>
-                    <option value={20}>20 / page</option>
-                    <option value={50}>50 / page</option>
-                  </select>
-                  <input
-                    type="number"
-                    value={minQty}
-                    onChange={(event) => {
-                      setMinQty(event.target.value);
-                      setPage(1);
-                    }}
-                    placeholder={t("minQuantity")}
-                    className="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
-                  />
-                  <input
-                    type="number"
-                    value={maxQty}
-                    onChange={(event) => {
-                      setMaxQty(event.target.value);
-                      setPage(1);
-                    }}
-                    placeholder={t("maxQuantity")}
-                    className="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
-                  />
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={minPrice}
-                    onChange={(event) => {
-                      setMinPrice(event.target.value);
-                      setPage(1);
-                    }}
-                    placeholder={t("minPrice")}
-                    className="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
-                  />
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={maxPrice}
-                    onChange={(event) => {
-                      setMaxPrice(event.target.value);
-                      setPage(1);
-                    }}
-                    placeholder={t("maxPrice")}
-                    className="rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-2 text-sm"
-                  />
-                </div>
 
                 <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700">
                   <div className="overflow-x-auto">
@@ -907,28 +1159,67 @@ function Products() {
                                 </td>
                                 <td className="px-4 py-3">
                                   <div className="flex items-center gap-2">
-                                    <button
-                                      className="px-3 py-1 rounded-lg bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-200"
-                                      onClick={() =>
-                                        navigate(`/products/${product.id}`)
-                                      }
-                                    >
-                                      {t("view")}
-                                    </button>
-                                    <button
-                                      className="px-3 py-1 rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-200"
-                                      onClick={() => handleEditProduct(product)}
-                                    >
-                                      {t("edit")}
-                                    </button>
-                                    <button
-                                      className="px-3 py-1 rounded-lg bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-200"
-                                      onClick={() =>
-                                        handleDeleteProduct(product.id)
-                                      }
-                                    >
-                                      {t("delete")}
-                                    </button>
+                                    <Tooltip label={t("view")}>
+                                      <button
+                                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-200"
+                                        onClick={() =>
+                                          navigate(`/products/${product.id}`)
+                                        }
+                                        aria-label={t("view")}
+                                      >
+                                        <svg
+                                          className="h-4 w-4"
+                                          viewBox="0 0 24 24"
+                                          fill="none"
+                                          stroke="currentColor"
+                                          strokeWidth="2"
+                                        >
+                                          <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12Z" />
+                                          <circle cx="12" cy="12" r="3" />
+                                        </svg>
+                                      </button>
+                                    </Tooltip>
+                                    <Tooltip label={t("edit")}>
+                                      <button
+                                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-200"
+                                        onClick={() =>
+                                          handleEditProduct(product)
+                                        }
+                                        aria-label={t("edit")}
+                                      >
+                                        <svg
+                                          className="h-4 w-4"
+                                          viewBox="0 0 24 24"
+                                          fill="none"
+                                          stroke="currentColor"
+                                          strokeWidth="2"
+                                        >
+                                          <path d="M12 20h9" />
+                                          <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+                                        </svg>
+                                      </button>
+                                    </Tooltip>
+                                    <Tooltip label={t("delete")}>
+                                      <button
+                                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-200"
+                                        onClick={() =>
+                                          handleDeleteProduct(product.id)
+                                        }
+                                        aria-label={t("delete")}
+                                      >
+                                        <svg
+                                          className="h-4 w-4"
+                                          viewBox="0 0 24 24"
+                                          fill="none"
+                                          stroke="currentColor"
+                                          strokeWidth="2"
+                                        >
+                                          <path d="M3 6h18" />
+                                          <path d="M8 6V4h8v2" />
+                                          <path d="M19 6l-1 14H6L5 6" />
+                                        </svg>
+                                      </button>
+                                    </Tooltip>
                                   </div>
                                 </td>
                               </tr>
@@ -958,35 +1249,90 @@ function Products() {
                     {productsResponse?.total || 0}
                   </p>
                   <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      disabled={!productsResponse?.prev_page_url}
-                      onClick={() =>
-                        setPage((previous) => Math.max(previous - 1, 1))
+                    <Tooltip label={t("previous")}>
+                      <button
+                        type="button"
+                        disabled={!productsResponse?.prev_page_url}
+                        onClick={() =>
+                          setPage((previous) => Math.max(previous - 1, 1))
+                        }
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-300 dark:border-gray-700 disabled:opacity-50"
+                        aria-label={t("previous")}
+                      >
+                        <svg
+                          className="h-4 w-4"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                        >
+                          <path d="m15 18-6-6 6-6" />
+                        </svg>
+                      </button>
+                    </Tooltip>
+                    {buildPagination(
+                      productsResponse?.current_page || 1,
+                      productsResponse?.last_page || 1,
+                    ).map((pageItem) => {
+                      if (typeof pageItem === "string") {
+                        return (
+                          <span
+                            key={pageItem}
+                            className="px-2 text-sm text-gray-400"
+                          >
+                            ...
+                          </span>
+                        );
                       }
-                      className="px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-700 disabled:opacity-50"
-                    >
-                      {t("previous")}
-                    </button>
+
+                      const isActive =
+                        pageItem === (productsResponse?.current_page || 1);
+
+                      return (
+                        <button
+                          key={pageItem}
+                          type="button"
+                          onClick={() => setPage(pageItem)}
+                          className={`min-w-9 px-3 py-1.5 rounded-lg border text-sm ${
+                            isActive
+                              ? "border-primary-500 bg-primary-50 dark:bg-primary-900/30"
+                              : "border-gray-300 dark:border-gray-700"
+                          }`}
+                        >
+                          {pageItem}
+                        </button>
+                      );
+                    })}
                     <span className="text-sm text-gray-700 dark:text-gray-300">
                       {productsResponse?.current_page || 1} /{" "}
                       {productsResponse?.last_page || 1}
                     </span>
-                    <button
-                      type="button"
-                      disabled={!productsResponse?.next_page_url}
-                      onClick={() =>
-                        setPage((previous) =>
-                          Math.min(
-                            previous + 1,
-                            productsResponse?.last_page || previous + 1,
-                          ),
-                        )
-                      }
-                      className="px-3 py-1.5 rounded-lg border border-gray-300 dark:border-gray-700 disabled:opacity-50"
-                    >
-                      {t("next")}
-                    </button>
+                    <Tooltip label={t("next")}>
+                      <button
+                        type="button"
+                        disabled={!productsResponse?.next_page_url}
+                        onClick={() =>
+                          setPage((previous) =>
+                            Math.min(
+                              previous + 1,
+                              productsResponse?.last_page || previous + 1,
+                            ),
+                          )
+                        }
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-300 dark:border-gray-700 disabled:opacity-50"
+                        aria-label={t("next")}
+                      >
+                        <svg
+                          className="h-4 w-4"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                        >
+                          <path d="m9 18 6-6-6-6" />
+                        </svg>
+                      </button>
+                    </Tooltip>
                   </div>
                 </div>
               </>
@@ -1012,12 +1358,24 @@ function Products() {
               <h3 className="text-xl font-bold text-gray-900 dark:text-white">
                 {editingProduct ? t("editProduct") : t("addProduct")}
               </h3>
-              <button
-                onClick={handleCloseProductModal}
-                className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
-              >
-                x
-              </button>
+              <Tooltip label={t("close") || "Close"}>
+                <button
+                  onClick={handleCloseProductModal}
+                  aria-label={t("close") || "Close"}
+                  className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
+                >
+                  <svg
+                    className="h-4 w-4"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path d="M18 6 6 18" />
+                    <path d="m6 6 12 12" />
+                  </svg>
+                </button>
+              </Tooltip>
             </div>
             <ProductForm
               product={editingProduct}
@@ -1043,15 +1401,27 @@ function Products() {
               <h3 className="text-xl font-bold text-gray-900 dark:text-white">
                 {editingCategory ? t("editCategory") : t("addCategory")}
               </h3>
-              <button
-                onClick={() => {
-                  setShowCategoryModal(false);
-                  setEditingCategory(null);
-                }}
-                className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
-              >
-                x
-              </button>
+              <Tooltip label={t("close") || "Close"}>
+                <button
+                  onClick={() => {
+                    setShowCategoryModal(false);
+                    setEditingCategory(null);
+                  }}
+                  aria-label={t("close") || "Close"}
+                  className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
+                >
+                  <svg
+                    className="h-4 w-4"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path d="M18 6 6 18" />
+                    <path d="m6 6 12 12" />
+                  </svg>
+                </button>
+              </Tooltip>
             </div>
             <form className="space-y-4" onSubmit={submitCategory}>
               <div>

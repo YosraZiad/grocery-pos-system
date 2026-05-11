@@ -26,6 +26,8 @@ class ProductController extends Controller
         $filters = $request->only([
             'search',
             'category_id',
+            'category_ids',
+            'include_descendants',
             'per_page',
             'created_from',
             'created_to',

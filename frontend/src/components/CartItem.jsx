@@ -1,9 +1,10 @@
-import { useI18n } from '../context/I18nContext';
-import QuantityControl from './QuantityControl';
+import { useI18n } from "../context/I18nContext";
+import QuantityControl from "./QuantityControl";
+import Tooltip from "./Tooltip";
 
 function CartItem({ item, onUpdateQuantity, onRemove }) {
   const { t } = useI18n();
-  
+
   const handleQuantityChange = (newQuantity) => {
     if (newQuantity < 1) {
       onRemove();
@@ -39,13 +40,15 @@ function CartItem({ item, onUpdateQuantity, onRemove }) {
         </div>
 
         {/* زر الحذف */}
-        <button
-          onClick={onRemove}
-          className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 p-2 rounded-lg transition-colors duration-200"
-          title={t('delete')}
-        >
-          🗑️
-        </button>
+        <Tooltip label={t("delete")}>
+          <button
+            onClick={onRemove}
+            className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 p-2 rounded-lg transition-colors duration-200"
+            aria-label={t("delete")}
+          >
+            🗑️
+          </button>
+        </Tooltip>
       </div>
     </div>
   );

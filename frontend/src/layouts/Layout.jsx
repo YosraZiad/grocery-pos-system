@@ -3,6 +3,7 @@ import { Outlet, useNavigate, Link, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useI18n } from "../context/I18nContext";
 import { useTheme } from "../context/ThemeContext";
+import Tooltip from "../components/Tooltip";
 
 /**
  * Layout حديث واحترافي مع Navigation محسّن
@@ -313,36 +314,50 @@ function Layout() {
             {/* User Actions */}
             <div className="flex items-center space-x-2 rtl:space-x-reverse">
               {/* Language Toggle */}
-              <button
-                onClick={toggleLanguage}
-                className="p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
-                title={
-                  language === "en"
-                    ? "Switch to Arabic"
-                    : "التبديل إلى الإنجليزية"
+              <Tooltip
+                label={
+                  language === "en" ? t("switchToArabic") : t("switchToEnglish")
                 }
               >
-                {language === "en" ? "🇸🇦" : "🇬🇧"}
-              </button>
+                <button
+                  onClick={toggleLanguage}
+                  className="p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
+                  aria-label={
+                    language === "en"
+                      ? t("switchToArabic")
+                      : t("switchToEnglish")
+                  }
+                >
+                  {language === "en" ? "🇸🇦" : "🇬🇧"}
+                </button>
+              </Tooltip>
 
               {/* Theme Toggle */}
-              <button
-                onClick={toggleTheme}
-                className="p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
-                title={theme === "light" ? "Dark Mode" : "Light Mode"}
+              <Tooltip
+                label={theme === "light" ? t("darkMode") : t("lightMode")}
               >
-                {theme === "light" ? "🌙" : "☀️"}
-              </button>
+                <button
+                  onClick={toggleTheme}
+                  className="p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
+                  aria-label={
+                    theme === "light" ? t("darkMode") : t("lightMode")
+                  }
+                >
+                  {theme === "light" ? "🌙" : "☀️"}
+                </button>
+              </Tooltip>
 
               {/* User Menu - Dropdown */}
               <div className="hidden md:flex items-center user-menu-container relative">
-                <button
-                  onClick={() => setUserMenuOpen(!userMenuOpen)}
-                  className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-700 rounded-full flex items-center justify-center text-white text-sm font-semibold hover:from-primary-600 hover:to-primary-800 transition-all duration-200 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
-                  title={user?.name || "User"}
-                >
-                  {user?.name?.charAt(0)?.toUpperCase() || "U"}
-                </button>
+                <Tooltip label={user?.name || t("user") || "User"}>
+                  <button
+                    onClick={() => setUserMenuOpen(!userMenuOpen)}
+                    className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-700 rounded-full flex items-center justify-center text-white text-sm font-semibold hover:from-primary-600 hover:to-primary-800 transition-all duration-200 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+                    aria-label={user?.name || t("user") || "User"}
+                  >
+                    {user?.name?.charAt(0)?.toUpperCase() || "U"}
+                  </button>
+                </Tooltip>
 
                 {/* User Dropdown Menu */}
                 {userMenuOpen && (

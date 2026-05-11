@@ -3,6 +3,18 @@ import { useQuery } from "@tanstack/react-query";
 import { useI18n } from "../context/I18nContext";
 import api from "../services/api";
 
+function flattenCategories(nodes, level = 0) {
+  if (!Array.isArray(nodes)) {
+    return [];
+  }
+
+  return nodes.flatMap((node) => {
+    const current = [{ ...node, __level: level }];
+    const children = flattenCategories(node.children || [], level + 1);
+    return [...current, ...children];
+  });
+}
+
 function ProductForm({
   product,
   onSubmit,
@@ -53,6 +65,21 @@ function ProductForm({
 
     return [];
   }, [categoriesPayload]);
+
+  const normalizedCategories = useMemo(
+    () => flattenCategories(categories),
+    [categories],
+  );
+
+  const selectedCategory = useMemo(() => {
+    if (!formData.category_id) {
+      return null;
+    }
+
+    return normalizedCategories.find(
+      (category) => Number(category.id) === Number(formData.category_id),
+    );
+  }, [normalizedCategories, formData.category_id]);
 
   useEffect(() => {
     if (product) {
@@ -110,9 +137,9 @@ function ProductForm({
             className="input"
           >
             <option value="">{t("allCategories")}</option>
-            {categories?.map((category) => (
+            {normalizedCategories?.map((category) => (
               <option key={category.id} value={category.id}>
-                {category.name}
+                {`${"- ".repeat(category.__level || 0)}${category.name}`}
               </option>
             ))}
           </select>
@@ -199,6 +226,16 @@ function ProductForm({
       {showAdvancedFields && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
+            <label className="label">{t("parentCategoryId")}</label>
+            <input
+              type="text"
+              className="input bg-gray-50 dark:bg-gray-800"
+              value={selectedCategory?.parent_id ?? "-"}
+              disabled
+            />
+          </div>
+
+          <div>
             <label className="label">{t("productDescription")}</label>
             <textarea
               name="description"
@@ -212,12 +249,13 @@ function ProductForm({
             <div>
               <label className="label">{t("unitId")}</label>
               <input
-                type="text"
+                type="number"
                 name="unit_id"
                 value={formData.unit_id}
                 onChange={handleChange}
+                min="1"
                 className="input"
-                placeholder={t("unitId")}
+                placeholder="1"
               />
             </div>
             <div>
@@ -237,7 +275,7 @@ function ProductForm({
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="label">Expiry Date</label>
+          <label className="label">{t("expiryDate")}</label>
           <input
             type="date"
             name="expiry_date"
@@ -248,7 +286,7 @@ function ProductForm({
         </div>
 
         <div>
-          <label className="label">Min Stock Alert</label>
+          <label className="label">{t("lowStockAlert")}</label>
           <input
             type="number"
             name="min_stock_alert"

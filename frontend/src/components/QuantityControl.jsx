@@ -1,4 +1,5 @@
-import { useI18n } from '../context/I18nContext';
+import { useI18n } from "../context/I18nContext";
+import Tooltip from "./Tooltip";
 
 function QuantityControl({ value, onChange, min = 1, max, disabled = false }) {
   const { t } = useI18n();
@@ -28,9 +29,11 @@ function QuantityControl({ value, onChange, min = 1, max, disabled = false }) {
         onClick={handleDecrease}
         disabled={disabled || value <= min}
         className="w-10 h-10 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-700 rounded-l-lg transition-colors duration-200 text-gray-600 dark:text-gray-400 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-        title={t('decrease')}
+        aria-label={t("decrease")}
       >
-        −
+        <Tooltip label={t("decrease")}>
+          <span aria-hidden="true">−</span>
+        </Tooltip>
       </button>
       <input
         type="number"
@@ -45,9 +48,11 @@ function QuantityControl({ value, onChange, min = 1, max, disabled = false }) {
         onClick={handleIncrease}
         disabled={disabled || value >= max}
         className="w-10 h-10 flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-700 rounded-r-lg transition-colors duration-200 text-gray-600 dark:text-gray-400 font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-        title={t('increase')}
+        aria-label={t("increase")}
       >
-        +
+        <Tooltip label={t("increase")}>
+          <span aria-hidden="true">+</span>
+        </Tooltip>
       </button>
     </div>
   );

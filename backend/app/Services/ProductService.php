@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
@@ -27,9 +28,34 @@ class ProductService
             });
         }
 
+        // Filter by multiple categories (used for parent category selection with descendants)
+        if (!empty($filters['category_ids'])) {
+            $rawCategoryIds = is_array($filters['category_ids'])
+                ? $filters['category_ids']
+                : explode(',', (string) $filters['category_ids']);
+
+            $categoryIds = collect($rawCategoryIds)
+                ->map(fn ($id) => (int) $id)
+                ->filter(fn ($id) => $id > 0)
+                ->unique()
+                ->values()
+                ->all();
+
+            if (!empty($categoryIds)) {
+                $query->whereIn('category_id', $categoryIds);
+            }
+        }
+
         // Filter by category
-        if (isset($filters['category_id'])) {
-            $query->where('category_id', $filters['category_id']);
+        if (isset($filters['category_id']) && empty($filters['category_ids'])) {
+            $categoryId = (int) $filters['category_id'];
+            if ($categoryId > 0) {
+                if ($this->shouldIncludeDescendants($filters['include_descendants'] ?? false)) {
+                    $query->whereIn('category_id', $this->getDescendantCategoryIds($categoryId));
+                } else {
+                    $query->where('category_id', $categoryId);
+                }
+            }
         }
 
         if (!empty($filters['created_from'])) {
@@ -138,5 +164,58 @@ class ProductService
             })
             ->limit(20)
             ->get();
+    }
+
+    private function shouldIncludeDescendants(mixed $value): bool
+    {
+        if (is_bool($value)) {
+            return $value;
+        }
+
+        if (is_numeric($value)) {
+            return (int) $value === 1;
+        }
+
+        if (!is_string($value)) {
+            return false;
+        }
+
+        return in_array(strtolower(trim($value)), ['1', 'true', 'yes', 'on'], true);
+    }
+
+    /**
+     * Return root category id + all nested descendants ids.
+     */
+    private function getDescendantCategoryIds(int $rootCategoryId): array
+    {
+        $categories = Category::query()->select(['id', 'parent_id'])->get();
+
+        $childrenByParent = [];
+        foreach ($categories as $category) {
+            $parentId = $category->parent_id;
+            if (!array_key_exists($parentId, $childrenByParent)) {
+                $childrenByParent[$parentId] = [];
+            }
+            $childrenByParent[$parentId][] = (int) $category->id;
+        }
+
+        $result = [];
+        $queue = [$rootCategoryId];
+
+        while (!empty($queue)) {
+            $currentId = array_shift($queue);
+            if (in_array($currentId, $result, true)) {
+                continue;
+            }
+
+            $result[] = $currentId;
+
+            $children = $childrenByParent[$currentId] ?? [];
+            foreach ($children as $childId) {
+                $queue[] = $childId;
+            }
+        }
+
+        return $result;
     }
 }
