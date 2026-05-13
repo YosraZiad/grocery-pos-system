@@ -11,6 +11,8 @@ const translations = {
     inventory: "Inventory",
     returns: "Returns",
     logout: "Logout",
+    management: "Management",
+    appName: "Grocery POS",
 
     // Auth
     login: "Login",
@@ -543,6 +545,8 @@ const translations = {
     inventory: "المخزون",
     returns: "المرتجعات",
     logout: "تسجيل الخروج",
+    management: "الإدارة",
+    appName: "نقاط بيع البقالة",
 
     // Auth
     login: "تسجيل الدخول",
