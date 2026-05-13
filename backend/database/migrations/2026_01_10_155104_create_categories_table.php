@@ -16,6 +16,8 @@ return new class extends Migration
             $table->foreignId('tenant_id')->constrained()->onDelete('cascade');
             $table->string('name');
             $table->text('description')->nullable();
+            $table->unsignedBigInteger('parent_id')->nullable();
+            $table->foreign('parent_id')->references('id')->on('categories')->onDelete('cascade');
             $table->timestamps();
             
             $table->index('tenant_id');

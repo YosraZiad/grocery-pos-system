@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             RolePermissionSeeder::class,
             UserSeeder::class,
+            CategorySeeder::class,      // هيكل الأقسام (3 مستويات)
             RealisticDataSeeder::class, // بيانات واقعية للاختبار
         ]);
     }
