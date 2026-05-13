@@ -88,6 +88,14 @@ const translations = {
     unitId: "Unit ID",
     provider: "Provider",
     productCard: "Product Card",
+    updatedAt: "Updated At",
+    minimumStockAlert: "Minimum Stock Alert",
+    minimumExpiryAlert: "Minimum Expiry Alert",
+    details: "Details",
+    overview: "Overview",
+    pricing: "Pricing",
+    inventoryInfo: "Inventory Info",
+    marginPercent: "Margin %",
 
     // Sales
     salesScreenTitle: "Sales Screen",
@@ -202,6 +210,12 @@ const translations = {
     previous: "Previous",
     next: "Next",
     page: "page",
+    perPage: "Per Page",
+    quickGoToPage: "Quick Page",
+    go: "Go",
+    invalidPageNumber: "Please enter a valid page number",
+    dateAddedAfter: "Date added (after)",
+    dateAddedBefore: "Date added (before)",
 
     // Confirmation Modal
     confirmAction: "Confirm Action",
@@ -605,6 +619,14 @@ const translations = {
     unitId: "معرف الوحدة",
     provider: "المورد",
     productCard: "بطاقة المنتج",
+    updatedAt: "آخر تحديث",
+    minimumStockAlert: "تنبيه المخزون الأدنى",
+    minimumExpiryAlert: "تنبيه الصلاحية الأدنى",
+    details: "التفاصيل",
+    overview: "نظرة عامة",
+    pricing: "التسعير",
+    inventoryInfo: "معلومات المخزون",
+    marginPercent: "نسبة الهامش %",
 
     // Sales
     salesScreenTitle: "شاشة المبيعات",
@@ -643,6 +665,8 @@ const translations = {
     back: "رجوع",
     print: "طباعة",
     invoice: "فاتورة",
+    confirmDeleteCategory: "هل أنت متأكد من حذف هذا القسم؟",
+    cannotDeleteCategoryWithProducts: "لا يمكن حذف القسم لوجود منتجات تابعة له",
 
     // Inventory
     inventoryManagement: "إدارة المخزون",
@@ -719,6 +743,12 @@ const translations = {
     previous: "السابق",
     next: "التالي",
     page: "صفحة",
+    perPage: "لكل صفحة",
+    quickGoToPage: "اذهب لصفحة",
+    go: "اذهب",
+    invalidPageNumber: "يرجى إدخال رقم صفحة صحيح",
+    dateAddedAfter: "تاريخ الإضافة (بعد)",
+    dateAddedBefore: "تاريخ الإضافة (قبل)",
 
     // Confirmation Modal
     confirmAction: "تأكيد الإجراء",
