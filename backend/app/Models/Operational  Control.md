@@ -1,73 +1,80 @@
-# Operational Control WMS
+# نظام التحكم التشغيلي لإدارة المستودعات (Operational Control WMS)
 
-## Product Overview
+## نظرة عامة على المنتج
 
-**The Pitch:** An enterprise-grade cold storage WMS engineered for speed, accuracy, and absolute traceability. It replaces fragmented spreadsheets with a high-density, keyboard-driven workspace that visually maps occupancy and rigorously validates every pallet movement.
+**الفكرة الأساسية:** نظام إدارة مستودعات (WMS) مخصص للتخزين المبرد على مستوى المؤسسات، مصمم هندسياً للسرعة والدقة وإمكانية التتبع المطلقة. يستبدل جداول البيانات المجزأة بمساحة عمل عالية الكثافة تعتمد على لوحة المفاتيح، والتي ترسم خريطة الإشغال بصرياً وتتحقق بصرامة من كل حركة للمنصات (Pallets).
 
-**For:** Warehouse managers and floor operators who need to process inbound shipments quickly while maintaining strict temperature-zone compliance and error-free spatial management.
+**الجمهور المستهدف:** مديرو المستودعات ومشغلو الأرضية الذين يحتاجون إلى معالجة الشحنات الواردة بسرعة مع الحفاظ على الامتثال الصارم لمناطق درجات الحرارة والإدارة المكانية الخالية من الأخطاء.
 
-**Device:** desktop
+**الجهاز المستهدف:** سطح المكتب (Desktop)
 
-**Design Direction:** Industrial clarity meets high-density data. Stark borders, highly legible technical typography, low-glare backgrounds to reduce eye fatigue, and vibrant semantic colors for instant operational awareness.
+**توجه التصميم:** الوضوح الصناعي يلتقي بالبيانات عالية الكثافة. حدود صارمة، طباعة فنية واضحة جداً، خلفيات منخفضة التوهج لتقليل إجهاد العين، وألوان دلالية نابضة بالحياة للوعي التشغيلي الفوري.
 
-**Inspired by:** Bloomberg Terminal (data density), Flexport (logistics clarity)
-
----
-
-## Screens
-
-- **Command Dashboard:** Live facility overview featuring zone-based occupancy heatmaps and critical temperature alerts.
-- **Pallet Workspace:** Deep-dive traceability ledger detailing real-time location, thermal history, and movement timeline.
-- **Receiving Wizard:** Keyboard-optimized, multi-step intake flow for rapid pallet registration.
-- **Rearrangement Interface:** Split-pane source/destination validator to ensure correct spatial and thermal routing.
-- **Room Management:** Configuration hub for adjusting zone capacities, temperature thresholds, and rack mapping.
+**مستوحى من:** محطة بلومبرغ (Bloomberg Terminal) (لكثافة البيانات)، فليكس بورت (Flexport) (لوضوح الخدمات اللوجستية).
 
 ---
 
-## Key Flows
+## الشاشات الرئيسية
 
-**Rapid Inbound Receiving:** Operator ingests a new shipment.
+- **لوحة قيادة التحكم (Command Dashboard):** نظرة عامة حية على المرفق تتميز بخرائط حرارية (Heatmaps) للإشغال قائمة على المناطق وتنبيهات حاسمة لدرجات الحرارة.
+- **مساحة عمل المنصة (Pallet Workspace):** دفتر أستاذ عميق التتبع يُفصل الموقع في الوقت الفعلي، التاريخ الحراري، والخط الزمني للحركة.
+- **معالج الاستلام (Receiving Wizard):** تدفق إدخال متعدد الخطوات مُحسّن للوحة المفاتيح لتسجيل المنصات السريع.
+- **واجهة إعادة الترتيب (Rearrangement Interface):** أداة تحقق مقسمة الشاشة للمصدر/الوجهة لضمان التوجيه المكاني والحراري الصحيح.
+- **إدارة الغرف (Room Management):** مركز التكوين لضبط سعات المناطق، حدود درجات الحرارة، ورسم خرائط الرفوف.
 
-1. User is on **Command Dashboard** -> presses `Ctrl+N` to launch **Receiving Wizard**
-2. User enters manifest details -> presses `Enter` to proceed to Allocation
-3. System suggests optimal cold zones -> User confirms with `Enter` -> Pallets are instantly logged and assigned holding locations.
+---
 
-**Pallet Rearrangement:** Operator moves a pallet to prevent thermal expiration.
+## مسارات العمل الأساسية
 
-1. User is on **Pallet Workspace** -> clicks **Relocate** on a specific pallet
-2. User sees **Rearrangement Interface** -> scans/types destination rack ID
-3. Interface validates temperature zone compatibility -> User clicks **Confirm Move** -> Ledger updates with new location and timestamp.
+**الاستلام السريع للواردات (Rapid Inbound Receiving):** يقوم المشغل بإدخال شحنة جديدة.
+
+1. يتواجد المستخدم في **لوحة قيادة التحكم** ➔ يضغط `Ctrl+N` لتشغيل **معالج الاستلام**.
+2. يُدخل المستخدم تفاصيل بيان الشحن ➔ يضغط `Enter` للمتابعة إلى التخصيص (Allocation).
+3. يقترح النظام المناطق الباردة المثلى ➔ يؤكد المستخدم بـ `Enter` ➔ يتم تسجيل المنصات فوراً وتعيين مواقع الاحتفاظ بها.
+
+**إعادة ترتيب المنصات (Pallet Rearrangement):** يقوم المشغل بنقل منصة لمنع انتهاء الصلاحية الحرارية.
+
+1. يتواجد المستخدم في **مساحة عمل المنصة** ➔ ينقر على **نقل (Relocate)** لمنصة معينة.
+2. يرى المستخدم **واجهة إعادة الترتيب** ➔ يقوم بمسح/كتابة معرّف رف الوجهة.
+3. تتحقق الواجهة من توافق منطقة درجة الحرارة ➔ ينقر المستخدم على **تأكيد النقل (Confirm Move)** ➔ يتحدث دفتر الأستاذ بالموقع الجديد والطابع الزمني.
 
 ---
 
 <details>
-<summary>Design System</summary>
+<summary><b>نظام التصميم (Design System)</b></summary>
 
-## Color Palette
+## لوحة الألوان
 
-- **Primary:** `#0F4C81` - Buttons, active tabs, primary actions (Industrial Navy)
-- **Background:** `#F4F5F7` - App background, low-glare (Neutral Off-white)
-- **Surface:** `#FFFFFF` - Cards, tables, modal backgrounds
-- **Text:** `#111827` - Body text, high-contrast data (Deep Slate)
-- **Muted:** `#6B7280` - Secondary text, grid lines, disabled states
-- **Accent - Cold:** `#38BDF8` - Thermal indicators, frozen status
-- **Accent - Low Occupancy:** `#10B981` - Green heatmap zones (0-50%)
-- **Accent - Mid Occupancy:** `#F59E0B` - Yellow heatmap zones (51-85%)
-- **Accent - High Occupancy:** `#EF4444` - Red heatmap zones (86-100%)
+| اللون | الكود السداسي | الاستخدام |
+| :--- | :--- | :--- |
+| **الأساسي (Primary)** | `#0F4C81` | الأزرار، علامات التبويب النشطة، الإجراءات الأساسية (كحلي صناعي) |
+| **الخلفية (Background)** | `#F4F5F7` | خلفية التطبيق، منخفضة التوهج (أبيض مائل للرمادي محايد) |
+| **الأسطح (Surface)** | `#FFFFFF` | البطاقات، الجداول، خلفيات النوافذ المنبثقة |
+| **النص (Text)** | `#111827` | النص الأساسي، بيانات عالية التباين (رمادي داكن عميق) |
+| **الخافت (Muted)** | `#6B7280` | النص الثانوي، خطوط الشبكة، الحالات المعطلة |
+| **إبراز - بارد (Accent Cold)** | `#38BDF8` | المؤشرات الحرارية، الحالة المجمدة |
+| **إبراز - إشغال منخفض** | `#10B981` | مناطق الخريطة الحرارية الخضراء (0-50%) |
+| **إبراز - إشغال متوسط** | `#F59E0B` | مناطق الخريطة الحرارية الصفراء (51-85%) |
+| **إبراز - إشغال مرتفع** | `#EF4444` | مناطق الخريطة الحرارية الحمراء (86-100%) |
 
-## Typography
+## الطباعة الخطية (Typography)
 
-Distinctive, engineered, and highly legible for complex data environments.
+مميزة، هندسية، ومقروءة بشكل كبير لبيئات البيانات المعقدة.
 
-- **Headings:** `Space Grotesk`, 600, 20-28px
-- **Body:** `IBM Plex Sans`, 400, 14px
-- **Data/Monospace:** `JetBrains Mono`, 500, 13px (For SKUs, Pallet IDs, Timestamps)
-- **Small text:** `IBM Plex Sans`, 500, 12px
-- **Buttons:** `Space Grotesk`, 600, 14px
+- **العناوين (Headings):** `Space Grotesk`، الوزن: `600`، الحجم: `20-28px`
+- **المتن (Body):** `IBM Plex Sans`، الوزن: `400`، الحجم: `14px`
+- **البيانات/أحادية المسافة:** `JetBrains Mono`، الوزن: `500`، الحجم: `13px` *(رموز التخزين التعريفي SKU، معرفات المنصات، الطوابع الزمنية)*
+- **النص الصغير (Small text):** `IBM Plex Sans`، الوزن: `500`، الحجم: `12px`
+- **الأزرار (Buttons):** `Space Grotesk`، الوزن: `600`، الحجم: `14px`
 
-**Style notes:** Utilitarian aesthetic. 4px base grid. 0px or 2px border radius (sharp, structural). 1px `#E5E7EB` solid borders instead of shadows to define hierarchy. Dense layouts to maximize above-the-fold information.
+**ملاحظات النمط (Style notes):**
+> [!NOTE]
+> - جمالية نفعية. شبكة أساسية `4px`.
+> - نصف قطر الإطار `0px` أو `2px` (حادة، هيكلية).
+> - إطارات صلبة `1px` بلون `#E5E7EB` بدلاً من الظلال لتحديد التسلسل الهرمي.
+> - تخطيطات كثيفة لزيادة المعلومات المتاحة بدون تمرير (above-the-fold).
 
-## Design Tokens
+## رموز التصميم (Design Tokens)
 
 ```css
 :root {
@@ -97,138 +104,138 @@ Distinctive, engineered, and highly legible for complex data environments.
 ---
 
 <details>
-<summary>Screen Specifications</summary>
+<summary><b>مواصفات الشاشات (Screen Specifications)</b></summary>
 
-### Command Dashboard
+### لوحة قيادة التحكم (Command Dashboard)
 
-**Purpose:** Provide an at-a-glance, spatial understanding of warehouse capacity and thermal integrity.
+**الهدف:** توفير فهم مكاني سريع لسعة المستودع والسلامة الحرارية.
 
-**Layout:** 64px top navigation, 240px left sidebar, fluid main content area featuring a 2/3 width heatmap and 1/3 width alerts panel.
+**التخطيط:** تنقل علوي `64px`، شريط جانبي أيسر `240px`، منطقة محتوى رئيسية مرنة تتميز بخريطة حرارية بعرض الثلثين (2/3) ولوحة تنبيهات بعرض الثلث (1/3).
 
-**Key Elements:**
-- **Occupancy Heatmap:** SVG-based top-down grid of the warehouse. Racks colored by occupancy tokens (`--color-occ-low` to `--color-occ-high`). Hover reveals exact pallet count.
-- **Thermal Alerts Panel:** List of warnings (e.g., `Zone B: Temp +2°C above threshold`). Red text, stark 1px borders.
-- **Quick Action Bar:** Sticky bottom bar, `Space Grotesk` buttons for `Receive Shipment` and `Dispatch`.
+**العناصر الرئيسية:**
+- **خريطة حرارية للإشغال:** شبكة SVG من أعلى لأسفل للمستودع. الرفوف ملونة برموز الإشغال (`--color-occ-low` إلى `--color-occ-high`). التمرير (Hover) يكشف العدد الدقيق للمنصات.
+- **لوحة التنبيهات الحرارية:** قائمة بالتحذيرات (مثال: `Zone B: Temp +2°C above threshold`). نص أحمر، حدود صارمة `1px`.
+- **شريط إجراءات سريع:** شريط سفلي ثابت، أزرار `Space Grotesk` لـ `استلام الشحنة (Receive Shipment)` و `إرسال (Dispatch)`.
 
-**States:**
-- **Empty:** "No zones configured. Access Room Management."
-- **Loading:** Monochromatic pulsing grid outlines.
-- **Error:** Red banner, "Sensor sync failed. Showing last known state."
+**الحالات:**
+- **فارغ:** "لم يتم تكوين مناطق. قم بالوصول إلى إدارة الغرف."
+- **التحميل:** مخططات شبكية نابضة أحادية اللون.
+- **خطأ:** لافتة حمراء، "فشل مزامنة المستشعر. يعرض آخر حالة معروفة."
 
-**Components:**
-- **Alert Card:** 100% width, `#FFFFFF` surface, 1px `#EF4444` left border (4px width), 13px mono text for timestamp.
-- **Heatmap Cell:** 32x32px minimum, 2px gap, fill color based on capacity percentage.
+**المكونات:**
+- **بطاقة التنبيه:** عرض 100%، سطح `#FFFFFF`، حد أيسر `1px` بلون `#EF4444` (بسمك `4px`)، نص أحادي `13px` للطابع الزمني.
+- **خلية الخريطة الحرارية:** الحد الأدنى `32x32px`، فجوة `2px`، لون التعبئة بناءً على النسبة المئوية للسعة.
 
-**Interactions:**
-- **Click Heatmap Cell:** Opens side-panel with detailed rack inventory.
-- **Hover Alert:** Background shifts to `#F3F4F6`, cursor changes to pointer.
+**التفاعلات:**
+- **النقر على خلية الخريطة الحرارية:** يفتح لوحة جانبية تحتوي على جرد تفصيلي للرف.
+- **تمرير الماوس فوق التنبيه:** تتحول الخلفية إلى `#F3F4F6`، ويتغير المؤشر إلى يد (pointer).
 
-**Responsive:**
-- **Desktop:** Heatmap and alerts side-by-side.
-- **Tablet:** Alerts stack below heatmap.
-- **Mobile:** Not supported (Desktop only).
+**الاستجابة للشاشات (Responsive):**
+- **سطح المكتب:** الخريطة الحرارية والتنبيهات جنباً إلى جنب.
+- **الجهاز اللوحي:** تتكدس التنبيهات أسفل الخريطة الحرارية.
+- **المحمول:** غير مدعوم (سطح المكتب فقط).
 
-### Pallet Workspace
+### مساحة عمل المنصة (Pallet Workspace)
 
-**Purpose:** Deep-dive traceability ledger for a single SKU or Pallet ID.
+**الهدف:** دفتر أستاذ متعمق التتبع لرمز SKU واحد أو معرّف منصة.
 
-**Layout:** Split pane. Left 40% contains pallet details and thermal chart. Right 60% contains the vertical movement ledger.
+**التخطيط:** جزء مقسم. يحتوي الـ 40% الأيسر على تفاصيل المنصة والمخطط الحراري. يحتوي الـ 60% الأيمن على دفتر أستاذ الحركة العمودي.
 
-**Key Elements:**
-- **ID Header:** Huge 28px `JetBrains Mono` text (e.g., `PLT-88492-B`).
-- **Thermal History Chart:** Sparkline chart showing temperature over time. `#38BDF8` stroke, 2px width.
-- **Movement Ledger:** Dense data table. Columns: `Timestamp`, `Action`, `From`, `To`, `Operator`. 32px row height.
+**العناصر الرئيسية:**
+- **رأس المعرّف (ID Header):** نص كبير `28px` بخط `JetBrains Mono` (مثال: `PLT-88492-B`).
+- **مخطط التاريخ الحراري:** مخطط مصغر (Sparkline) يوضح درجة الحرارة بمرور الوقت. خط رسم `#38BDF8`، سمك `2px`.
+- **دفتر أستاذ الحركة:** جدول بيانات كثيف. الأعمدة: `الطابع الزمني`، `الإجراء`، `من`، `إلى`، `المشغل`. ارتفاع الصف `32px`.
 
-**States:**
-- **Empty:** "Search a Pallet ID to view history."
-- **Loading:** Skeleton rows in the ledger, 32px height, `#E5E7EB`.
-- **Error:** "Traceability data unavailable for this ID."
+**الحالات:**
+- **فارغ:** "ابحث عن معرّف منصة لعرض السجل."
+- **التحميل:** صفوف هيكلية في دفتر الأستاذ، ارتفاع `32px`، بلون `#E5E7EB`.
+- **خطأ:** "بيانات التتبع غير متوفرة لهذا المعرّف."
 
-**Components:**
-- **Status Badge:** 24px height, 4px padding, `#10B981` background, `#FFFFFF` text. "CLEARED".
-- **Ledger Row:** 1px bottom border `#F3F4F6`, 13px mono text for IDs, 14px body for operator names.
+**المكونات:**
+- **شارة الحالة:** ارتفاع `24px`، حشوة `4px`، خلفية `#10B981`، نص `#FFFFFF`. "مُصرح (CLEARED)".
+- **صف دفتر الأستاذ:** حد سفلي `1px` بلون `#F3F4F6`، نص أحادي `13px` للمعرفات، نص أساسي `14px` لأسماء المشغلين.
 
-**Interactions:**
-- **Click 'From/To' ID:** Navigates to Room Management view for that specific rack.
-- **Hover Ledger Row:** Background shifts to `#F9FAFB`.
+**التفاعلات:**
+- **النقر على معرّف 'من/إلى':** ينتقل إلى عرض إدارة الغرف لهذا الرف المعين.
+- **تمرير الماوس فوق صف دفتر الأستاذ:** تتحول الخلفية إلى `#F9FAFB`.
 
-**Responsive:**
-- **Desktop:** Split pane layout.
-- **Tablet:** Stacked layout, chart above ledger.
-- **Mobile:** Not supported.
+**الاستجابة للشاشات (Responsive):**
+- **سطح المكتب:** تخطيط اللوحة المقسمة.
+- **الجهاز اللوحي:** تخطيط مكدس، المخطط فوق دفتر الأستاذ.
+- **المحمول:** غير مدعوم.
 
-### Receiving Wizard
+### معالج الاستلام (Receiving Wizard)
 
-**Purpose:** Keyboard-optimized intake flow for rapid pallet registration.
+**الهدف:** تدفق إدخال مُحسّن للوحة المفاتيح لتسجيل المنصات السريع.
 
-**Layout:** Centered 600px modal over a dark overlay (`#111827` at 50% opacity). Multi-step progress indicator at top.
+**التخطيط:** نافذة منبثقة (Modal) مركزية بعرض `600px` فوق تراكب داكن (`#111827` بشفافية 50%). مؤشر تقدم متعدد الخطوات في الأعلى.
 
-**Key Elements:**
-- **Progress Bar:** 4px tall, `#0F4C81` fill indicating step (1/3).
-- **Input Grid:** 2-column layout for `SKU`, `Quantity`, `Batch`, `Expiry`. Auto-focuses first field.
-- **Keyboard Shortcuts Hint:** Bottom row showing `[Enter] Next`, `[Esc] Cancel` in 12px mono text.
+**العناصر الرئيسية:**
+- **شريط التقدم:** ارتفاع `4px`، تعبئة `#0F4C81` تشير إلى الخطوة (1/3).
+- **شبكة الإدخال:** تخطيط من عمودين لـ `SKU`، `الكمية`، `الدفعة (Batch)`، `الانتهاء`. يركز تلقائياً على الحقل الأول.
+- **تلميح اختصارات لوحة المفاتيح:** صف سفلي يعرض `[Enter] التالي`، `[Esc] إلغاء` بنص أحادي `12px`.
 
-**States:**
-- **Empty:** Blank inputs with focused blue border (`#0F4C81`, 2px).
-- **Loading:** "Validating SKU..." with inline spinner next to input.
-- **Error:** Field border turns `#EF4444`, 12px error text below input.
+**الحالات:**
+- **فارغ:** مدخلات فارغة بحد أزرق مُركز (`#0F4C81`، `2px`).
+- **التحميل:** "جاري التحقق من SKU..." مع مؤشر دوار مدمج بجوار الإدخال.
+- **خطأ:** يتحول حد الحقل إلى `#EF4444`، نص خطأ `12px` أسفل الإدخال.
 
-**Components:**
-- **Input Field:** 40px height, `#FFFFFF` background, 1px `#D1D5DB` border, `IBM Plex Sans` 14px.
-- **Primary Button:** 100% width, 48px height, `#0F4C81` background, white text, "Proceed to Allocation".
+**المكونات:**
+- **حقل الإدخال:** ارتفاع `40px`، خلفية `#FFFFFF`، حد `1px` بلون `#D1D5DB`، نص `IBM Plex Sans` بحجم `14px`.
+- **الزر الأساسي:** عرض 100%، ارتفاع `48px`، خلفية `#0F4C81`، نص أبيض، "المتابعة إلى التخصيص".
 
-**Interactions:**
-- **Press Enter:** Validates active field and moves focus to next field.
-- **Click 'Add Pallet':** Appends a new blank row to the input grid without leaving the step.
+**التفاعلات:**
+- **الضغط على Enter:** يتحقق من الحقل النشط وينقل التركيز إلى الحقل التالي.
+- **النقر على 'إضافة منصة':** يُلحق صفاً فارغاً جديداً إلى شبكة الإدخال دون مغادرة الخطوة.
 
-**Responsive:**
-- **Desktop:** Centered modal.
-- **Tablet:** Modal takes 90% width.
-- **Mobile:** Not supported.
+**الاستجابة للشاشات (Responsive):**
+- **سطح المكتب:** نافذة منبثقة مركزية.
+- **الجهاز اللوحي:** تأخذ النافذة المنبثقة 90% من العرض.
+- **المحمول:** غير مدعوم.
 
-### Rearrangement Interface
+### واجهة إعادة الترتيب (Rearrangement Interface)
 
-**Purpose:** Secure, validated interface for moving pallets between locations.
+**الهدف:** واجهة آمنة وموثقة لنقل المنصات بين المواقع.
 
-**Layout:** Symmetrical split view. Left side: Source Selection. Right side: Destination Selection.
+**التخطيط:** عرض مقسم متماثل. الجانب الأيسر: اختيار المصدر. الجانب الأيمن: اختيار الوجهة.
 
-**Key Elements:**
-- **Source Input:** Scan/type field for current Pallet ID. Displays current zone specs.
-- **Destination Input:** Scan/type field for target Rack ID.
-- **Validation Banner:** Central banner that updates dynamically. Green "Zone Compatible" or Red "Thermal Mismatch Warning".
-- **Action Button:** "Execute Move" button, disabled until validation passes.
+**العناصر الرئيسية:**
+- **إدخال المصدر:** حقل مسح/كتابة لمعرف المنصة الحالي. يعرض مواصفات المنطقة الحالية.
+- **إدخال الوجهة:** حقل مسح/كتابة لمعرف رف الهدف.
+- **لافتة التحقق:** لافتة مركزية يتم تحديثها ديناميكياً. أخضر "منطقة متوافقة" أو أحمر "تحذير من عدم التطابق الحراري".
+- **زر الإجراء:** زر "تنفيذ النقل"، معطل حتى ينجح التحقق.
 
-**States:**
-- **Empty:** Waiting for source scan. Large mono placeholder `Awaiting Scan...`
-- **Loading:** Validating destination capacity...
-- **Error:** "Destination rack full" or "Target zone too warm for this product".
+**الحالات:**
+- **فارغ:** في انتظار مسح المصدر. نص عنصر نائب أحادي كبير `في انتظار المسح...`
+- **التحميل:** جاري التحقق من سعة الوجهة...
+- **خطأ:** "رف الوجهة ممتلئ" أو "المنطقة المستهدفة دافئة جداً لهذا المنتج".
 
-**Components:**
-- **Location Card:** 120px height, grey background, shows Rack ID, Zone Temp, and Current Capacity (e.g., `4/5 Pallets`).
-- **Validation Icon:** 24x24px, Check (`#10B981`) or Cross (`#EF4444`).
+**المكونات:**
+- **بطاقة الموقع:** ارتفاع `120px`، خلفية رمادية، تعرض معرف الرف، درجة حرارة المنطقة، والسعة الحالية (مثال: `4/5 منصات`).
+- **أيقونة التحقق:** `24x24px`، علامة صح (`#10B981`) أو خطأ (`#EF4444`).
 
-**Interactions:**
-- **Type in Destination:** Auto-completes rack IDs. Instantly triggers validation logic.
-- **Click 'Execute':** Confirms move, flashes screen green for 200ms, resets interface for next move.
+**التفاعلات:**
+- **الكتابة في الوجهة:** إكمال تلقائي لمعرفات الرفوف. يُشغل منطق التحقق فوراً.
+- **النقر على 'تنفيذ':** يؤكد النقل، يومض الشاشة باللون الأخضر لمدة 200 مللي ثانية، يُعيد تعيين الواجهة للنقلة التالية.
 
-**Responsive:**
-- **Desktop:** Symmetrical split left/right.
-- **Tablet:** Stacked top/bottom.
-- **Mobile:** Not supported.
+**الاستجابة للشاشات (Responsive):**
+- **سطح المكتب:** تقسيم متماثل يسار/يمين.
+- **الجهاز اللوحي:** مكدس أعلى/أسفل.
+- **المحمول:** غير مدعوم.
 
 </details>
 
 ---
 
 <details>
-<summary>Build Guide</summary>
+<summary><b>دليل البناء (Build Guide)</b></summary>
 
-**Stack:** HTML + Tailwind CSS v3
+**التقنيات (Stack):** HTML + Tailwind CSS v3
 
-**Build Order:**
-1. **Pallet Workspace** - Establishes the dense typography (`IBM Plex Sans`, `JetBrains Mono`), 4px grid spacing, and strict 1px border structures.
-2. **Command Dashboard** - Implements the complex SVG heatmap and semantic color scales (`--color-occ-low` etc).
-3. **Receiving Wizard** - Focuses on form elements, focus states, and keyboard navigation optimization.
-4. **Rearrangement Interface** - Reuses cards from the dashboard and form elements from the wizard, finalizing validation logic UI.
+**ترتيب البناء (Build Order):**
+1. **مساحة عمل المنصة** - تؤسس الطباعة الكثيفة (`IBM Plex Sans`، `JetBrains Mono`)، تباعد الشبكة `4px`، وهياكل الحدود الصارمة `1px`.
+2. **لوحة قيادة التحكم** - تطبق الخريطة الحرارية المعقدة SVG وتدرجات الألوان الدلالية (`--color-occ-low` إلخ).
+3. **معالج الاستلام** - يركز على عناصر النموذج، حالات التركيز، وتحسين التنقل بلوحة المفاتيح.
+4. **واجهة إعادة الترتيب** - تعيد استخدام البطاقات من لوحة القيادة وعناصر النموذج من المعالج، مما يُنهي واجهة مستخدم منطق التحقق.
 
 </details>
