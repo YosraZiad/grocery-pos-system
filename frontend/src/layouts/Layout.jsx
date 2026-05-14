@@ -94,7 +94,7 @@ function Layout() {
                 <span className="text-white text-xl font-bold">🛒</span>
               </div>
               <h1 className="text-xl font-bold text-gray-900 dark:text-white">
-                Grocery POS
+                {t("appName")}
               </h1>
             </div>
 
@@ -349,11 +349,11 @@ function Layout() {
 
               {/* User Menu - Dropdown */}
               <div className="hidden md:flex items-center user-menu-container relative">
-                <Tooltip label={user?.name || t("user") || "User"}>
+                <Tooltip label={user?.name || t("user")}>
                   <button
                     onClick={() => setUserMenuOpen(!userMenuOpen)}
                     className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-700 rounded-full flex items-center justify-center text-white text-sm font-semibold hover:from-primary-600 hover:to-primary-800 transition-all duration-200 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
-                    aria-label={user?.name || t("user") || "User"}
+                    aria-label={user?.name || t("user")}
                   >
                     {user?.name?.charAt(0)?.toUpperCase() || "U"}
                   </button>
@@ -365,7 +365,7 @@ function Layout() {
                     {/* User Info */}
                     <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
                       <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
-                        {user?.name || "User"}
+                        {user?.name || t("user")}
                       </p>
                       <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
                         {user?.email || ""}
@@ -380,7 +380,7 @@ function Layout() {
                         className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                       >
                         <span className="mr-3 rtl:ml-3">👤</span>
-                        <span>{t("profile") || "Profile"}</span>
+                        <span>{t("profile")}</span>
                       </Link>
                       <button
                         onClick={() => {
@@ -423,7 +423,7 @@ function Layout() {
               {/* User Info */}
               <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
                 <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
-                  {user?.name || "User"}
+                  {user?.name || t("user")}
                 </p>
                 <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
                   {user?.email || ""}
@@ -441,7 +441,7 @@ function Layout() {
                   className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                 >
                   <span className="mr-3 rtl:ml-3">👤</span>
-                  <span>{t("profile") || "Profile"}</span>
+                  <span>{t("profile")}</span>
                 </Link>
                 <button
                   onClick={() => {
