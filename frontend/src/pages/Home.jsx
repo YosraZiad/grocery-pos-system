@@ -1,9 +1,24 @@
-import { Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { useState } from 'react';
-import { useI18n } from '../context/I18nContext';
-import { useAuth } from '../context/AuthContext';
-import api from '../services/api';
+import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useI18n } from "../context/I18nContext";
+import { useAuth } from "../context/AuthContext";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faBox,
+  faBuildingColumns,
+  faCartShopping,
+  faChartColumn,
+  faChartLine,
+  faCreditCard,
+  faExclamationTriangle,
+  faGear,
+  faKey,
+  faMoneyBill,
+  faMoneyBillTransfer,
+  faUsers,
+} from "@fortawesome/free-solid-svg-icons";
+import api from "../services/api";
 
 /**
  * صفحة الرئيسية - Dashboard مخصص حسب نوع المستخدم
@@ -11,15 +26,15 @@ import api from '../services/api';
 function Home() {
   const { t } = useI18n();
   const { user } = useAuth();
-  const [period, setPeriod] = useState('today'); // today, week, month, year
+  const [period, setPeriod] = useState("today"); // today, week, month, year
 
   // التحقق من نوع المستخدم
-  const isAdmin = user?.roles?.some(role => role.name === 'admin');
-  const isCashier = user?.roles?.some(role => role.name === 'cashier');
+  const isAdmin = user?.roles?.some((role) => role.name === "admin");
+  const isCashier = user?.roles?.some((role) => role.name === "cashier");
 
   // جلب إحصائيات Dashboard
   const { data: dashboardData, isLoading } = useQuery({
-    queryKey: ['dashboard', 'stats', period],
+    queryKey: ["dashboard", "stats", period],
     queryFn: async () => {
       const response = await api.get(`/dashboard/stats?period=${period}`);
       return response.data.data;
@@ -34,28 +49,28 @@ function Home() {
   // Quick Actions
   const quickActions = [
     {
-      icon: '💰',
-      title: t('newSale'),
-      link: '/sales',
-      color: 'from-green-500 to-green-600',
+      icon: faMoneyBill,
+      title: t("newSale"),
+      link: "/sales",
+      color: "from-green-500 to-green-600",
     },
     {
-      icon: '📦',
-      title: t('addProduct'),
-      link: '/products',
-      color: 'from-blue-500 to-blue-600',
+      icon: faBox,
+      title: t("addProduct"),
+      link: "/products",
+      color: "from-blue-500 to-blue-600",
     },
     {
-      icon: '📥',
-      title: t('purchaseInvoice'),
-      link: '/purchase-invoices',
-      color: 'from-purple-500 to-purple-600',
+      icon: faBuildingColumns,
+      title: t("purchaseInvoice"),
+      link: "/purchase-invoices",
+      color: "from-purple-500 to-purple-600",
     },
     {
-      icon: '📊',
-      title: t('reports'),
-      link: '/reports',
-      color: 'from-orange-500 to-orange-600',
+      icon: faChartColumn,
+      title: t("reports"),
+      link: "/reports",
+      color: "from-orange-500 to-orange-600",
     },
   ];
 
@@ -64,7 +79,9 @@ function Home() {
       <div className="flex items-center justify-center py-12">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-400">{t('loading')}</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">
+            {t("loading")}
+          </p>
         </div>
       </div>
     );
@@ -77,10 +94,10 @@ function Home() {
         {/* Header */}
         <div>
           <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            {t('adminDashboard')}
+            {t("adminDashboard")}
           </h2>
           <p className="text-gray-600 dark:text-gray-400">
-            {t('adminDashboardDesc')}
+            {t("adminDashboardDesc")}
           </p>
         </div>
 
@@ -93,14 +110,14 @@ function Home() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                  {t('usersManagement')}
+                  {t("usersManagement")}
                 </p>
                 <p className="text-xl font-bold text-gray-900 dark:text-white">
-                  {t('manageUsers')}
+                  {t("manageUsers")}
                 </p>
               </div>
               <div className="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center text-2xl">
-                👥
+                <FontAwesomeIcon icon={faUsers} />
               </div>
             </div>
           </Link>
@@ -112,14 +129,14 @@ function Home() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                  {t('rolesAndPermissions')}
+                  {t("rolesAndPermissions")}
                 </p>
                 <p className="text-xl font-bold text-gray-900 dark:text-white">
-                  {t('manageRoles')}
+                  {t("manageRoles")}
                 </p>
               </div>
               <div className="w-12 h-12 bg-indigo-500 rounded-lg flex items-center justify-center text-2xl">
-                🔐
+                <FontAwesomeIcon icon={faKey} />
               </div>
             </div>
           </Link>
@@ -131,14 +148,14 @@ function Home() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                  {t('settings')}
+                  {t("settings")}
                 </p>
                 <p className="text-xl font-bold text-gray-900 dark:text-white">
-                  {t('systemSettings')}
+                  {t("systemSettings")}
                 </p>
               </div>
               <div className="w-12 h-12 bg-gray-500 rounded-lg flex items-center justify-center text-2xl">
-                ⚙️
+                <FontAwesomeIcon icon={faGear} />
               </div>
             </div>
           </Link>
@@ -150,14 +167,14 @@ function Home() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                  {t('reports')}
+                  {t("reports")}
                 </p>
                 <p className="text-xl font-bold text-gray-900 dark:text-white">
-                  {t('viewReports')}
+                  {t("viewReports")}
                 </p>
               </div>
               <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center text-2xl">
-                📊
+                <FontAwesomeIcon icon={faChartColumn} />
               </div>
             </div>
           </Link>
@@ -169,14 +186,14 @@ function Home() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                  {t('totalSales')}
+                  {t("totalSales")}
                 </p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">
                   {(Number(sales.total) || 0).toFixed(2)} ر.س
                 </p>
               </div>
               <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center text-2xl">
-                💰
+                <FontAwesomeIcon icon={faMoneyBill} />
               </div>
             </div>
           </div>
@@ -185,14 +202,14 @@ function Home() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                  {t('profit')}
+                  {t("profit")}
                 </p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">
                   {(Number(stats.profit) || 0).toFixed(2)} ر.س
                 </p>
               </div>
               <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center text-2xl">
-                📈
+                <FontAwesomeIcon icon={faChartLine} />
               </div>
             </div>
           </div>
@@ -201,14 +218,14 @@ function Home() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                  {t('expenses')}
+                  {t("expenses")}
                 </p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">
                   {(Number(expenses.total) || 0).toFixed(2)} ر.س
                 </p>
               </div>
               <div className="w-12 h-12 bg-red-500 rounded-lg flex items-center justify-center text-2xl">
-                💸
+                <FontAwesomeIcon icon={faMoneyBillTransfer} />
               </div>
             </div>
           </div>
@@ -217,14 +234,14 @@ function Home() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                  {t('itemsSold')}
+                  {t("itemsSold")}
                 </p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">
                   {stats.items_sold || 0}
                 </p>
               </div>
               <div className="w-12 h-12 bg-yellow-500 rounded-lg flex items-center justify-center text-2xl">
-                📦
+                <FontAwesomeIcon icon={faBox} />
               </div>
             </div>
           </div>
@@ -240,21 +257,21 @@ function Home() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            {t('cashierDashboard')}
+            {t("cashierDashboard")}
           </h2>
           <p className="text-gray-600 dark:text-gray-400">
-            {t('cashierDashboardDesc')}
+            {t("cashierDashboardDesc")}
           </p>
         </div>
         <div className="flex items-center space-x-2 rtl:space-x-reverse">
-          {['today', 'week', 'month', 'year'].map((p) => (
+          {["today", "week", "month", "year"].map((p) => (
             <button
               key={p}
               onClick={() => setPeriod(p)}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 period === p
-                  ? 'bg-primary-600 text-white'
-                  : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                  ? "bg-primary-600 text-white"
+                  : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
               }`}
             >
               {t(p)}
@@ -270,17 +287,17 @@ function Home() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                {t('sales')}
+                {t("sales")}
               </p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white">
                 {(Number(sales.total) || 0).toFixed(2)}
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                {sales.count || 0} {t('transactions')}
+                {sales.count || 0} {t("transactions")}
               </p>
             </div>
             <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center text-2xl">
-              💰
+              <FontAwesomeIcon icon={faMoneyBill} />
             </div>
           </div>
         </div>
@@ -290,17 +307,17 @@ function Home() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                {t('profit')}
+                {t("profit")}
               </p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white">
                 {(Number(stats.profit) || 0).toFixed(2)}
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                {t('grossProfit')}
+                {t("grossProfit")}
               </p>
             </div>
             <div className="w-12 h-12 bg-blue-500 rounded-lg flex items-center justify-center text-2xl">
-              📈
+              <FontAwesomeIcon icon={faChartLine} />
             </div>
           </div>
         </div>
@@ -310,17 +327,17 @@ function Home() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                {t('expenses')}
+                {t("expenses")}
               </p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white">
                 {(Number(expenses.total) || 0).toFixed(2)}
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                {expenses.count || 0} {t('expenses')}
+                {expenses.count || 0} {t("expenses")}
               </p>
             </div>
             <div className="w-12 h-12 bg-red-500 rounded-lg flex items-center justify-center text-2xl">
-              💸
+              <FontAwesomeIcon icon={faMoneyBillTransfer} />
             </div>
           </div>
         </div>
@@ -330,28 +347,33 @@ function Home() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
-                {t('itemsSold')}
+                {t("itemsSold")}
               </p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white">
                 {stats.items_sold || 0}
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                {t('units')}
+                {t("units")}
               </p>
             </div>
             <div className="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center text-2xl">
-              📦
+              <FontAwesomeIcon icon={faBox} />
             </div>
           </div>
         </div>
       </div>
 
       {/* Alerts Panel */}
-      {(alerts.low_stock > 0 || alerts.expired > 0 || alerts.expiring_soon > 0 || alerts.pending_returns > 0) && (
+      {(alerts.low_stock > 0 ||
+        alerts.expired > 0 ||
+        alerts.expiring_soon > 0 ||
+        alerts.pending_returns > 0) && (
         <div className="card bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800">
           <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4 flex items-center">
-            <span className="mr-2 rtl:ml-2">⚠️</span>
-            {t('alerts')}
+            <span className="mr-2 rtl:ml-2">
+              <FontAwesomeIcon icon={faExclamationTriangle} />
+            </span>
+            {t("alerts")}
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {alerts.low_stock > 0 && (
@@ -360,7 +382,7 @@ function Home() {
                 className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-lg hover:shadow-md transition-shadow"
               >
                 <span className="text-sm text-gray-700 dark:text-gray-300">
-                  {t('lowStock')}
+                  {t("lowStock")}
                 </span>
                 <span className="text-lg font-bold text-yellow-600 dark:text-yellow-400">
                   {alerts.low_stock}
@@ -373,7 +395,7 @@ function Home() {
                 className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-lg hover:shadow-md transition-shadow"
               >
                 <span className="text-sm text-gray-700 dark:text-gray-300">
-                  {t('expired')}
+                  {t("expired")}
                 </span>
                 <span className="text-lg font-bold text-red-600 dark:text-red-400">
                   {alerts.expired}
@@ -386,7 +408,7 @@ function Home() {
                 className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-lg hover:shadow-md transition-shadow"
               >
                 <span className="text-sm text-gray-700 dark:text-gray-300">
-                  {t('expiringSoon')}
+                  {t("expiringSoon")}
                 </span>
                 <span className="text-lg font-bold text-orange-600 dark:text-orange-400">
                   {alerts.expiring_soon}
@@ -399,7 +421,7 @@ function Home() {
                 className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-lg hover:shadow-md transition-shadow"
               >
                 <span className="text-sm text-gray-700 dark:text-gray-300">
-                  {t('pendingReturns')}
+                  {t("pendingReturns")}
                 </span>
                 <span className="text-lg font-bold text-blue-600 dark:text-blue-400">
                   {alerts.pending_returns}
@@ -416,7 +438,7 @@ function Home() {
         <div className="lg:col-span-1">
           <div className="card">
             <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
-              {t('quickActions')}
+              {t("quickActions")}
             </h3>
             <div className="space-y-3">
               {quickActions.map((action, index) => (
@@ -425,8 +447,10 @@ function Home() {
                   to={action.link}
                   className="flex items-center p-4 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors group"
                 >
-                  <div className={`w-10 h-10 bg-gradient-to-br ${action.color} rounded-lg flex items-center justify-center text-xl mr-3 rtl:ml-3 group-hover:scale-110 transition-transform`}>
-                    {action.icon}
+                  <div
+                    className={`w-10 h-10 bg-gradient-to-br ${action.color} rounded-lg flex items-center justify-center text-xl mr-3 rtl:ml-3 group-hover:scale-110 transition-transform`}
+                  >
+                    <FontAwesomeIcon icon={action.icon} />
                   </div>
                   <span className="font-medium text-gray-900 dark:text-white">
                     {action.title}
@@ -441,19 +465,28 @@ function Home() {
         <div className="lg:col-span-2">
           <div className="card">
             <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
-              {t('dailySales')} ({t('last7Days')})
+              {t("dailySales")} ({t("last7Days")})
             </h3>
             {stats.daily_sales && stats.daily_sales.length > 0 ? (
               <div className="space-y-2">
                 {stats.daily_sales.map((day, index) => {
                   const dayTotal = Number(day.total) || 0;
-                  const maxTotal = Math.max(...stats.daily_sales.map(d => Number(d.total) || 0));
-                  const percentage = maxTotal > 0 ? (dayTotal / maxTotal) * 100 : 0;
-                  
+                  const maxTotal = Math.max(
+                    ...stats.daily_sales.map((d) => Number(d.total) || 0),
+                  );
+                  const percentage =
+                    maxTotal > 0 ? (dayTotal / maxTotal) * 100 : 0;
+
                   return (
-                    <div key={index} className="flex items-center space-x-3 rtl:space-x-reverse">
+                    <div
+                      key={index}
+                      className="flex items-center space-x-3 rtl:space-x-reverse"
+                    >
                       <div className="w-20 text-sm text-gray-600 dark:text-gray-400">
-                        {new Date(day.date).toLocaleDateString('ar-SA', { weekday: 'short', day: 'numeric' })}
+                        {new Date(day.date).toLocaleDateString("ar-SA", {
+                          weekday: "short",
+                          day: "numeric",
+                        })}
                       </div>
                       <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-6 relative overflow-hidden">
                         <div
@@ -468,7 +501,7 @@ function Home() {
                         </div>
                       </div>
                       <div className="w-20 text-sm font-medium text-gray-900 dark:text-white text-left rtl:text-right">
-                        {day.count || 0} {t('sales')}
+                        {day.count || 0} {t("sales")}
                       </div>
                     </div>
                   );
@@ -476,7 +509,7 @@ function Home() {
               </div>
             ) : (
               <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                {t('noData')}
+                {t("noData")}
               </div>
             )}
           </div>
@@ -488,7 +521,7 @@ function Home() {
         {/* Top Products */}
         <div className="card">
           <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
-            {t('topProducts')} ({t('last7Days')})
+            {t("topProducts")} ({t("last7Days")})
           </h3>
           {stats.top_products && stats.top_products.length > 0 ? (
             <div className="space-y-3">
@@ -506,7 +539,9 @@ function Home() {
                         {product.name}
                       </p>
                       <p className="text-sm text-gray-500 dark:text-gray-400">
-                        {product.total_quantity || 0} {t('units')} - {(Number(product.total_revenue) || 0).toFixed(2)} {t('currency')}
+                        {product.total_quantity || 0} {t("units")} -{" "}
+                        {(Number(product.total_revenue) || 0).toFixed(2)}{" "}
+                        {t("currency")}
                       </p>
                     </div>
                   </div>
@@ -515,7 +550,7 @@ function Home() {
             </div>
           ) : (
             <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-              {t('noData')}
+              {t("noData")}
             </div>
           )}
         </div>
@@ -523,20 +558,27 @@ function Home() {
         {/* Payment Methods */}
         <div className="card">
           <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
-            {t('paymentMethods')}
+            {t("paymentMethods")}
           </h3>
           <div className="space-y-4">
             <div className="flex items-center justify-between p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
               <div className="flex items-center space-x-3 rtl:space-x-reverse">
                 <div className="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center text-white">
-                  💵
+                  <FontAwesomeIcon icon={faMoneyBill} />
                 </div>
                 <div>
                   <p className="font-medium text-gray-900 dark:text-white">
-                    {t('cash')}
+                    {t("cash")}
                   </p>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
-                    {sales.total > 0 ? ((Number(sales.cash) || 0) / (Number(sales.total) || 1) * 100).toFixed(1) : '0.0'}%
+                    {sales.total > 0
+                      ? (
+                          ((Number(sales.cash) || 0) /
+                            (Number(sales.total) || 1)) *
+                          100
+                        ).toFixed(1)
+                      : "0.0"}
+                    %
                   </p>
                 </div>
               </div>
@@ -547,14 +589,21 @@ function Home() {
             <div className="flex items-center justify-between p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
               <div className="flex items-center space-x-3 rtl:space-x-reverse">
                 <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center text-white">
-                  💳
+                  <FontAwesomeIcon icon={faCreditCard} />
                 </div>
                 <div>
                   <p className="font-medium text-gray-900 dark:text-white">
-                    {t('card')}
+                    {t("card")}
                   </p>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
-                    {sales.total > 0 ? ((Number(sales.card) || 0) / (Number(sales.total) || 1) * 100).toFixed(1) : '0.0'}%
+                    {sales.total > 0
+                      ? (
+                          ((Number(sales.card) || 0) /
+                            (Number(sales.total) || 1)) *
+                          100
+                        ).toFixed(1)
+                      : "0.0"}
+                    %
                   </p>
                 </div>
               </div>
@@ -566,14 +615,21 @@ function Home() {
               <div className="flex items-center justify-between p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
                 <div className="flex items-center space-x-3 rtl:space-x-reverse">
                   <div className="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center text-white">
-                    🏦
+                    <FontAwesomeIcon icon={faBuildingColumns} />
                   </div>
                   <div>
                     <p className="font-medium text-gray-900 dark:text-white">
-                      {t('transfer')}
+                      {t("transfer")}
                     </p>
                     <p className="text-sm text-gray-500 dark:text-gray-400">
-                      {sales.total > 0 ? ((Number(sales.transfer) || 0) / (Number(sales.total) || 1) * 100).toFixed(1) : '0.0'}%
+                      {sales.total > 0
+                        ? (
+                            ((Number(sales.transfer) || 0) /
+                              (Number(sales.total) || 1)) *
+                            100
+                          ).toFixed(1)
+                        : "0.0"}
+                      %
                     </p>
                   </div>
                 </div>

@@ -1,4 +1,6 @@
 import { useI18n } from "../context/I18nContext";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faTrashCan } from "@fortawesome/free-regular-svg-icons";
 import QuantityControl from "./QuantityControl";
 import Tooltip from "./Tooltip";
 
@@ -46,7 +48,7 @@ function CartItem({ item, onUpdateQuantity, onRemove }) {
             className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 p-2 rounded-lg transition-colors duration-200"
             aria-label={t("delete")}
           >
-            🗑️
+            <FontAwesomeIcon icon={faTrashCan} />
           </button>
         </Tooltip>
       </div>

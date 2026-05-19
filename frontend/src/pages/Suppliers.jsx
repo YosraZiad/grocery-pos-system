@@ -1,31 +1,37 @@
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useI18n } from '../context/I18nContext';
-import toast from 'react-hot-toast';
-import ConfirmationModal from '../components/ConfirmationModal';
-import api from '../services/api';
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useI18n } from "../context/I18nContext";
+import toast from "react-hot-toast";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faPenToSquare,
+  faTrashCan,
+  faXmark,
+} from "@fortawesome/free-solid-svg-icons";
+import ConfirmationModal from "../components/ConfirmationModal";
+import api from "../services/api";
 
 function Suppliers() {
   const { t } = useI18n();
   const queryClient = useQueryClient();
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [supplierToDelete, setSupplierToDelete] = useState(null);
   const [editingSupplier, setEditingSupplier] = useState(null);
   const [formData, setFormData] = useState({
-    name: '',
-    phone: '',
-    email: '',
-    address: '',
+    name: "",
+    phone: "",
+    email: "",
+    address: "",
   });
 
   // جلب الموردين
   const { data: suppliersData, isLoading } = useQuery({
-    queryKey: ['suppliers', search],
+    queryKey: ["suppliers", search],
     queryFn: async () => {
       const params = new URLSearchParams();
-      if (search) params.append('search', search);
+      if (search) params.append("search", search);
       const response = await api.get(`/suppliers?${params.toString()}`);
       return response.data;
     },
@@ -34,20 +40,26 @@ function Suppliers() {
   // إضافة مورد
   const createMutation = useMutation({
     mutationFn: async (data) => {
-      const response = await api.post('/suppliers', data);
+      const response = await api.post("/suppliers", data);
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['suppliers']);
+      queryClient.invalidateQueries(["suppliers"]);
       setShowModal(false);
-      setFormData({ name: '', phone: '', email: '', address: '' });
+      setFormData({ name: "", phone: "", email: "", address: "" });
       setEditingSupplier(null);
-      toast.success(t('supplierCreatedSuccessfully') || 'Supplier created successfully');
+      toast.success(
+        t("supplierCreatedSuccessfully") || "Supplier created successfully",
+      );
     },
     onError: (error) => {
-      const message = error.response?.data?.message || 
-        (error.response?.data?.errors ? Object.values(error.response.data.errors).flat().join(', ') : null) ||
-        t('errorCreatingSupplier') || 'Error creating supplier';
+      const message =
+        error.response?.data?.message ||
+        (error.response?.data?.errors
+          ? Object.values(error.response.data.errors).flat().join(", ")
+          : null) ||
+        t("errorCreatingSupplier") ||
+        "Error creating supplier";
       toast.error(message);
     },
   });
@@ -59,16 +71,22 @@ function Suppliers() {
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['suppliers']);
+      queryClient.invalidateQueries(["suppliers"]);
       setShowModal(false);
-      setFormData({ name: '', phone: '', email: '', address: '' });
+      setFormData({ name: "", phone: "", email: "", address: "" });
       setEditingSupplier(null);
-      toast.success(t('supplierUpdatedSuccessfully') || 'Supplier updated successfully');
+      toast.success(
+        t("supplierUpdatedSuccessfully") || "Supplier updated successfully",
+      );
     },
     onError: (error) => {
-      const message = error.response?.data?.message || 
-        (error.response?.data?.errors ? Object.values(error.response.data.errors).flat().join(', ') : null) ||
-        t('errorUpdatingSupplier') || 'Error updating supplier';
+      const message =
+        error.response?.data?.message ||
+        (error.response?.data?.errors
+          ? Object.values(error.response.data.errors).flat().join(", ")
+          : null) ||
+        t("errorUpdatingSupplier") ||
+        "Error updating supplier";
       toast.error(message);
     },
   });
@@ -80,11 +98,16 @@ function Suppliers() {
       return response.data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['suppliers']);
-      toast.success(t('supplierDeletedSuccessfully') || 'Supplier deleted successfully');
+      queryClient.invalidateQueries(["suppliers"]);
+      toast.success(
+        t("supplierDeletedSuccessfully") || "Supplier deleted successfully",
+      );
     },
     onError: (error) => {
-      const message = error.response?.data?.message || t('errorDeletingSupplier') || 'Error deleting supplier';
+      const message =
+        error.response?.data?.message ||
+        t("errorDeletingSupplier") ||
+        "Error deleting supplier";
       toast.error(message);
     },
   });
@@ -102,9 +125,9 @@ function Suppliers() {
     setEditingSupplier(supplier);
     setFormData({
       name: supplier.name,
-      phone: supplier.phone || '',
-      email: supplier.email || '',
-      address: supplier.address || '',
+      phone: supplier.phone || "",
+      email: supplier.email || "",
+      address: supplier.address || "",
     });
     setShowModal(true);
   };
@@ -125,10 +148,14 @@ function Suppliers() {
         });
       }),
       {
-        loading: t('deletingSupplier') || 'Deleting supplier...',
-        success: t('supplierDeletedSuccessfully') || 'Supplier deleted successfully',
-        error: (err) => err.response?.data?.message || t('errorDeletingSupplier') || 'Error deleting supplier',
-      }
+        loading: t("deletingSupplier") || "Deleting supplier...",
+        success:
+          t("supplierDeletedSuccessfully") || "Supplier deleted successfully",
+        error: (err) =>
+          err.response?.data?.message ||
+          t("errorDeletingSupplier") ||
+          "Error deleting supplier",
+      },
     );
 
     setShowDeleteModal(false);
@@ -138,7 +165,7 @@ function Suppliers() {
   const handleCloseModal = () => {
     setShowModal(false);
     setEditingSupplier(null);
-    setFormData({ name: '', phone: '', email: '', address: '' });
+    setFormData({ name: "", phone: "", email: "", address: "" });
   };
 
   const formatCurrency = (amount) => {
@@ -150,7 +177,9 @@ function Suppliers() {
       <div className="flex items-center justify-center py-12">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-400">{t('loading')}</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">
+            {t("loading")}
+          </p>
         </div>
       </div>
     );
@@ -164,10 +193,10 @@ function Suppliers() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            {t('suppliersManagement')}
+            {t("suppliersManagement")}
           </h2>
           <p className="text-gray-600 dark:text-gray-400">
-            {t('manageSuppliers')}
+            {t("manageSuppliers")}
           </p>
         </div>
         <button
@@ -175,7 +204,7 @@ function Suppliers() {
           className="btn-primary flex items-center space-x-2 rtl:space-x-reverse"
         >
           <span>+</span>
-          <span>{t('addSupplier')}</span>
+          <span>{t("addSupplier")}</span>
         </button>
       </div>
 
@@ -185,7 +214,7 @@ function Suppliers() {
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder={t('searchSuppliers')}
+          placeholder={t("searchSuppliers")}
           className="input"
         />
       </div>
@@ -197,25 +226,25 @@ function Suppliers() {
             <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
               <tr>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  {t('name')}
+                  {t("name")}
                 </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  {t('phone')}
+                  {t("phone")}
                 </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  {t('email')}
+                  {t("email")}
                 </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  {t('address')}
+                  {t("address")}
                 </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  {t('totalBalance')}
+                  {t("totalBalance")}
                 </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  {t('invoicesCount')}
+                  {t("invoicesCount")}
                 </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  {t('actions')}
+                  {t("actions")}
                 </th>
               </tr>
             </thead>
@@ -225,7 +254,7 @@ function Suppliers() {
                   <td colSpan="7" className="px-6 py-12 text-center">
                     <div className="text-gray-500 dark:text-gray-400">
                       <div className="text-4xl mb-4">🏪</div>
-                      <p className="text-lg">{t('noSuppliersFound')}</p>
+                      <p className="text-lg">{t("noSuppliersFound")}</p>
                     </div>
                   </td>
                 </tr>
@@ -242,25 +271,27 @@ function Suppliers() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-600 dark:text-gray-400">
-                        {supplier.phone || '-'}
+                        {supplier.phone || "-"}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-600 dark:text-gray-400">
-                        {supplier.email || '-'}
+                        {supplier.email || "-"}
                       </div>
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-sm text-gray-600 dark:text-gray-400 max-w-xs truncate">
-                        {supplier.address || '-'}
+                        {supplier.address || "-"}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className={`text-sm font-semibold ${
-                        (supplier.total_balance || 0) > 0 
-                          ? 'text-red-600 dark:text-red-400' 
-                          : 'text-green-600 dark:text-green-400'
-                      }`}>
+                      <div
+                        className={`text-sm font-semibold ${
+                          (supplier.total_balance || 0) > 0
+                            ? "text-red-600 dark:text-red-400"
+                            : "text-green-600 dark:text-green-400"
+                        }`}
+                      >
                         {formatCurrency(supplier.total_balance || 0)}
                       </div>
                     </td>
@@ -274,16 +305,16 @@ function Suppliers() {
                         <button
                           onClick={() => handleEdit(supplier)}
                           className="text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300"
-                          title={t('edit')}
+                          title={t("edit")}
                         >
-                          ✏️
+                          <FontAwesomeIcon icon={faPenToSquare} />
                         </button>
                         <button
                           onClick={() => handleDelete(supplier.id)}
                           className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
-                          title={t('delete')}
+                          title={t("delete")}
                         >
-                          🗑️
+                          <FontAwesomeIcon icon={faTrashCan} />
                         </button>
                       </div>
                     </td>
@@ -301,49 +332,57 @@ function Suppliers() {
           <div className="card max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                {editingSupplier ? t('editSupplier') : t('addSupplier')}
+                {editingSupplier ? t("editSupplier") : t("addSupplier")}
               </h3>
               <button
                 onClick={handleCloseModal}
                 className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
               >
-                ✕
+                <FontAwesomeIcon icon={faXmark} />
               </button>
             </div>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="label">{t('name')} *</label>
+                <label className="label">{t("name")} *</label>
                 <input
                   type="text"
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
                   className="input"
                   required
                 />
               </div>
               <div>
-                <label className="label">{t('phone')}</label>
+                <label className="label">{t("phone")}</label>
                 <input
                   type="text"
                   value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, phone: e.target.value })
+                  }
                   className="input"
                 />
               </div>
               <div>
-                <label className="label">{t('email')}</label>
+                <label className="label">{t("email")}</label>
                 <input
                   type="email"
                   value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, email: e.target.value })
+                  }
                   className="input"
                 />
               </div>
               <div>
-                <label className="label">{t('address')}</label>
+                <label className="label">{t("address")}</label>
                 <textarea
                   value={formData.address}
-                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, address: e.target.value })
+                  }
                   className="input"
                   rows="3"
                 />
@@ -354,14 +393,18 @@ function Suppliers() {
                   onClick={handleCloseModal}
                   className="btn-secondary"
                 >
-                  {t('cancel')}
+                  {t("cancel")}
                 </button>
                 <button
                   type="submit"
-                  disabled={createMutation.isPending || updateMutation.isPending}
+                  disabled={
+                    createMutation.isPending || updateMutation.isPending
+                  }
                   className="btn-primary"
                 >
-                  {(createMutation.isPending || updateMutation.isPending) ? t('loading') : t('save')}
+                  {createMutation.isPending || updateMutation.isPending
+                    ? t("loading")
+                    : t("save")}
                 </button>
               </div>
             </form>
@@ -377,10 +420,13 @@ function Suppliers() {
           setSupplierToDelete(null);
         }}
         onConfirm={confirmDelete}
-        title={t('confirmDelete') || 'Confirm Delete'}
-        message={t('confirmDeleteSupplier') || 'Are you sure you want to delete this supplier?'}
-        confirmText={t('delete') || 'Delete'}
-        cancelText={t('cancel') || 'Cancel'}
+        title={t("confirmDelete") || "Confirm Delete"}
+        message={
+          t("confirmDeleteSupplier") ||
+          "Are you sure you want to delete this supplier?"
+        }
+        confirmText={t("delete") || "Delete"}
+        cancelText={t("cancel") || "Cancel"}
         type="danger"
       />
     </div>

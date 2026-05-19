@@ -1,12 +1,12 @@
-import { createContext, useContext, useState, useEffect } from 'react';
-import api from '../services/api';
+import { createContext, useContext, useState, useEffect } from "react";
+import api from "../services/api";
 
 const AuthContext = createContext(null);
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth must be used within AuthProvider');
+    throw new Error("useAuth must be used within AuthProvider");
   }
   return context;
 };
@@ -22,25 +22,25 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const checkAuth = async () => {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem("token");
     if (!token) {
       setLoading(false);
       return;
     }
 
     try {
-      const response = await api.get('/auth/me');
+      const response = await api.get("/auth/me");
       setUser(response.data.user);
       setIsAuthenticated(true);
-      
+
       // حفظ tenant_id
       if (response.data.user.tenant_id) {
-        localStorage.setItem('tenant_id', response.data.user.tenant_id);
+        localStorage.setItem("tenant_id", response.data.user.tenant_id);
       }
     } catch (error) {
       // Token غير صالح
-      localStorage.removeItem('token');
-      localStorage.removeItem('tenant_id');
+      localStorage.removeItem("token");
+      localStorage.removeItem("tenant_id");
       setUser(null);
       setIsAuthenticated(false);
     } finally {
@@ -48,36 +48,60 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const login = async (email, password) => {
+  const login = async (identifierOrPayload, legacyPassword) => {
+    const payload =
+      typeof identifierOrPayload === "object" && identifierOrPayload !== null
+        ? identifierOrPayload
+        : {
+            identifier: identifierOrPayload,
+            password: legacyPassword,
+          };
+
     try {
-      const response = await api.post('/auth/login', {
-        email,
-        password,
+      const response = await api.post("/auth/login", {
+        identifier: payload.identifier,
+        password: payload.password,
+        login_method: payload.loginMethod,
       });
 
-      const { token, user, tenant_id } = response.data;
+      const { token, user, tenant_id, login_method, login_at_server } =
+        response.data;
 
       // حفظ token و tenant_id
-      localStorage.setItem('token', token);
+      localStorage.setItem("token", token);
       if (tenant_id) {
-        localStorage.setItem('tenant_id', tenant_id);
+        localStorage.setItem("tenant_id", tenant_id);
       }
 
       setUser(user);
       setIsAuthenticated(true);
 
-      return { success: true };
+      return {
+        success: true,
+        loginMethod: login_method,
+        loginAtServer: login_at_server,
+      };
     } catch (error) {
       return {
         success: false,
-        message: error.response?.data?.message || 'فشل تسجيل الدخول',
+        message: error.response?.data?.message || "فشل تسجيل الدخول",
+        status: error.response?.status,
+        attemptsRemaining: error.response?.data?.attempts_remaining,
+        lockedUntil: error.response?.data?.locked_until,
+        retryAfterSeconds: error.response?.data?.retry_after_seconds,
       };
     }
   };
 
-  const register = async (name, email, password, passwordConfirmation, tenantId) => {
+  const register = async (
+    name,
+    email,
+    password,
+    passwordConfirmation,
+    tenantId,
+  ) => {
     try {
-      const response = await api.post('/auth/register', {
+      const response = await api.post("/auth/register", {
         name,
         email,
         password,
@@ -88,9 +112,9 @@ export const AuthProvider = ({ children }) => {
       const { token, user, tenant_id } = response.data;
 
       // حفظ token و tenant_id
-      localStorage.setItem('token', token);
+      localStorage.setItem("token", token);
       if (tenant_id) {
-        localStorage.setItem('tenant_id', tenant_id);
+        localStorage.setItem("tenant_id", tenant_id);
       }
 
       setUser(user);
@@ -100,7 +124,7 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       return {
         success: false,
-        message: error.response?.data?.message || 'فشل التسجيل',
+        message: error.response?.data?.message || "فشل التسجيل",
         errors: error.response?.data?.errors || {},
       };
     }
@@ -108,13 +132,13 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      await api.post('/auth/logout');
+      await api.post("/auth/logout");
     } catch (error) {
-      console.error('Logout error:', error);
+      console.error("Logout error:", error);
     } finally {
       // مسح البيانات المحلية حتى لو فشل الطلب
-      localStorage.removeItem('token');
-      localStorage.removeItem('tenant_id');
+      localStorage.removeItem("token");
+      localStorage.removeItem("tenant_id");
       setUser(null);
       setIsAuthenticated(false);
     }

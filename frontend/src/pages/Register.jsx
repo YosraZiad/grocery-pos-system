@@ -1,18 +1,24 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { useI18n } from '../context/I18nContext';
-import { useTheme } from '../context/ThemeContext';
+import { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import { useI18n } from "../context/I18nContext";
+import { useTheme } from "../context/ThemeContext";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faCartShopping,
+  faMoon,
+  faSun,
+} from "@fortawesome/free-solid-svg-icons";
 
 function Register() {
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    password_confirmation: '',
+    name: "",
+    email: "",
+    password: "",
+    password_confirmation: "",
     tenant_id: 1, // افتراضي - سيتم تحسينه لاحقًا
   });
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const { register } = useAuth();
@@ -29,7 +35,7 @@ function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setErrors({});
     setLoading(true);
 
@@ -38,13 +44,13 @@ function Register() {
       formData.email,
       formData.password,
       formData.password_confirmation,
-      formData.tenant_id
+      formData.tenant_id,
     );
 
     if (result.success) {
-      navigate('/');
+      navigate("/");
     } else {
-      setError(result.message || t('error'));
+      setError(result.message || t("error"));
       if (result.errors) {
         setErrors(result.errors);
       }
@@ -59,16 +65,18 @@ function Register() {
         <button
           onClick={toggleLanguage}
           className="p-2 rounded-lg bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 shadow-md transition-all duration-200"
-          title={language === 'en' ? 'Switch to Arabic' : 'التبديل إلى الإنجليزية'}
+          title={
+            language === "en" ? "Switch to Arabic" : "التبديل إلى الإنجليزية"
+          }
         >
-          {language === 'en' ? '🇸🇦' : '🇬🇧'}
+          {language === "en" ? "🇸🇦" : "🇬🇧"}
         </button>
         <button
           onClick={toggleTheme}
           className="p-2 rounded-lg bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 shadow-md transition-all duration-200"
-          title={theme === 'light' ? 'Dark Mode' : 'Light Mode'}
+          title={theme === "light" ? "Dark Mode" : "Light Mode"}
         >
-          {theme === 'light' ? '🌙' : '☀️'}
+          <FontAwesomeIcon icon={theme === "light" ? faMoon : faSun} />
         </button>
       </div>
 
@@ -76,18 +84,21 @@ function Register() {
         {/* Logo & Title */}
         <div className="text-center">
           <div className="mx-auto w-20 h-20 bg-gradient-to-br from-primary-500 to-primary-700 rounded-2xl flex items-center justify-center shadow-lg mb-4">
-            <span className="text-white text-4xl">🛒</span>
+            <FontAwesomeIcon
+              icon={faCartShopping}
+              className="text-white text-4xl"
+            />
           </div>
           <h2 className="text-4xl font-extrabold text-gray-900 dark:text-white mb-2">
-            {t('register')}
+            {t("register")}
           </h2>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            {t('or')}{' '}
+            {t("or")}{" "}
             <Link
               to="/login"
               className="font-medium text-primary-600 dark:text-primary-400 hover:text-primary-500 dark:hover:text-primary-300 transition-colors duration-200"
             >
-              {t('login')}
+              {t("login")}
             </Link>
           </p>
         </div>
@@ -95,100 +106,106 @@ function Register() {
         {/* Register Form */}
         <div className="card">
           <form className="space-y-6" onSubmit={handleSubmit}>
-          {error && (
+            {error && (
               <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg text-sm">
-              {error}
-            </div>
-          )}
+                {error}
+              </div>
+            )}
 
-          <div className="space-y-4">
-            <div>
+            <div className="space-y-4">
+              <div>
                 <label htmlFor="name" className="label">
-                  {t('name')} *
-              </label>
-              <input
-                id="name"
-                name="name"
-                type="text"
-                required
+                  {t("name")} *
+                </label>
+                <input
+                  id="name"
+                  name="name"
+                  type="text"
+                  required
                   className="input"
-                  placeholder={t('fullName')}
-                value={formData.name}
-                onChange={handleChange}
-              />
-              {errors.name && (
-                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.name[0]}</p>
-              )}
-            </div>
+                  placeholder={t("fullName")}
+                  value={formData.name}
+                  onChange={handleChange}
+                />
+                {errors.name && (
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                    {errors.name[0]}
+                  </p>
+                )}
+              </div>
 
-            <div>
+              <div>
                 <label htmlFor="email" className="label">
-                  {t('email')} *
-              </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
+                  {t("email")} *
+                </label>
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
                   className="input"
-                  placeholder={t('email')}
-                value={formData.email}
-                onChange={handleChange}
-              />
-              {errors.email && (
-                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.email[0]}</p>
-              )}
-            </div>
+                  placeholder={t("email")}
+                  value={formData.email}
+                  onChange={handleChange}
+                />
+                {errors.email && (
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                    {errors.email[0]}
+                  </p>
+                )}
+              </div>
 
-            <div>
+              <div>
                 <label htmlFor="password" className="label">
-                  {t('password')} *
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="new-password"
-                required
+                  {t("password")} *
+                </label>
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  autoComplete="new-password"
+                  required
                   className="input"
-                  placeholder={t('passwordMin')}
-                value={formData.password}
-                onChange={handleChange}
-              />
-              {errors.password && (
-                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.password[0]}</p>
-              )}
+                  placeholder={t("passwordMin")}
+                  value={formData.password}
+                  onChange={handleChange}
+                />
+                {errors.password && (
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                    {errors.password[0]}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label htmlFor="password_confirmation" className="label">
+                  {t("confirmPassword")} *
+                </label>
+                <input
+                  id="password_confirmation"
+                  name="password_confirmation"
+                  type="password"
+                  autoComplete="new-password"
+                  required
+                  className="input"
+                  placeholder={t("confirmPasswordPlaceholder")}
+                  value={formData.password_confirmation}
+                  onChange={handleChange}
+                />
+              </div>
             </div>
 
             <div>
-                <label htmlFor="password_confirmation" className="label">
-                  {t('confirmPassword')} *
-              </label>
-              <input
-                id="password_confirmation"
-                name="password_confirmation"
-                type="password"
-                autoComplete="new-password"
-                required
-                  className="input"
-                  placeholder={t('confirmPasswordPlaceholder')}
-                value={formData.password_confirmation}
-                onChange={handleChange}
-              />
-            </div>
-          </div>
-
-          <div>
-            <button
-              type="submit"
-              disabled={loading}
+              <button
+                type="submit"
+                disabled={loading}
                 className="w-full btn-primary py-3 text-base disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-                {loading ? t('processing') : t('registerButton')}
-            </button>
-          </div>
-        </form>
+              >
+                {loading ? t("processing") : t("registerButton")}
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     </div>

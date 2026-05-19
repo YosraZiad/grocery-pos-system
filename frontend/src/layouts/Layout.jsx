@@ -3,6 +3,28 @@ import { Outlet, useNavigate, Link, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useI18n } from "../context/I18nContext";
 import { useTheme } from "../context/ThemeContext";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faBars,
+  faBox,
+  faCartShopping,
+  faChartColumn,
+  faChevronDown,
+  faDoorOpen,
+  faFileInvoice,
+  faGear,
+  faHouse,
+  faKey,
+  faListCheck,
+  faMoon,
+  faMoneyBill,
+  faMoneyBillTransfer,
+  faRightLeft,
+  faSun,
+  faUser,
+  faUserShield,
+  faUsers,
+} from "@fortawesome/free-solid-svg-icons";
 import Tooltip from "../components/Tooltip";
 
 /**
@@ -55,30 +77,38 @@ function Layout() {
   // Navigation Groups
   const navigationGroups = {
     main: [
-      { path: "/", label: t("home"), icon: "🏠" },
-      { path: "/categories", label: t("categories"), icon: "📁" },
-      { path: "/products", label: t("products"), icon: "📦" },
+      { path: "/", label: t("home"), icon: faHouse },
+      { path: "/categories", label: t("categories"), icon: faListCheck },
+      { path: "/products", label: t("products"), icon: faBox },
     ],
     admin: isAdmin
       ? [
-          { path: "/users", label: t("usersManagement"), icon: "👥" },
-          { path: "/roles", label: t("rolesAndPermissions"), icon: "🔐" },
+          { path: "/users", label: t("usersManagement"), icon: faUsers },
+          { path: "/roles", label: t("rolesAndPermissions"), icon: faKey },
         ]
       : [],
     sales: [
-      { path: "/sales", label: t("sales"), icon: "💰" },
-      { path: "/sales-list", label: t("salesList"), icon: "📋" },
+      { path: "/sales", label: t("sales"), icon: faMoneyBill },
+      { path: "/sales-list", label: t("salesList"), icon: faListCheck },
     ],
     management: [
-      { path: "/inventory", label: t("inventory"), icon: "📊" },
-      { path: "/returns", label: t("returnsManagement"), icon: "🔄" },
-      { path: "/suppliers", label: t("suppliersManagement"), icon: "👥" },
-      { path: "/purchase-invoices", label: t("purchaseInvoices"), icon: "📄" },
-      { path: "/expenses", label: t("expensesManagement"), icon: "💸" },
+      { path: "/inventory", label: t("inventory"), icon: faChartColumn },
+      { path: "/returns", label: t("returnsManagement"), icon: faRightLeft },
+      { path: "/suppliers", label: t("suppliersManagement"), icon: faUsers },
+      {
+        path: "/purchase-invoices",
+        label: t("purchaseInvoices"),
+        icon: faFileInvoice,
+      },
+      {
+        path: "/expenses",
+        label: t("expensesManagement"),
+        icon: faMoneyBillTransfer,
+      },
     ],
     reports: [
-      { path: "/profit-loss", label: t("profitLoss"), icon: "📈" },
-      { path: "/reports", label: t("reports"), icon: "📊" },
+      { path: "/profit-loss", label: t("profitLoss"), icon: faChartColumn },
+      { path: "/reports", label: t("reports"), icon: faChartColumn },
     ],
   };
 
@@ -91,7 +121,10 @@ function Layout() {
             {/* Logo */}
             <div className="flex items-center space-x-3 rtl:space-x-reverse">
               <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-700 rounded-lg flex items-center justify-center">
-                <span className="text-white text-xl font-bold">🛒</span>
+                <FontAwesomeIcon
+                  icon={faCartShopping}
+                  className="text-white text-xl"
+                />
               </div>
               <h1 className="text-xl font-bold text-gray-900 dark:text-white">
                 {t("appName")}
@@ -111,7 +144,9 @@ function Layout() {
                       : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                   }`}
                 >
-                  <span>{item.icon}</span>
+                  <span>
+                    <FontAwesomeIcon icon={item.icon} />
+                  </span>
                   <span>{item.label}</span>
                 </Link>
               ))}
@@ -134,9 +169,13 @@ function Layout() {
                       : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                   }`}
                 >
-                  <span>💰</span>
+                  <span>
+                    <FontAwesomeIcon icon={faMoneyBill} />
+                  </span>
                   <span>{t("sales")}</span>
-                  <span>▼</span>
+                  <span>
+                    <FontAwesomeIcon icon={faChevronDown} className="text-xs" />
+                  </span>
                 </button>
                 {salesMenuOpen && (
                   <div className="absolute top-full left-0 rtl:left-auto rtl:right-0 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
@@ -151,7 +190,9 @@ function Layout() {
                             : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                         }`}
                       >
-                        <span className="mr-2 rtl:ml-2">{item.icon}</span>
+                        <span className="mr-2 rtl:ml-2">
+                          <FontAwesomeIcon icon={item.icon} />
+                        </span>
                         {item.label}
                       </Link>
                     ))}
@@ -179,9 +220,13 @@ function Layout() {
                       : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                   }`}
                 >
-                  <span>⚙️</span>
+                  <span>
+                    <FontAwesomeIcon icon={faGear} />
+                  </span>
                   <span>{t("management")}</span>
-                  <span>▼</span>
+                  <span>
+                    <FontAwesomeIcon icon={faChevronDown} className="text-xs" />
+                  </span>
                 </button>
                 {managementMenuOpen && (
                   <div className="absolute top-full left-0 rtl:left-auto rtl:right-0 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
@@ -196,7 +241,9 @@ function Layout() {
                             : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                         }`}
                       >
-                        <span className="mr-2 rtl:ml-2">{item.icon}</span>
+                        <span className="mr-2 rtl:ml-2">
+                          <FontAwesomeIcon icon={item.icon} />
+                        </span>
                         {item.label}
                       </Link>
                     ))}
@@ -222,9 +269,13 @@ function Layout() {
                       : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                   }`}
                 >
-                  <span>📊</span>
+                  <span>
+                    <FontAwesomeIcon icon={faChartColumn} />
+                  </span>
                   <span>{t("reports")}</span>
-                  <span>▼</span>
+                  <span>
+                    <FontAwesomeIcon icon={faChevronDown} className="text-xs" />
+                  </span>
                 </button>
                 {reportsMenuOpen && (
                   <div className="absolute top-full left-0 rtl:left-auto rtl:right-0 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
@@ -239,7 +290,9 @@ function Layout() {
                             : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                         }`}
                       >
-                        <span className="mr-2 rtl:ml-2">{item.icon}</span>
+                        <span className="mr-2 rtl:ml-2">
+                          <FontAwesomeIcon icon={item.icon} />
+                        </span>
                         {item.label}
                       </Link>
                     ))}
@@ -263,9 +316,16 @@ function Layout() {
                       setReportsMenuOpen(false);
                     }}
                   >
-                    <span>👑</span>
+                    <span>
+                      <FontAwesomeIcon icon={faUserShield} />
+                    </span>
                     <span>{t("admin")}</span>
-                    <span>▼</span>
+                    <span>
+                      <FontAwesomeIcon
+                        icon={faChevronDown}
+                        className="text-xs"
+                      />
+                    </span>
                   </button>
                   {adminMenuOpen && (
                     <div className="absolute top-full left-0 rtl:left-auto rtl:right-0 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
@@ -280,7 +340,9 @@ function Layout() {
                               : "text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                           }`}
                         >
-                          <span className="mr-2 rtl:ml-2">{item.icon}</span>
+                          <span className="mr-2 rtl:ml-2">
+                            <FontAwesomeIcon icon={item.icon} />
+                          </span>
                           {item.label}
                         </Link>
                       ))}
@@ -298,7 +360,9 @@ function Layout() {
                     : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                 }`}
               >
-                <span>⚙️</span>
+                <span>
+                  <FontAwesomeIcon icon={faGear} />
+                </span>
                 <span>{t("settings")}</span>
               </Link>
             </nav>
@@ -308,7 +372,9 @@ function Layout() {
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="lg:hidden p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
             >
-              <span className="text-2xl">☰</span>
+              <span className="text-2xl">
+                <FontAwesomeIcon icon={faBars} />
+              </span>
             </button>
 
             {/* User Actions */}
@@ -343,7 +409,7 @@ function Layout() {
                     theme === "light" ? t("darkMode") : t("lightMode")
                   }
                 >
-                  {theme === "light" ? "🌙" : "☀️"}
+                  <FontAwesomeIcon icon={theme === "light" ? faMoon : faSun} />
                 </button>
               </Tooltip>
 
@@ -379,7 +445,9 @@ function Layout() {
                         onClick={() => setUserMenuOpen(false)}
                         className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                       >
-                        <span className="mr-3 rtl:ml-3">👤</span>
+                        <span className="mr-3 rtl:ml-3">
+                          <FontAwesomeIcon icon={faUser} />
+                        </span>
                         <span>{t("profile")}</span>
                       </Link>
                       <button
@@ -389,7 +457,9 @@ function Layout() {
                         }}
                         className="w-full flex items-center px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-right rtl:text-left"
                       >
-                        <span className="mr-3 rtl:ml-3">🚪</span>
+                        <span className="mr-3 rtl:ml-3">
+                          <FontAwesomeIcon icon={faDoorOpen} />
+                        </span>
                         <span>{t("logout")}</span>
                       </button>
                     </div>
@@ -440,7 +510,9 @@ function Layout() {
                   }}
                   className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                 >
-                  <span className="mr-3 rtl:ml-3">👤</span>
+                  <span className="mr-3 rtl:ml-3">
+                    <FontAwesomeIcon icon={faUser} />
+                  </span>
                   <span>{t("profile")}</span>
                 </Link>
                 <button
@@ -451,7 +523,9 @@ function Layout() {
                   }}
                   className="w-full flex items-center px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-right rtl:text-left"
                 >
-                  <span className="mr-3 rtl:ml-3">🚪</span>
+                  <span className="mr-3 rtl:ml-3">
+                    <FontAwesomeIcon icon={faDoorOpen} />
+                  </span>
                   <span>{t("logout")}</span>
                 </button>
               </div>
@@ -474,7 +548,9 @@ function Layout() {
                       : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                   }`}
                 >
-                  <span className="mr-2 rtl:ml-2">{item.icon}</span>
+                  <span className="mr-2 rtl:ml-2">
+                    <FontAwesomeIcon icon={item.icon} />
+                  </span>
                   {item.label}
                 </Link>
               ))}
@@ -494,7 +570,9 @@ function Layout() {
                         : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                     }`}
                   >
-                    <span className="mr-2 rtl:ml-2">{item.icon}</span>
+                    <span className="mr-2 rtl:ml-2">
+                      <FontAwesomeIcon icon={item.icon} />
+                    </span>
                     {item.label}
                   </Link>
                 ))}
@@ -515,7 +593,9 @@ function Layout() {
                         : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                     }`}
                   >
-                    <span className="mr-2 rtl:ml-2">{item.icon}</span>
+                    <span className="mr-2 rtl:ml-2">
+                      <FontAwesomeIcon icon={item.icon} />
+                    </span>
                     {item.label}
                   </Link>
                 ))}
@@ -536,7 +616,9 @@ function Layout() {
                         : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                     }`}
                   >
-                    <span className="mr-2 rtl:ml-2">{item.icon}</span>
+                    <span className="mr-2 rtl:ml-2">
+                      <FontAwesomeIcon icon={item.icon} />
+                    </span>
                     {item.label}
                   </Link>
                 ))}
@@ -558,7 +640,9 @@ function Layout() {
                           : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                       }`}
                     >
-                      <span className="mr-2 rtl:ml-2">{item.icon}</span>
+                      <span className="mr-2 rtl:ml-2">
+                        <FontAwesomeIcon icon={item.icon} />
+                      </span>
                       {item.label}
                     </Link>
                   ))}
@@ -575,7 +659,9 @@ function Layout() {
                     : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                 }`}
               >
-                <span className="mr-2 rtl:ml-2">⚙️</span>
+                <span className="mr-2 rtl:ml-2">
+                  <FontAwesomeIcon icon={faGear} />
+                </span>
                 {t("settings")}
               </Link>
             </div>

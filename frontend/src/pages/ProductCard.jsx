@@ -1,6 +1,19 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "react-router-dom";
 import { useI18n } from "../context/I18nContext";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faAlignLeft,
+  faBarcode,
+  faBoxOpen,
+  faCalendarDays,
+  faChartLine,
+  faFolder,
+  faHashtag,
+  faMoneyBillWave,
+  faTag,
+  faUser,
+} from "@fortawesome/free-solid-svg-icons";
 import api from "../services/api";
 
 function InfoTile({ label, value, icon, tone = "indigo" }) {
@@ -95,13 +108,7 @@ function ProductCard() {
           <div className="space-y-3">
             <div className="inline-flex items-center gap-2 rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-700 dark:bg-sky-900/30 dark:text-sky-200">
               <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-sky-600 text-white">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  className="h-3 w-3"
-                >
-                  <path d="M3 6a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v1H3V6Zm0 4h18v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-8Z" />
-                </svg>
+                <FontAwesomeIcon icon={faBoxOpen} className="h-3 w-3" />
               </span>
               {t("productCard")}
             </div>
@@ -135,105 +142,39 @@ function ProductCard() {
                 value={data.name}
                 tone="slate"
                 icon={
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    className="h-5 w-5"
-                  >
-                    <path d="M4 7h16" />
-                    <path d="M4 12h16" />
-                    <path d="M4 17h10" />
-                  </svg>
+                  <FontAwesomeIcon icon={faAlignLeft} className="h-5 w-5" />
                 }
               />
               <InfoTile
                 label={t("barcode")}
                 value={data.barcode || "-"}
                 tone="slate"
-                icon={
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    className="h-5 w-5"
-                  >
-                    <path d="M4 7v10" />
-                    <path d="M8 7v10" />
-                    <path d="M12 7v10" />
-                    <path d="M16 7v10" />
-                    <path d="M20 7v10" />
-                  </svg>
-                }
+                icon={<FontAwesomeIcon icon={faBarcode} className="h-5 w-5" />}
               />
               <InfoTile
                 label={t("category")}
                 value={data.category?.name || "-"}
                 tone="indigo"
-                icon={
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                    className="h-5 w-5"
-                  >
-                    <path d="M3 6a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v1H3V6Zm0 4h18v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-8Z" />
-                  </svg>
-                }
+                icon={<FontAwesomeIcon icon={faFolder} className="h-5 w-5" />}
               />
               <InfoTile
                 label={t("provider")}
                 value={data.provider || "-"}
                 tone="sky"
-                icon={
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    className="h-5 w-5"
-                  >
-                    <path d="M20 21a8 8 0 0 0-16 0" />
-                    <circle cx="12" cy="8" r="4" />
-                  </svg>
-                }
+                icon={<FontAwesomeIcon icon={faUser} className="h-5 w-5" />}
               />
               <InfoTile
                 label={t("unitId")}
                 value={data.unit_id || "-"}
                 tone="amber"
-                icon={
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    className="h-5 w-5"
-                  >
-                    <path d="M4 7h16" />
-                    <path d="M4 12h16" />
-                    <path d="M4 17h10" />
-                  </svg>
-                }
+                icon={<FontAwesomeIcon icon={faHashtag} className="h-5 w-5" />}
               />
               <InfoTile
                 label={t("expiryDate")}
                 value={data.expiry_date || "-"}
                 tone="slate"
                 icon={
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    className="h-5 w-5"
-                  >
-                    <rect x="3" y="5" width="18" height="16" rx="2" />
-                    <path d="M8 2v4" />
-                    <path d="M16 2v4" />
-                    <path d="M3 10h18" />
-                  </svg>
+                  <FontAwesomeIcon icon={faCalendarDays} className="h-5 w-5" />
                 }
               />
             </div>
@@ -257,51 +198,21 @@ function ProductCard() {
                 value={purchasePrice.toFixed(2)}
                 tone="amber"
                 icon={
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    className="h-5 w-5"
-                  >
-                    <path d="M6 21V3h9l3 3v15" />
-                    <path d="M9 9h6" />
-                    <path d="M9 13h6" />
-                  </svg>
+                  <FontAwesomeIcon icon={faMoneyBillWave} className="h-5 w-5" />
                 }
               />
               <InfoTile
                 label={t("salePrice")}
                 value={salePrice.toFixed(2)}
                 tone="emerald"
-                icon={
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    className="h-5 w-5"
-                  >
-                    <path d="M12 1v22" />
-                    <path d="M17 5H9.5a3.5 3.5 0 1 0 0 7H14a3.5 3.5 0 0 1 0 7H6" />
-                  </svg>
-                }
+                icon={<FontAwesomeIcon icon={faTag} className="h-5 w-5" />}
               />
               <InfoTile
                 label={t("marginPercent")}
                 value={`${margin}%`}
                 tone="indigo"
                 icon={
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    className="h-5 w-5"
-                  >
-                    <path d="M4 17 10 11l4 4 6-8" />
-                    <path d="M20 7h-5" />
-                  </svg>
+                  <FontAwesomeIcon icon={faChartLine} className="h-5 w-5" />
                 }
               />
             </div>
