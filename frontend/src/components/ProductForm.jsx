@@ -83,6 +83,7 @@ function ProductForm({
 
   useEffect(() => {
     if (product) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFormData({
         category_id: product.category_id || "",
         name: product.name || "",
@@ -100,6 +101,7 @@ function ProductForm({
       return;
     }
 
+     
     setFormData((previous) => ({
       ...previous,
       category_id: defaultCategoryId

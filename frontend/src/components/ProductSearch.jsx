@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useI18n } from "../context/I18nContext";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -11,7 +11,6 @@ function ProductSearch({ onSelectProduct }) {
   const [showResults, setShowResults] = useState(false);
   const inputRef = useRef(null);
   const barcodeBuffer = useRef("");
-  const barcodeTimeout = useRef(null);
 
   // بحث المنتجات
   const { data: searchResults, isLoading } = useQuery({

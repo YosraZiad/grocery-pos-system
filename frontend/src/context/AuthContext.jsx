@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useState, useEffect } from "react";
 import api from "../services/api";
 
@@ -37,7 +38,7 @@ export const AuthProvider = ({ children }) => {
       if (response.data.user.tenant_id) {
         localStorage.setItem("tenant_id", response.data.user.tenant_id);
       }
-    } catch (error) {
+    } catch {
       // Token غير صالح
       localStorage.removeItem("token");
       localStorage.removeItem("tenant_id");
