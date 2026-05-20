@@ -36,9 +36,14 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
+        'username',
+        'employee_barcode',
         'email',
         'password',
         'tenant_id',
+        'failed_login_attempts',
+        'locked_until',
+        'last_login_at',
     ];
 
     /**
@@ -61,6 +66,8 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'locked_until' => 'datetime',
+            'last_login_at' => 'datetime',
         ];
     }
 

@@ -25,6 +25,8 @@ class UserSeeder extends Seeder
             ['email' => 'admin@example.com'],
             [
                 'name' => 'مدير النظام',
+                'username' => 'admin_main',
+                'employee_barcode' => 'EMP-000001',
                 'password' => Hash::make('password'),
                 'tenant_id' => $tenant->id,
             ]
@@ -40,6 +42,8 @@ class UserSeeder extends Seeder
             ['email' => 'cashier@example.com'],
             [
                 'name' => 'كاشير',
+                'username' => 'cashier_main',
+                'employee_barcode' => 'EMP-000002',
                 'password' => Hash::make('password'),
                 'tenant_id' => $tenant->id,
             ]

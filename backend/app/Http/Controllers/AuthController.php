@@ -3,11 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use App\Models\Tenant;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
@@ -18,6 +17,8 @@ class AuthController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
+            'username' => 'nullable|string|max:255|unique:users,username',
+            'employee_barcode' => 'nullable|string|max:255|unique:users,employee_barcode',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
             'tenant_id' => 'required|exists:tenants,id',
@@ -32,6 +33,8 @@ class AuthController extends Controller
 
         $user = User::create([
             'name' => $request->name,
+            'username' => $request->username,
+            'employee_barcode' => $request->employee_barcode,
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'tenant_id' => $request->tenant_id,
@@ -54,9 +57,16 @@ class AuthController extends Controller
      */
     public function login(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'email' => 'required|email',
-            'password' => 'required',
+        $identifier = trim((string) $request->input('identifier', $request->input('email', $request->input('employee_barcode', ''))));
+        $password = $request->input('password');
+        $isBarcodeLogin = $this->isBarcodeIdentifier($identifier) || $request->input('login_method') === 'barcode';
+
+        $validator = Validator::make([
+            'identifier' => $identifier,
+            'password' => $password,
+        ], [
+            'identifier' => 'required|string|max:255',
+            'password' => $isBarcodeLogin ? 'nullable' : 'required|string',
         ]);
 
         if ($validator->fails()) {
@@ -66,13 +76,32 @@ class AuthController extends Controller
             ], 422);
         }
 
-        $user = User::where('email', $request->email)->first();
+        $user = $this->findUserByIdentifier($identifier, $isBarcodeLogin);
 
-        if (!$user || !Hash::check($request->password, $user->password)) {
+        if (!$user) {
             return response()->json([
                 'message' => 'Invalid credentials',
             ], 401);
         }
+
+        if ($this->isAccountLocked($user)) {
+            return response()->json([
+                'message' => 'Account is locked due to multiple failed attempts',
+                'locked_until' => $user->locked_until?->toIso8601String(),
+                'retry_after_seconds' => now()->diffInSeconds($user->locked_until),
+            ], 423);
+        }
+
+        if (!$isBarcodeLogin && !Hash::check((string) $password, $user->password)) {
+            return $this->handleFailedLoginAttempt($user);
+        }
+
+        $loginAt = Carbon::now();
+        $user->forceFill([
+            'failed_login_attempts' => 0,
+            'locked_until' => null,
+            'last_login_at' => $loginAt,
+        ])->save();
 
         // حذف جميع الـ tokens القديمة (اختياري - للأمان)
         $user->tokens()->delete();
@@ -85,7 +114,50 @@ class AuthController extends Controller
             'user' => $user->load('roles'),
             'token' => $token,
             'tenant_id' => $user->tenant_id,
+            'login_method' => $isBarcodeLogin ? 'barcode' : 'username_password',
+            'login_at_server' => $loginAt->toIso8601String(),
         ], 200);
+    }
+
+    private function findUserByIdentifier(string $identifier, bool $isBarcodeLogin): ?User
+    {
+        if ($isBarcodeLogin) {
+            return User::where('employee_barcode', $identifier)->first();
+        }
+
+        return User::where('username', $identifier)
+            ->orWhere('email', $identifier)
+            ->first();
+    }
+
+    private function isBarcodeIdentifier(string $identifier): bool
+    {
+        return str_starts_with(strtoupper($identifier), 'EMP-');
+    }
+
+    private function isAccountLocked(User $user): bool
+    {
+        return $user->locked_until !== null && now()->lt($user->locked_until);
+    }
+
+    private function handleFailedLoginAttempt(User $user)
+    {
+        $attempts = min(3, (int) $user->failed_login_attempts + 1);
+        $shouldLock = $attempts >= 3;
+        $lockedUntil = $shouldLock ? now()->addMinutes(15) : null;
+
+        $user->forceFill([
+            'failed_login_attempts' => $attempts,
+            'locked_until' => $lockedUntil,
+        ])->save();
+
+        return response()->json([
+            'message' => $shouldLock
+                ? 'Account locked after 3 failed attempts'
+                : 'Invalid credentials',
+            'attempts_remaining' => max(0, 3 - $attempts),
+            'locked_until' => $lockedUntil?->toIso8601String(),
+        ], $shouldLock ? 423 : 401);
     }
 
     /**
