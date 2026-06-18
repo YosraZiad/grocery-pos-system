@@ -94,4 +94,17 @@ abstract class TestCase extends BaseTestCase
         $this->actingAs($this->cashierUser, 'sanctum');
         return $this->cashierUser;
     }
+
+    protected function createOpenShift(User $user): \App\Models\Shift
+    {
+        return \App\Models\Shift::create([
+            'tenant_id' => $user->tenant_id,
+            'user_id' => $user->id,
+            'shift_number' => 'SHFT-' . str_pad(rand(1, 999999), 6, '0', STR_PAD_LEFT),
+            'device_number' => 'POS-TEST',
+            'opening_float' => 100.00,
+            'opened_at' => now(),
+            'status' => 'open',
+        ]);
+    }
 }

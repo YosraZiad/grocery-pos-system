@@ -36,6 +36,17 @@ class SaleController extends Controller
      */
     public function store(Request $request)
     {
+        // التحقق من وجود وردية نشطة للكاشير
+        $activeShift = \App\Models\Shift::where('user_id', auth()->id())
+            ->where('status', 'open')
+            ->first();
+
+        if (!$activeShift) {
+            return response()->json([
+                'message' => 'Cannot start a sale without an open shift. | لا يمكنك بدء عملية بيع دون فتح وردية.',
+            ], 403);
+        }
+
         $tenantId = config('tenant_id');
         
         // Custom validation for products with tenant_id

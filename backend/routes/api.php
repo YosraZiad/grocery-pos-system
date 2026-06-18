@@ -19,6 +19,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\BackupController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\ShiftController;
 
 /*
 |--------------------------------------------------------------------------
@@ -40,6 +41,11 @@ Route::post('/auth/reset-fast-login', [AuthController::class, 'resetFastLogin'])
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::get('/auth/me', [AuthController::class, 'me']);
+    
+    // Shifts
+    Route::post('/shifts/start', [ShiftController::class, 'start']);
+    Route::get('/shifts/active', [ShiftController::class, 'active']);
+    Route::post('/shifts/end', [ShiftController::class, 'end']);
     
     // Categories
     Route::get('/categories', [CategoryController::class, 'index'])->middleware('permission:view products');

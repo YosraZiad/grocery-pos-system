@@ -9,16 +9,115 @@ import Cart from '../components/Cart';
 
 function Sales() {
   const [cartItems, setCartItems] = useState([]);
+  const [activeShift, setActiveShift] = useState(null);
+  const [checkingShift, setCheckingShift] = useState(true);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useI18n();
 
+  // إتمام البيع (Hook)
+  const checkoutMutation = useMutation({
+    mutationFn: async (saleData) => {
+      const response = await api.post('/sales', saleData);
+      return response.data;
+    },
+    onSuccess: (data) => {
+      // إعادة تعيين السلة
+      setCartItems([]);
+      
+      // تحديث البيانات
+      queryClient.invalidateQueries(['products']);
+      queryClient.invalidateQueries(['sales']);
+
+      toast.success(t('saleCompletedSuccessfully') || 'Sale completed successfully');
+      
+      // توجيه المستخدم لصفحة الفاتورة
+      navigate(`/sales/${data.data.id}/invoice`);
+    },
+    onError: (error) => {
+      console.error('Sale creation error:', error);
+      
+      let message = t('errorCreatingSale') || 'Error creating sale';
+      
+      if (error.response) {
+        // Server responded with error
+        if (error.response.data?.message) {
+          message = error.response.data.message;
+        } else if (error.response.data?.errors) {
+          const errors = Object.values(error.response.data.errors).flat();
+          message = errors.join(', ');
+        } else if (error.response.data?.error) {
+          message = error.response.data.error;
+        } else {
+          message = `Server error: ${error.response.status} ${error.response.statusText}`;
+        }
+      } else if (error.request) {
+        // Request was made but no response received
+        message = t('networkError') || 'Network error. Please check your connection.';
+      } else {
+        // Something else happened
+        message = error.message || t('errorCreatingSale') || 'Error creating sale';
+      }
+      
+      toast.error(message, { duration: 6000 });
+    },
+  });
+
   // Reset السلة عند فتح الصفحة (New Sale)
   useEffect(() => {
-    // Reset السلة عند فتح الصفحة مباشرة (New Sale)
+    checkActiveShift();
     setCartItems([]);
   }, []);
+
+  const checkActiveShift = async () => {
+    try {
+      const response = await api.get('/shifts/active');
+      if (response.data?.active) {
+        setActiveShift(response.data.shift);
+      } else {
+        setActiveShift(null);
+      }
+    } catch (error) {
+      console.error("Error checking active shift:", error);
+    } finally {
+      setCheckingShift(false);
+    }
+  };
+
+  if (checkingShift) {
+    return (
+      <div className="min-h-[50vh] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
+      </div>
+    );
+  }
+
+  if (!activeShift) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center p-4">
+        <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 p-6 text-center space-y-5">
+          <div className="w-16 h-16 bg-red-100 dark:bg-red-950/20 text-red-600 dark:text-red-400 rounded-full flex items-center justify-center text-3xl mx-auto">
+            <span>⚠️</span>
+          </div>
+          <div className="space-y-2">
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+              {t('shiftRequiredTitle') || "Shift Activation Required | تفعيل الوردية مطلوب"}
+            </h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              {t('shiftRequiredDesc') || "You must open a new shift and declare your starting cash float before you can make sales. | يجب عليك فتح وردية جديدة والتصريح بالعهدة النقدية قبل البدء بالمبيعات."}
+            </p>
+          </div>
+          <button
+            onClick={() => navigate('/start-shift')}
+            className="w-full btn btn-primary min-h-12 text-base font-bold flex items-center justify-center"
+          >
+            {t('openShiftBtn') || "Open New Shift | فتح وردية جديدة"}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // إضافة منتج للسلة
   const handleAddProduct = (product) => {
@@ -68,54 +167,6 @@ function Sales() {
     const newItems = cartItems.filter((_, i) => i !== index);
     setCartItems(newItems);
   };
-
-  // إتمام البيع
-  const checkoutMutation = useMutation({
-    mutationFn: async (saleData) => {
-      const response = await api.post('/sales', saleData);
-      return response.data;
-    },
-    onSuccess: (data) => {
-      // إعادة تعيين السلة
-      setCartItems([]);
-      
-      // تحديث البيانات
-      queryClient.invalidateQueries(['products']);
-      queryClient.invalidateQueries(['sales']);
-
-      toast.success(t('saleCompletedSuccessfully') || 'Sale completed successfully');
-      
-      // توجيه المستخدم لصفحة الفاتورة
-      navigate(`/sales/${data.data.id}/invoice`);
-    },
-    onError: (error) => {
-      console.error('Sale creation error:', error);
-      
-      let message = t('errorCreatingSale') || 'Error creating sale';
-      
-      if (error.response) {
-        // Server responded with error
-        if (error.response.data?.message) {
-          message = error.response.data.message;
-        } else if (error.response.data?.errors) {
-          const errors = Object.values(error.response.data.errors).flat();
-          message = errors.join(', ');
-        } else if (error.response.data?.error) {
-          message = error.response.data.error;
-        } else {
-          message = `Server error: ${error.response.status} ${error.response.statusText}`;
-        }
-      } else if (error.request) {
-        // Request was made but no response received
-        message = t('networkError') || 'Network error. Please check your connection.';
-      } else {
-        // Something else happened
-        message = error.message || t('errorCreatingSale') || 'Error creating sale';
-      }
-      
-      toast.error(message, { duration: 6000 });
-    },
-  });
 
   return (
     <div className="space-y-4">

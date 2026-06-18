@@ -23,6 +23,7 @@ import Roles from "./pages/Roles";
 import Profile from "./pages/Profile";
 import ProtectedRoute from "./components/ProtectedRoute";
 import FastLoginTestPanel from "./pages/FastLoginTestPanel";
+import StartShift from "./pages/StartShift";
 import "./App.css";
 import "./styles/print.css";
 
@@ -63,6 +64,7 @@ function App() {
             <Route path="users" element={<Users />} />
             <Route path="roles" element={<Roles />} />
             <Route path="profile" element={<Profile />} />
+            <Route path="start-shift" element={<StartShift />} />
           </Route>
         </Routes>
       </BrowserRouter>

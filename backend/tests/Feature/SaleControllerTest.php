@@ -40,6 +40,7 @@ class SaleControllerTest extends TestCase
     public function test_user_with_permission_can_create_sale()
     {
         $user = $this->actingAsAdmin();
+        $this->createOpenShift($user);
 
         $category = Category::factory()->create([
             'tenant_id' => $this->tenant->id,
@@ -85,7 +86,8 @@ class SaleControllerTest extends TestCase
 
     public function test_sale_creation_fails_with_insufficient_stock()
     {
-        $this->actingAsAdmin();
+        $user = $this->actingAsAdmin();
+        $this->createOpenShift($user);
 
         $category = Category::factory()->create([
             'tenant_id' => $this->tenant->id,
@@ -135,7 +137,8 @@ class SaleControllerTest extends TestCase
 
     public function test_sale_creation_requires_valid_data()
     {
-        $this->actingAsAdmin();
+        $user = $this->actingAsAdmin();
+        $this->createOpenShift($user);
 
         $response = $this->postJson('/api/sales', [
             'items' => [],
