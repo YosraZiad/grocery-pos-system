@@ -11,15 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('categories', function (Blueprint $table) {
-            $table->foreignId('parent_id')
-                ->nullable()
-                ->after('description')
-                ->constrained('categories')
-                ->nullOnDelete();
+        if (!Schema::hasColumn('categories', 'parent_id')) {
+            Schema::table('categories', function (Blueprint $table) {
+                $table->foreignId('parent_id')
+                    ->nullable()
+                    ->after('description')
+                    ->constrained('categories')
+                    ->nullOnDelete();
 
-            $table->index(['tenant_id', 'parent_id']);
-        });
+                $table->index(['tenant_id', 'parent_id']);
+            });
+        }
     }
 
     /**
@@ -27,9 +29,11 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('categories', function (Blueprint $table) {
-            $table->dropIndex(['tenant_id', 'parent_id']);
-            $table->dropConstrainedForeignId('parent_id');
-        });
+        if (Schema::hasColumn('categories', 'parent_id')) {
+            Schema::table('categories', function (Blueprint $table) {
+                $table->dropIndex(['tenant_id', 'parent_id']);
+                $table->dropConstrainedForeignId('parent_id');
+            });
+        }
     }
 };

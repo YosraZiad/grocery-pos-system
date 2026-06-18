@@ -34,6 +34,7 @@ use App\Http\Controllers\RoleController;
 // Public routes (لا تحتاج tenant_id)
 Route::post('/auth/register', [AuthController::class, 'register']);
 Route::post('/auth/login', [AuthController::class, 'login']);
+Route::post('/auth/reset-fast-login', [AuthController::class, 'resetFastLogin']);
 
 // Protected routes (تحتاج authentication)
 Route::middleware('auth:sanctum')->group(function () {

@@ -34,7 +34,10 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    const url = error.config?.url || '';
+    const isAuthRequest = url.includes('/auth/login') || url.includes('/auth/register');
+    
+    if (error.response?.status === 401 && !isAuthRequest) {
       // Unauthorized - مسح token وإعادة توجيه للصفحة الرئيسية
       localStorage.removeItem('token');
       localStorage.removeItem('tenant_id');

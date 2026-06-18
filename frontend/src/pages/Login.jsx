@@ -305,6 +305,17 @@ function Login() {
                 </p>
               </div>
             </div>
+
+            {/* Fast Login Test Panel Link */}
+            <div className="border-t border-gray-200 dark:border-gray-700 pt-4 text-center">
+              <Link
+                to="/fast-login-test"
+                className="inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-primary-600 dark:text-primary-400 hover:text-primary-500 transition-colors duration-200"
+              >
+                <span>💡</span>
+                <span>Fast Login Test Panel | لوحة اختبار تسجيل الدخول السريع</span>
+              </Link>
+            </div>
           </form>
         </div>
       </div>

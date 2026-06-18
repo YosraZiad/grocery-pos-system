@@ -92,6 +92,14 @@ class AuthController extends Controller
             ], 423);
         }
 
+        // If the lock has expired, reset failed attempts
+        if ($user->locked_until !== null && now()->gte($user->locked_until)) {
+            $user->forceFill([
+                'failed_login_attempts' => 0,
+                'locked_until' => null,
+            ])->save();
+        }
+
         if (!$isBarcodeLogin && !Hash::check((string) $password, $user->password)) {
             return $this->handleFailedLoginAttempt($user);
         }
@@ -188,5 +196,25 @@ class AuthController extends Controller
         return response()->json([
             'user' => $request->user()->load('roles', 'permissions'),
         ], 200);
+    }
+
+    /**
+     * إعادة تعيين بيانات اختبار تسجيل الدخول السريع
+     */
+    public function resetFastLogin()
+    {
+        try {
+            \Illuminate\Support\Facades\Artisan::call('db:seed', [
+                '--class' => 'FastLoginTestCasesSeeder'
+            ]);
+            return response()->json([
+                'message' => 'Database successfully reset to fast login test states',
+                'output' => \Illuminate\Support\Facades\Artisan::output()
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to seed: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

@@ -27,12 +27,13 @@ class UpdateProductRequest extends FormRequest
         
         return [
             'category_id' => [
+                'sometimes',
                 'required',
                 Rule::exists('categories', 'id')->where(function ($query) use ($tenantId) {
                     $query->where('tenant_id', $tenantId);
                 }),
             ],
-            'name' => 'required|string|max:255',
+            'name' => 'sometimes|required|string|max:255',
             'barcode' => [
                 'nullable',
                 'string',

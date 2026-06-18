@@ -78,7 +78,6 @@ function Layout() {
   const navigationGroups = {
     main: [
       { path: "/", label: t("home"), icon: faHouse },
-      { path: "/categories", label: t("categories"), icon: faListCheck },
       { path: "/products", label: t("products"), icon: faBox },
     ],
     admin: isAdmin

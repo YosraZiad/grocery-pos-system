@@ -4,7 +4,6 @@ import Layout from "./layouts/Layout";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import Categories from "./pages/Categories";
 import Products from "./pages/Products";
 import ProductCard from "./pages/ProductCard";
 import Sales from "./pages/Sales";
@@ -23,6 +22,7 @@ import Users from "./pages/Users";
 import Roles from "./pages/Roles";
 import Profile from "./pages/Profile";
 import ProtectedRoute from "./components/ProtectedRoute";
+import FastLoginTestPanel from "./pages/FastLoginTestPanel";
 import "./App.css";
 import "./styles/print.css";
 
@@ -34,6 +34,7 @@ function App() {
           {/* Public routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/fast-login-test" element={<FastLoginTestPanel />} />
 
           {/* Protected routes */}
           <Route
@@ -45,7 +46,6 @@ function App() {
             }
           >
             <Route index element={<Home />} />
-            <Route path="categories" element={<Categories />} />
             <Route path="products" element={<Products />} />
             <Route path="products/:id" element={<ProductCard />} />
             <Route path="sales" element={<Sales />} />
