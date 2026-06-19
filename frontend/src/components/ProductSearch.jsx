@@ -50,7 +50,7 @@ function ProductSearch({ onSelectProduct }) {
     setFocusedIndex(-1);
   }, [searchResults]);
 
-  // مستمع عالمي للتركيز التلقائي (Autofocus)
+  // مستمع عالمي للتركيز التلقائي عند النقر أو الضغط على لوحة المفاتيح (Autofocus)
   useEffect(() => {
     const handleGlobalClick = (e) => {
       // تجنب سرقة التركيز إذا نقر المستخدم على حقول أخرى أو أزرار أو نوافذ منبثقة
@@ -69,11 +69,38 @@ function ProductSearch({ onSelectProduct }) {
       inputRef.current?.focus();
     };
 
+    const handleGlobalKeyDown = (e) => {
+      const activeElement = document.activeElement;
+      
+      // إذا كان المستخدم يركز بالفعل على حقل إدخال آخر، دعه يكتب بحرية
+      if (
+        activeElement &&
+        (activeElement.tagName === "INPUT" ||
+          activeElement.tagName === "TEXTAREA" ||
+          activeElement.tagName === "SELECT" ||
+          activeElement.isContentEditable)
+      ) {
+        return;
+      }
+
+      // مطابقة الأحرف والأرقام فقط (التي يتكون منها الباركود عادةً)
+      const isAlphanumeric = /^[a-zA-Z0-9]$/.test(e.key);
+      if (isAlphanumeric && !e.ctrlKey && !e.altKey && !e.metaKey) {
+        e.preventDefault();
+        inputRef.current?.focus();
+        setSearchQuery((prev) => prev + e.key);
+      }
+    };
+
+
     document.addEventListener("click", handleGlobalClick);
+    window.addEventListener("keydown", handleGlobalKeyDown);
     return () => {
       document.removeEventListener("click", handleGlobalClick);
+      window.removeEventListener("keydown", handleGlobalKeyDown);
     };
   }, []);
+
 
   const handleSelect = (product) => {
     onSelectProduct(product);
