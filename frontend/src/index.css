@@ -241,3 +241,17 @@
     @apply text-gray-400;
   }
 }
+
+@keyframes scan-highlight {
+  0% {
+    background-color: rgba(59, 130, 246, 0.35); /* Soft primary blue blink */
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+.animate-scan-highlight {
+  animation: scan-highlight 1.5s ease-out forwards;
+}
+

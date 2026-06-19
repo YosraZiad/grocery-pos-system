@@ -11,6 +11,7 @@ function Sales() {
   const [cartItems, setCartItems] = useState([]);
   const [activeShift, setActiveShift] = useState(null);
   const [checkingShift, setCheckingShift] = useState(true);
+  const [latestAddedId, setLatestAddedId] = useState(null);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const location = useLocation();
@@ -126,6 +127,9 @@ function Sales() {
       item => item.product.id === product.id
     );
 
+    // تعيين معرف الوميض للمنتج الأحدث المضاف
+    setLatestAddedId(`${product.id}-${Date.now()}`);
+
     if (existingIndex >= 0) {
       // زيادة الكمية
       const newItems = [...cartItems];
@@ -211,6 +215,7 @@ function Sales() {
             onRemoveItem={handleRemoveItem}
             onCheckout={checkoutMutation.mutate}
             isLoading={checkoutMutation.isPending}
+            latestAddedId={latestAddedId}
           />
         </div>
       </div>

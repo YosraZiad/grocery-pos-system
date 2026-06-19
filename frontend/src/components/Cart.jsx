@@ -17,6 +17,7 @@ function Cart({
   onRemoveItem,
   onCheckout,
   isLoading,
+  latestAddedId,
 }) {
   const { t } = useI18n();
   const [discount, setDiscount] = useState(0);
@@ -96,6 +97,7 @@ function Cart({
                 item={item}
                 onUpdateQuantity={(qty) => onUpdateQuantity(index, qty)}
                 onRemove={() => onRemoveItem(index)}
+                latestAddedId={latestAddedId}
               />
             ))}
           </div>

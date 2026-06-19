@@ -4,7 +4,7 @@ import { faTrashCan } from "@fortawesome/free-regular-svg-icons";
 import QuantityControl from "./QuantityControl";
 import Tooltip from "./Tooltip";
 
-function CartItem({ item, onUpdateQuantity, onRemove }) {
+function CartItem({ item, onUpdateQuantity, onRemove, latestAddedId }) {
   const { t } = useI18n();
 
   const handleQuantityChange = (newQuantity) => {
@@ -15,10 +15,19 @@ function CartItem({ item, onUpdateQuantity, onRemove }) {
     }
   };
 
+  // التحقق مما إذا كان هذا العنصر هو آخر عنصر تم مسحه بالباركود/إضافته
+  const isHighlighted = latestAddedId && latestAddedId.startsWith(`${item.product.id}-`);
+
   return (
-    <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-150">
+    <div
+      key={isHighlighted ? latestAddedId : undefined}
+      className={`flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-150 ${
+        isHighlighted ? "animate-scan-highlight" : ""
+      }`}
+    >
       <div className="flex-1 min-w-0">
-        <div className="font-medium text-gray-900 dark:text-white text-base">
+        {/* اسم المنتج عريض وواضح للغاية */}
+        <div className="font-bold text-gray-900 dark:text-white text-lg">
           {item.product.name}
         </div>
         <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">
@@ -34,9 +43,9 @@ function CartItem({ item, onUpdateQuantity, onRemove }) {
           max={item.product.quantity + item.quantity}
         />
 
-        {/* الإجمالي */}
-        <div className="w-24 text-right rtl:text-left">
-          <div className="font-bold text-gray-900 dark:text-white text-lg">
+        {/* السعر بخط كبير وعريض ليكون مقروءاً بوضوح */}
+        <div className="w-28 text-right rtl:text-left">
+          <div className="font-extrabold text-primary-600 dark:text-primary-400 text-xl">
             {(item.price * item.quantity).toFixed(2)} ر.س
           </div>
         </div>
