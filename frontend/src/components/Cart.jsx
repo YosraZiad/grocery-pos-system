@@ -12,6 +12,8 @@ import PaymentMethod from "./PaymentMethod";
 import ConfirmationModal from "./ConfirmationModal";
 import AdminAuthModal from "./AdminAuthModal";
 import CashPaymentModal from "./CashPaymentModal";
+import CardPaymentModal from "./CardPaymentModal";
+import HybridPaymentModal from "./HybridPaymentModal";
 import api from "../services/api";
 import toast from "react-hot-toast";
 
@@ -36,6 +38,8 @@ function Cart({
   const [showDeleteItemConfirmModal, setShowDeleteItemConfirmModal] = useState(false);
   const [deleteItemTargetIndex, setDeleteItemTargetIndex] = useState(null);
   const [showCashPaymentModal, setShowCashPaymentModal] = useState(false);
+  const [showCardPaymentModal, setShowCardPaymentModal] = useState(false);
+  const [showHybridPaymentModal, setShowHybridPaymentModal] = useState(false);
 
   // مراقبة طلبات الحذف القادمة من الأب (مثلاً عند تقليل الكمية في حقل البحث لأقل من 1)
   useEffect(() => {
@@ -49,7 +53,7 @@ function Cart({
   useEffect(() => {
     const handleGlobalKeyDown = (e) => {
       // تجنب تفعيل الاختصارات إذا كانت هناك نافذة منبثقة مفتوحة بالفعل لمنع التعارض
-      if (showConfirmModal || showDiscountModal || showAdminAuthModal || showDeleteItemConfirmModal || showCashPaymentModal) return;
+      if (showConfirmModal || showDiscountModal || showAdminAuthModal || showDeleteItemConfirmModal || showCashPaymentModal || showCardPaymentModal || showHybridPaymentModal) return;
 
       if (e.key === "F2") {
         if (items.length > 0 && !isLoading) {
@@ -68,7 +72,7 @@ function Cart({
     return () => {
       window.removeEventListener("keydown", handleGlobalKeyDown);
     };
-  }, [items, isLoading, showConfirmModal, showDiscountModal, showAdminAuthModal, showDeleteItemConfirmModal, showCashPaymentModal, paymentMethod]);
+  }, [items, isLoading, showConfirmModal, showDiscountModal, showAdminAuthModal, showDeleteItemConfirmModal, showCashPaymentModal, showCardPaymentModal, showHybridPaymentModal, paymentMethod]);
 
   const triggerItemDeletion = (index) => {
     const item = items[index];
@@ -160,12 +164,16 @@ function Cart({
   const handleCheckout = () => {
     if (paymentMethod === "cash") {
       setShowCashPaymentModal(true);
+    } else if (paymentMethod === "card") {
+      setShowCardPaymentModal(true);
+    } else if (paymentMethod === "hybrid") {
+      setShowHybridPaymentModal(true);
     } else {
       setShowConfirmModal(true);
     }
   };
 
-  const confirmCheckout = (amountReceived = null, changeAmount = null) => {
+  const confirmCheckout = (amountReceived = null, changeAmount = null, paymentDetails = null) => {
     const saleData = {
       items: items.map((item) => ({
         product_id: item.product.id,
@@ -173,9 +181,10 @@ function Cart({
       })),
       discount: discount,
       discount_type: discountType,
-      payment_method: paymentMethod,
+      payment_method: paymentDetails ? 'hybrid' : paymentMethod,
       amount_received: amountReceived,
       change_amount: changeAmount,
+      payment_details: paymentDetails,
     };
     onCheckout(saleData);
   };
@@ -353,6 +362,24 @@ function Cart({
         isOpen={showCashPaymentModal}
         onClose={() => setShowCashPaymentModal(false)}
         onConfirm={(received, change) => confirmCheckout(received, change)}
+        totalDue={total}
+      />
+
+      {/* Card Payment Modal */}
+      <CardPaymentModal
+        isOpen={showCardPaymentModal}
+        onClose={() => setShowCardPaymentModal(false)}
+        onConfirm={confirmCheckout}
+        totalDue={total}
+      />
+
+      {/* Hybrid Payment Modal */}
+      <HybridPaymentModal
+        isOpen={showHybridPaymentModal}
+        onClose={() => setShowHybridPaymentModal(false)}
+        onConfirm={(amountReceived, changeAmount, paymentDetails) => 
+          confirmCheckout(amountReceived, changeAmount, paymentDetails)
+        }
         totalDue={total}
       />
     </div>

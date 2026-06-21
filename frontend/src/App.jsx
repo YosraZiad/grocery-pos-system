@@ -24,6 +24,7 @@ import Profile from "./pages/Profile";
 import ProtectedRoute from "./components/ProtectedRoute";
 import FastLoginTestPanel from "./pages/FastLoginTestPanel";
 import StartShift from "./pages/StartShift";
+import CardTerminalSimulator from "./pages/CardTerminalSimulator";
 import "./App.css";
 import "./styles/print.css";
 
@@ -36,6 +37,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/fast-login-test" element={<FastLoginTestPanel />} />
+          <Route path="/terminal-simulator" element={<CardTerminalSimulator />} />
 
           {/* Protected routes */}
           <Route

@@ -4,6 +4,7 @@ import {
   faCreditCard,
   faMoneyBillWave,
   faBuildingColumns,
+  faWallet,
 } from "@fortawesome/free-solid-svg-icons";
 
 function PaymentMethod({ value, onChange, disabled = false }) {
@@ -13,12 +14,13 @@ function PaymentMethod({ value, onChange, disabled = false }) {
     { value: "cash", label: t("cash"), icon: faMoneyBillWave },
     { value: "card", label: t("card"), icon: faCreditCard },
     { value: "transfer", label: t("transfer"), icon: faBuildingColumns },
+    { value: "hybrid", label: t("hybrid") || "مختلط (مقسم)", icon: faWallet },
   ];
 
   return (
     <div>
       <label className="label mb-3">{t("paymentMethod")}</label>
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 gap-3">
         {paymentMethods.map((method) => (
           <button
             key={method.value}

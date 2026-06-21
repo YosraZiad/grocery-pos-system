@@ -21,6 +21,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\ShiftController;
 use App\Http\Controllers\AuditLogController;
+use App\Http\Controllers\TerminalController;
 
 /*
 |--------------------------------------------------------------------------
@@ -37,6 +38,14 @@ use App\Http\Controllers\AuditLogController;
 Route::post('/auth/register', [AuthController::class, 'register']);
 Route::post('/auth/login', [AuthController::class, 'login']);
 Route::post('/auth/reset-fast-login', [AuthController::class, 'resetFastLogin']);
+
+// Terminal simulator public routes
+Route::prefix('terminal')->group(function () {
+    Route::post('charge', [TerminalController::class, 'charge']);
+    Route::get('status', [TerminalController::class, 'status']);
+    Route::post('action', [TerminalController::class, 'action']);
+    Route::post('reset', [TerminalController::class, 'reset']);
+});
 
 // Protected routes (تحتاج authentication)
 Route::middleware('auth:sanctum')->group(function () {

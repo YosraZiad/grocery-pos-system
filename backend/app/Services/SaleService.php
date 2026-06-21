@@ -91,6 +91,7 @@ class SaleService
                 'payment_method' => $data['payment_method'],
                 'amount_received' => $data['amount_received'] ?? null,
                 'change_amount' => $data['change_amount'] ?? null,
+                'payment_details' => $data['payment_details'] ?? null,
                 'status' => 'completed',
             ]);
 
