@@ -12,7 +12,7 @@ import {
 
 const BARCODE_PREFIX = "EMP-";
 const SCAN_IDLE_MS = 80;
-const MIN_BARCODE_LENGTH = 8;
+const BARCODE_LENGTH = 10;
 
 function Login() {
   const [identifier, setIdentifier] = useState("");
@@ -138,7 +138,7 @@ function Login() {
     const isBarcode = trimmed.toUpperCase().startsWith(BARCODE_PREFIX);
     if (
       !isBarcode ||
-      trimmed.length < MIN_BARCODE_LENGTH ||
+      trimmed.length !== BARCODE_LENGTH ||
       lockCountdown > 0
     ) {
       return;

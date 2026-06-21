@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCartShopping,
@@ -10,6 +10,9 @@ import CartItem from "./CartItem";
 import DiscountModal from "./DiscountModal";
 import PaymentMethod from "./PaymentMethod";
 import ConfirmationModal from "./ConfirmationModal";
+import AdminAuthModal from "./AdminAuthModal";
+import api from "../services/api";
+import toast from "react-hot-toast";
 
 function Cart({
   items,
@@ -18,6 +21,8 @@ function Cart({
   onCheckout,
   isLoading,
   latestAddedId,
+  itemIndexToDelete,
+  onClearDeleteIndex,
 }) {
   const { t } = useI18n();
   const [discount, setDiscount] = useState(0);
@@ -25,6 +30,118 @@ function Cart({
   const [paymentMethod, setPaymentMethod] = useState("cash");
   const [showDiscountModal, setShowDiscountModal] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showAdminAuthModal, setShowAdminAuthModal] = useState(false);
+  const [adminAuthTargetIndex, setAdminAuthTargetIndex] = useState(null);
+  const [showDeleteItemConfirmModal, setShowDeleteItemConfirmModal] = useState(false);
+  const [deleteItemTargetIndex, setDeleteItemTargetIndex] = useState(null);
+
+  // مراقبة طلبات الحذف القادمة من الأب (مثلاً عند تقليل الكمية في حقل البحث لأقل من 1)
+  useEffect(() => {
+    if (itemIndexToDelete !== null && itemIndexToDelete !== undefined) {
+      triggerItemDeletion(itemIndexToDelete);
+      onClearDeleteIndex();
+    }
+  }, [itemIndexToDelete]);
+
+  // مستمع اختصارات لوحة المفاتيح للسلة (F2 لإتمام الدفع، F3 لإضافة خصم)
+  useEffect(() => {
+    const handleGlobalKeyDown = (e) => {
+      // تجنب تفعيل الاختصارات إذا كانت هناك نافذة منبثقة مفتوحة بالفعل لمنع التعارض
+      if (showConfirmModal || showDiscountModal || showAdminAuthModal || showDeleteItemConfirmModal) return;
+
+      if (e.key === "F2") {
+        if (items.length > 0 && !isLoading) {
+          e.preventDefault();
+          setShowConfirmModal(true);
+        }
+      } else if (e.key === "F3") {
+        if (items.length > 0 && !isLoading) {
+          e.preventDefault();
+          setShowDiscountModal(true);
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleGlobalKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleGlobalKeyDown);
+    };
+  }, [items, isLoading, showConfirmModal, showDiscountModal, showAdminAuthModal, showDeleteItemConfirmModal]);
+
+  const triggerItemDeletion = (index) => {
+    const item = items[index];
+    if (!item) return;
+    const itemTotal = item.price * item.quantity;
+    if (itemTotal > 100) {
+      setAdminAuthTargetIndex(index);
+      setShowAdminAuthModal(true);
+    } else {
+      setDeleteItemTargetIndex(index);
+      setShowDeleteItemConfirmModal(true);
+    }
+  };
+
+  const confirmItemDeletion = () => {
+    if (deleteItemTargetIndex === null) return;
+    const item = items[deleteItemTargetIndex];
+    if (!item) return;
+    const itemTotal = item.price * item.quantity;
+
+    api.post("/audit-logs", {
+      action: "cart_item_deletion",
+      description: `Deleted item: ${item.product.name} (Qty: ${item.quantity}) with total value: ${itemTotal.toFixed(2)} SAR. Confirmed by cashier.`,
+    })
+    .then(() => {
+      onRemoveItem(deleteItemTargetIndex);
+    })
+    .catch((err) => {
+      console.error("Error logging cashier deletion:", err);
+      onRemoveItem(deleteItemTargetIndex);
+    })
+    .finally(() => {
+      setDeleteItemTargetIndex(null);
+      setShowDeleteItemConfirmModal(false);
+    });
+  };
+
+  const handleAdminAuthSuccess = (admin) => {
+    if (adminAuthTargetIndex === null) return;
+    const item = items[adminAuthTargetIndex];
+    if (!item) return;
+    const itemTotal = item.price * item.quantity;
+
+    api.post("/audit-logs", {
+      action: "cart_item_deletion",
+      description: `Deleted item: ${item.product.name} (Qty: ${item.quantity}) with total value: ${itemTotal.toFixed(2)} SAR. Authorized by admin: ${admin.name} (ID: ${admin.id}).`,
+      admin_user_id: admin.id,
+    })
+    .then(() => {
+      onRemoveItem(adminAuthTargetIndex);
+    })
+    .catch((err) => {
+      console.error("Error logging admin-authorized deletion:", err);
+      onRemoveItem(adminAuthTargetIndex);
+    })
+    .finally(() => {
+      setAdminAuthTargetIndex(null);
+      setShowAdminAuthModal(false);
+    });
+  };
+
+  const handleUpdateQuantityWithLogging = (index, newQty) => {
+    const item = items[index];
+    if (!item) return;
+    const oldQty = item.quantity;
+    if (newQty < oldQty) {
+      const valDiff = ((oldQty - newQty) * item.price).toFixed(2);
+      api.post("/audit-logs", {
+        action: "cart_item_quantity_update",
+        description: `Reduced quantity of ${item.product.name} from ${oldQty} to ${newQty} (Value difference: ${valDiff} SAR)`,
+      }).catch(err => console.error("Error logging quantity reduction:", err));
+    }
+    onUpdateQuantity(index, newQty);
+  };
+
 
   // حساب الإجمالي
   const subtotal = items.reduce(
@@ -95,8 +212,8 @@ function Cart({
               <CartItem
                 key={index}
                 item={item}
-                onUpdateQuantity={(qty) => onUpdateQuantity(index, qty)}
-                onRemove={() => onRemoveItem(index)}
+                onUpdateQuantity={(qty) => handleUpdateQuantityWithLogging(index, qty)}
+                onRemove={() => triggerItemDeletion(index)}
                 latestAddedId={latestAddedId}
               />
             ))}
@@ -194,6 +311,33 @@ function Cart({
         confirmText={t("completeSale")}
         cancelText={t("cancel")}
         type="info"
+      />
+
+      {/* Delete Item Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showDeleteItemConfirmModal}
+        onClose={() => {
+          setShowDeleteItemConfirmModal(false);
+          setDeleteItemTargetIndex(null);
+        }}
+        onConfirm={confirmItemDeletion}
+        title={t("confirmDelete") || "تأكيد الحذف"}
+        message={`${t("confirmDeleteMessage") || "هل أنت متأكد من رغبتك في حذف المنتج"} "${deleteItemTargetIndex !== null ? items[deleteItemTargetIndex]?.product?.name : ''}"؟`}
+        confirmText={t("delete") || "حذف"}
+        cancelText={t("cancel") || "إلغاء"}
+        type="danger"
+      />
+
+      {/* Admin Auth Modal for High-Value Deletion */}
+      <AdminAuthModal
+        isOpen={showAdminAuthModal}
+        onClose={() => {
+          setShowAdminAuthModal(false);
+          setAdminAuthTargetIndex(null);
+        }}
+        onSuccess={handleAdminAuthSuccess}
+        itemName={adminAuthTargetIndex !== null ? items[adminAuthTargetIndex]?.product?.name : ""}
+        itemTotal={adminAuthTargetIndex !== null ? items[adminAuthTargetIndex]?.price * items[adminAuthTargetIndex]?.quantity : 0}
       />
     </div>
   );

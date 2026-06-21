@@ -199,6 +199,61 @@ class AuthController extends Controller
     }
 
     /**
+     * التحقق من صلاحيات المدير لإجراءات الحذف ذات القيمة المرتفعة
+     */
+    public function verifyAdmin(Request $request)
+    {
+        $identifier = trim((string) $request->input('identifier', ''));
+        $password = $request->input('password');
+        $isBarcode = $this->isBarcodeIdentifier($identifier);
+
+        $validator = Validator::make([
+            'identifier' => $identifier,
+            'password' => $isBarcode ? 'nullable' : 'required|string',
+        ], [
+            'identifier' => 'required|string|max:255',
+            'password' => $isBarcode ? 'nullable' : 'required|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation error',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $user = $this->findUserByIdentifier($identifier, $isBarcode);
+
+        if (!$user) {
+            return response()->json([
+                'message' => 'Admin user not found',
+            ], 404);
+        }
+
+        // إذا لم يكن باركود، نتحقق من كلمة المرور
+        if (!$isBarcode && !Hash::check((string) $password, $user->password)) {
+            return response()->json([
+                'message' => 'Invalid password',
+            ], 401);
+        }
+
+        // التحقق من أنه يملك دور 'admin'
+        if (!$user->hasRole('admin')) {
+            return response()->json([
+                'message' => 'User is not an authorized admin',
+            ], 403);
+        }
+
+        return response()->json([
+            'success' => true,
+            'admin' => [
+                'id' => $user->id,
+                'name' => $user->name,
+            ]
+        ], 200);
+    }
+
+    /**
      * إعادة تعيين بيانات اختبار تسجيل الدخول السريع
      */
     public function resetFastLogin()

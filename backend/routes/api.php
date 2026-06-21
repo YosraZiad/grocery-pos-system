@@ -20,6 +20,7 @@ use App\Http\Controllers\BackupController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\ShiftController;
+use App\Http\Controllers\AuditLogController;
 
 /*
 |--------------------------------------------------------------------------
@@ -41,6 +42,10 @@ Route::post('/auth/reset-fast-login', [AuthController::class, 'resetFastLogin'])
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::get('/auth/me', [AuthController::class, 'me']);
+    Route::post('/auth/verify-admin', [AuthController::class, 'verifyAdmin']);
+    
+    // Audit Logs
+    Route::post('/audit-logs', [AuditLogController::class, 'store']);
     
     // Shifts
     Route::post('/shifts/start', [ShiftController::class, 'start']);

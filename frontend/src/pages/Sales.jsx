@@ -8,10 +8,20 @@ import ProductSearch from '../components/ProductSearch';
 import Cart from '../components/Cart';
 
 function Sales() {
-  const [cartItems, setCartItems] = useState([]);
+  const [cartItems, setCartItems] = useState(() => {
+    try {
+      const saved = localStorage.getItem('pos_cart_items');
+      console.log("Sales component: Initializing cartItems from localStorage. Value:", saved);
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      console.error("Sales component: Failed to parse pos_cart_items:", e);
+      return [];
+    }
+  });
   const [activeShift, setActiveShift] = useState(null);
   const [checkingShift, setCheckingShift] = useState(true);
   const [latestAddedId, setLatestAddedId] = useState(null);
+  const [itemIndexToDelete, setItemIndexToDelete] = useState(null);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const location = useLocation();
@@ -65,11 +75,16 @@ function Sales() {
     },
   });
 
-  // Reset السلة عند فتح الصفحة (New Sale)
+  // التحقق من الوردية عند فتح الصفحة
   useEffect(() => {
     checkActiveShift();
-    setCartItems([]);
   }, []);
+
+  // مزامنة السلة مع الـ LocalStorage عند تغييرها
+  useEffect(() => {
+    console.log("Sales component: Syncing cartItems to localStorage. New value:", cartItems);
+    localStorage.setItem('pos_cart_items', JSON.stringify(cartItems));
+  }, [cartItems]);
 
   const checkActiveShift = async () => {
     try {
@@ -120,9 +135,8 @@ function Sales() {
     );
   }
 
-  // إضافة منتج للسلة
-  const handleAddProduct = (product) => {
-    // التحقق من وجود المنتج في السلة
+  // إضافة منتج للسلة مع دعم الكمية المخصصة والتحقق من المخزون
+  const handleAddProduct = (product, quantity = 1) => {
     const existingIndex = cartItems.findIndex(
       item => item.product.id === product.id
     );
@@ -131,20 +145,104 @@ function Sales() {
     setLatestAddedId(`${product.id}-${Date.now()}`);
 
     if (existingIndex >= 0) {
-      // زيادة الكمية
       const newItems = [...cartItems];
-      newItems[existingIndex].quantity += 1;
+      const newQty = newItems[existingIndex].quantity + quantity;
+
+      // التحقق من المخزون
+      if (newQty > product.quantity) {
+        toast.error(
+          `${t('availableQuantity') || 'الكمية المتاحة'}: ${product.quantity}`,
+          { duration: 4000 }
+        );
+        return;
+      }
+
+      newItems[existingIndex].quantity = newQty;
       setCartItems(newItems);
     } else {
-      // إضافة منتج جديد
+      // التحقق من المخزون للمنتج الجديد
+      if (quantity > product.quantity) {
+        toast.error(
+          `${t('availableQuantity') || 'الكمية المتاحة'}: ${product.quantity}`,
+          { duration: 4000 }
+        );
+        return;
+      }
+
       setCartItems([
         ...cartItems,
         {
           product: product,
-          quantity: 1,
+          quantity: quantity,
           price: product.sale_price,
         },
       ]);
+    }
+  };
+
+  // تحديث كمية آخر منتج مضاف (عبر حقل البحث)
+  const handleUpdateLatestProductQuantity = (action, amount) => {
+    if (cartItems.length === 0) {
+      toast.error(t('cartIsEmpty') || "السلة فارغة");
+      return;
+    }
+
+    // تحديد الفهرس الخاص بآخر منتج مضاف
+    let targetIndex = -1;
+    if (latestAddedId) {
+      const prodId = parseInt(latestAddedId.split('-')[0], 10);
+      for (let i = cartItems.length - 1; i >= 0; i--) {
+        if (cartItems[i].product.id === prodId) {
+          targetIndex = i;
+          break;
+        }
+      }
+    }
+
+    if (targetIndex === -1) {
+      targetIndex = cartItems.length - 1;
+    }
+
+    const targetItem = cartItems[targetIndex];
+    let newQty = targetItem.quantity;
+
+    if (action === 'set') {
+      newQty = amount;
+    } else if (action === 'add') {
+      newQty += amount;
+    } else if (action === 'subtract') {
+      newQty -= amount;
+    }
+
+    if (newQty < 1) {
+      setItemIndexToDelete(targetIndex);
+      return;
+    }
+
+    // التحقق من توفر الكمية
+    if (newQty > targetItem.product.quantity) {
+      toast.error(
+        `${t('availableQuantity') || 'الكمية المتاحة'}: ${targetItem.product.quantity}`,
+        { duration: 4000 }
+      );
+      return;
+    }
+
+    const oldQty = targetItem.quantity;
+    const newItems = [...cartItems];
+    newItems[targetIndex].quantity = newQty;
+    setCartItems(newItems);
+
+    // وميض التحديث لآخر عنصر معدل
+    setLatestAddedId(`${targetItem.product.id}-${Date.now()}`);
+
+    // تسجيل في الـ audit logs إذا تم تخفيض الكمية (سلوك void أمني)
+    if (newQty < oldQty) {
+      const valDiff = ((oldQty - newQty) * targetItem.price).toFixed(2);
+      api.post('/audit-logs', {
+        action: 'cart_item_quantity_update',
+        description: `Reduced quantity of ${targetItem.product.name} from ${oldQty} to ${newQty} (Value difference: ${valDiff} SAR)`,
+      }).catch(err => console.error("Error logging quantity reduction:", err));
     }
   };
 
@@ -154,9 +252,9 @@ function Sales() {
     const product = newItems[index].product;
 
     // التحقق من توفر الكمية
-    if (quantity > product.quantity + newItems[index].quantity) {
+    if (quantity > product.quantity) {
       toast.error(
-        `${t('availableQuantity')}: ${product.quantity + newItems[index].quantity}`,
+        `${t('availableQuantity') || 'الكمية المتاحة'}: ${product.quantity}`,
         { duration: 4000 }
       );
       return;
@@ -190,21 +288,13 @@ function Sales() {
         {/* البحث وإضافة المنتجات */}
         <div className="lg:col-span-5 space-y-4">
           <div className="card p-6">
-            <ProductSearch onSelectProduct={handleAddProduct} />
+            <ProductSearch 
+              onSelectProduct={handleAddProduct} 
+              onUpdateLatestQuantity={handleUpdateLatestProductQuantity}
+            />
           </div>
 
-          {/* معلومات إضافية - Compact */}
-          <div className="card bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border-blue-200 dark:border-blue-800 p-4">
-            <h3 className="font-semibold text-blue-900 dark:text-blue-300 mb-2 flex items-center space-x-2 rtl:space-x-reverse text-sm">
-              <span>💡</span>
-              <span>{t('tips')}</span>
-            </h3>
-            <ul className="text-xs text-blue-800 dark:text-blue-300 space-y-1">
-              <li>• {t('tip1')}</li>
-              <li>• {t('tip2')}</li>
-              <li>• {t('tip3')}</li>
-            </ul>
-          </div>
+
         </div>
 
         {/* سلة المشتريات - أكبر مساحة */}
@@ -216,7 +306,42 @@ function Sales() {
             onCheckout={checkoutMutation.mutate}
             isLoading={checkoutMutation.isPending}
             latestAddedId={latestAddedId}
+            itemIndexToDelete={itemIndexToDelete}
+            onClearDeleteIndex={() => setItemIndexToDelete(null)}
           />
+        </div>
+      </div>
+
+      {/* شريط الاختصارات البصري السفلي */}
+      <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md border border-gray-200 dark:border-gray-700 rounded-xl p-3 flex flex-wrap gap-4 items-center justify-center text-sm font-semibold shadow-md text-gray-700 dark:text-gray-300 mt-6">
+        <div className="flex items-center space-x-1.5 rtl:space-x-reverse">
+          <kbd className="px-2.5 py-1 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-xs text-gray-800 dark:text-gray-200 shadow-sm font-mono">F4</kbd>
+          <span>{t('searchShortcut') || "بحث يدوي جديد"}</span>
+        </div>
+        <span className="text-gray-300 dark:text-gray-600">|</span>
+        <div className="flex items-center space-x-1.5 rtl:space-x-reverse">
+          <kbd className="px-2.5 py-1 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-xs text-gray-800 dark:text-gray-200 shadow-sm font-mono">F3</kbd>
+          <span>{t('discountShortcut') || "إضافة خصم"}</span>
+        </div>
+        <span className="text-gray-300 dark:text-gray-600">|</span>
+        <div className="flex items-center space-x-1.5 rtl:space-x-reverse">
+          <kbd className="px-2.5 py-1 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-xs text-gray-800 dark:text-gray-200 shadow-sm font-mono">F2</kbd>
+          <span>{t('checkoutShortcut') || "دفع وإتمام"}</span>
+        </div>
+        <span className="text-gray-300 dark:text-gray-600">|</span>
+        <div className="flex items-center space-x-1.5 rtl:space-x-reverse">
+          <kbd className="px-2.5 py-1 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-xs text-gray-800 dark:text-gray-200 shadow-sm font-mono">Esc</kbd>
+          <span>{t('closeShortcut') || "إغلاق النوافذ"}</span>
+        </div>
+        <span className="text-gray-300 dark:text-gray-600">|</span>
+        <div className="flex items-center space-x-1.5 rtl:space-x-reverse">
+          <kbd className="px-2.5 py-1 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-xs text-gray-800 dark:text-gray-200 shadow-sm font-mono">Qty*Barcode</kbd>
+          <span>{t('qtyScanHelp') || "ضرب مسبق (مثال: 5*6224)"}</span>
+        </div>
+        <span className="text-gray-300 dark:text-gray-600">|</span>
+        <div className="flex items-center space-x-1.5 rtl:space-x-reverse">
+          <kbd className="px-2.5 py-1 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-xs text-gray-800 dark:text-gray-200 shadow-sm font-mono">*Qty / +Qty / -Qty</kbd>
+          <span>{t('qtyAdjustHelp') || "تعديل كمية آخر منتج (مثال: *12, +3, -2)"}</span>
         </div>
       </div>
     </div>

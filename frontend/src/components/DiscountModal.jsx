@@ -1,10 +1,26 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useI18n } from '../context/I18nContext';
 
 function DiscountModal({ isOpen, onClose, onApply, currentDiscount = 0, currentDiscountType = 'fixed' }) {
   const { t } = useI18n();
   const [discount, setDiscount] = useState(currentDiscount);
   const [discountType, setDiscountType] = useState(currentDiscountType);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onClose();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 

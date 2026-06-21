@@ -27,7 +27,7 @@ const playSuccessBeep = () => {
   }
 };
 
-function ProductSearch({ onSelectProduct }) {
+function ProductSearch({ onSelectProduct, onUpdateLatestQuantity }) {
   const { t } = useI18n();
   const [searchQuery, setSearchQuery] = useState("");
   const [showResults, setShowResults] = useState(false);
@@ -38,11 +38,28 @@ function ProductSearch({ onSelectProduct }) {
   const { data: searchResults, isLoading } = useQuery({
     queryKey: ["products", "search", searchQuery],
     queryFn: async () => {
-      if (!searchQuery || searchQuery.length < 2) return [];
-      const response = await api.get(`/products/search?q=${searchQuery}`);
+      // إذا كان هناك نمط كمية (مثل 5* أو *5)، فلن نقوم بالبحث العادي لتفادي تشتيت الكاشير
+      const cleanedQuery = searchQuery.trim();
+      if (
+        !cleanedQuery || 
+        cleanedQuery.length < 2 || 
+        cleanedQuery.match(/^[*xX](\d+)$/) ||
+        cleanedQuery.match(/^\+(\d+)$/) ||
+        cleanedQuery.match(/^\-(\d+)$/)
+      ) {
+        return [];
+      }
+
+      // إذا كان نمط Qty + Scan (مثلاً 5*كوكا)، نبحث عن الجزء بعد النجمة
+      const qtyScanMatch = cleanedQuery.match(/^(\d+)[*xX](.+)$/);
+      const query = qtyScanMatch ? qtyScanMatch[2].trim() : cleanedQuery;
+
+      if (query.length < 2) return [];
+
+      const response = await api.get(`/products/search?q=${query}`);
       return response.data.data || [];
     },
-    enabled: searchQuery.length >= 2,
+    enabled: searchQuery.trim().length >= 2,
   });
 
   // إعادة تعيين المؤشر النشط عند تغير نتائج البحث
@@ -70,6 +87,16 @@ function ProductSearch({ onSelectProduct }) {
     };
 
     const handleGlobalKeyDown = (e) => {
+      // اختصار F4: تفريغ حقل البحث ونقل التركيز إليه فوراً للبحث اليدوي
+      if (e.key === "F4") {
+        e.preventDefault();
+        inputRef.current?.focus();
+        setSearchQuery("");
+        setShowResults(false);
+        setFocusedIndex(-1);
+        return;
+      }
+
       const activeElement = document.activeElement;
       
       // إذا كان المستخدم يركز بالفعل على حقل إدخال آخر، دعه يكتب بحرية
@@ -102,8 +129,8 @@ function ProductSearch({ onSelectProduct }) {
   }, []);
 
 
-  const handleSelect = (product) => {
-    onSelectProduct(product);
+  const handleSelect = (product, quantity = 1) => {
+    onSelectProduct(product, quantity);
     setSearchQuery("");
     setShowResults(false);
     setFocusedIndex(-1);
@@ -116,36 +143,77 @@ function ProductSearch({ onSelectProduct }) {
   // معالجة البحث المباشر السريع (مثلاً عند ضغط Enter أو مسح باركود)
   const handleSearchSubmit = async (e) => {
     if (e) e.preventDefault();
-    if (!searchQuery.trim()) return;
+    const query = searchQuery.trim();
+    if (!query) return;
+
+    // 1. فحص أنماط تعديل كمية آخر منتج بالسلة (مثال: *5 أو x5 أو +3 أو -2)
+    const setQtyMatch = query.match(/^[*xX](\d+)$/);
+    const addQtyMatch = query.match(/^\+(\d+)$/);
+    const subQtyMatch = query.match(/^\-(\d+)$/);
+
+    if (setQtyMatch) {
+      const qty = parseInt(setQtyMatch[1], 10);
+      onUpdateLatestQuantity("set", qty);
+      setSearchQuery("");
+      setShowResults(false);
+      playSuccessBeep();
+      return;
+    }
+    if (addQtyMatch) {
+      const qty = parseInt(addQtyMatch[1], 10);
+      onUpdateLatestQuantity("add", qty);
+      setSearchQuery("");
+      setShowResults(false);
+      playSuccessBeep();
+      return;
+    }
+    if (subQtyMatch) {
+      const qty = parseInt(subQtyMatch[1], 10);
+      onUpdateLatestQuantity("subtract", qty);
+      setSearchQuery("");
+      setShowResults(false);
+      playSuccessBeep();
+      return;
+    }
+
+    // 2. فحص نمط Qty + Scan (مثال: 5*barcode أو 5xbarcode)
+    const qtyScanMatch = query.match(/^(\d+)[*xX](.+)$/);
+    let targetQuery = query;
+    let targetQty = 1;
+
+    if (qtyScanMatch) {
+      targetQty = parseInt(qtyScanMatch[1], 10);
+      targetQuery = qtyScanMatch[2].trim();
+    }
 
     try {
-      const response = await api.get(`/products/search?q=${searchQuery}`);
+      const response = await api.get(`/products/search?q=${targetQuery}`);
       const products = response.data.data || [];
 
       if (products.length > 0) {
         // 1. البحث أولاً عن باركود مطابق تماماً
         const exactBarcodeMatch = products.find(
-          (p) => p.barcode === searchQuery.trim()
+          (p) => p.barcode === targetQuery
         );
         if (exactBarcodeMatch) {
-          handleSelect(exactBarcodeMatch);
+          handleSelect(exactBarcodeMatch, targetQty);
           playSuccessBeep();
           return;
         }
 
         // 2. البحث عن اسم مطابق تماماً
         const exactNameMatch = products.find(
-          (p) => p.name.toLowerCase() === searchQuery.trim().toLowerCase()
+          (p) => p.name.toLowerCase() === targetQuery.toLowerCase()
         );
         if (exactNameMatch) {
-          handleSelect(exactNameMatch);
+          handleSelect(exactNameMatch, targetQty);
           playSuccessBeep();
           return;
         }
 
         // 3. إذا كان هناك خيار وحيد فقط، يتم إضافته تلقائياً لتسهيل العمل
         if (products.length === 1) {
-          handleSelect(products[0]);
+          handleSelect(products[0], targetQty);
           playSuccessBeep();
           return;
         }
@@ -184,7 +252,11 @@ function ProductSearch({ onSelectProduct }) {
     } else if (e.key === "Enter") {
       e.preventDefault();
       if (focusedIndex >= 0 && searchResults[focusedIndex]) {
-        handleSelect(searchResults[focusedIndex]);
+        // التحقق مما إذا كان هناك ضرب مسبق للكمية (مثال: 5*c)
+        const qtyScanMatch = searchQuery.trim().match(/^(\d+)[*xX](.+)$/);
+        const targetQty = qtyScanMatch ? parseInt(qtyScanMatch[1], 10) : 1;
+        
+        handleSelect(searchResults[focusedIndex], targetQty);
         playSuccessBeep();
       } else {
         handleSearchSubmit(e);

@@ -1,7 +1,28 @@
+import { useEffect } from 'react';
 import { useI18n } from '../context/I18nContext';
 
 function ConfirmationModal({ isOpen, onClose, onConfirm, title, message, confirmText, cancelText, type = 'warning' }) {
   const { t } = useI18n();
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onClose();
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        onConfirm();
+        onClose();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, onClose, onConfirm]);
 
   if (!isOpen) return null;
 
