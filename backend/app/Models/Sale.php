@@ -17,12 +17,16 @@ class Sale extends BaseModel
         'discount',
         'discount_type',
         'payment_method',
+        'amount_received',
+        'change_amount',
         'status',
     ];
 
     protected $casts = [
         'total' => 'decimal:2',
         'discount' => 'decimal:2',
+        'amount_received' => 'decimal:2',
+        'change_amount' => 'decimal:2',
     ];
 
     /**

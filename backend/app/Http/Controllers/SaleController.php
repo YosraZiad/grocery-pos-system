@@ -74,6 +74,8 @@ class SaleController extends Controller
             'discount' => 'nullable|numeric|min:0',
             'discount_type' => 'nullable|in:percentage,fixed',
             'payment_method' => 'required|in:cash,card,transfer',
+            'amount_received' => 'nullable|numeric|min:0',
+            'change_amount' => 'nullable|numeric|min:0',
         ]);
 
         if ($validator->fails()) {
@@ -94,7 +96,7 @@ class SaleController extends Controller
         }
 
         try {
-            $data = $request->only(['items', 'discount', 'discount_type', 'payment_method']);
+            $data = $request->only(['items', 'discount', 'discount_type', 'payment_method', 'amount_received', 'change_amount']);
             $sale = $this->service->create($data, $userId, $tenantId);
 
             return response()->json([

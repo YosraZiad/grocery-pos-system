@@ -11,6 +11,7 @@ import DiscountModal from "./DiscountModal";
 import PaymentMethod from "./PaymentMethod";
 import ConfirmationModal from "./ConfirmationModal";
 import AdminAuthModal from "./AdminAuthModal";
+import CashPaymentModal from "./CashPaymentModal";
 import api from "../services/api";
 import toast from "react-hot-toast";
 
@@ -34,6 +35,7 @@ function Cart({
   const [adminAuthTargetIndex, setAdminAuthTargetIndex] = useState(null);
   const [showDeleteItemConfirmModal, setShowDeleteItemConfirmModal] = useState(false);
   const [deleteItemTargetIndex, setDeleteItemTargetIndex] = useState(null);
+  const [showCashPaymentModal, setShowCashPaymentModal] = useState(false);
 
   // مراقبة طلبات الحذف القادمة من الأب (مثلاً عند تقليل الكمية في حقل البحث لأقل من 1)
   useEffect(() => {
@@ -47,12 +49,12 @@ function Cart({
   useEffect(() => {
     const handleGlobalKeyDown = (e) => {
       // تجنب تفعيل الاختصارات إذا كانت هناك نافذة منبثقة مفتوحة بالفعل لمنع التعارض
-      if (showConfirmModal || showDiscountModal || showAdminAuthModal || showDeleteItemConfirmModal) return;
+      if (showConfirmModal || showDiscountModal || showAdminAuthModal || showDeleteItemConfirmModal || showCashPaymentModal) return;
 
       if (e.key === "F2") {
         if (items.length > 0 && !isLoading) {
           e.preventDefault();
-          setShowConfirmModal(true);
+          handleCheckout();
         }
       } else if (e.key === "F3") {
         if (items.length > 0 && !isLoading) {
@@ -66,7 +68,7 @@ function Cart({
     return () => {
       window.removeEventListener("keydown", handleGlobalKeyDown);
     };
-  }, [items, isLoading, showConfirmModal, showDiscountModal, showAdminAuthModal, showDeleteItemConfirmModal]);
+  }, [items, isLoading, showConfirmModal, showDiscountModal, showAdminAuthModal, showDeleteItemConfirmModal, showCashPaymentModal, paymentMethod]);
 
   const triggerItemDeletion = (index) => {
     const item = items[index];
@@ -156,10 +158,14 @@ function Cart({
   const total = subtotal - discountAmount;
 
   const handleCheckout = () => {
-    setShowConfirmModal(true);
+    if (paymentMethod === "cash") {
+      setShowCashPaymentModal(true);
+    } else {
+      setShowConfirmModal(true);
+    }
   };
 
-  const confirmCheckout = () => {
+  const confirmCheckout = (amountReceived = null, changeAmount = null) => {
     const saleData = {
       items: items.map((item) => ({
         product_id: item.product.id,
@@ -168,6 +174,8 @@ function Cart({
       discount: discount,
       discount_type: discountType,
       payment_method: paymentMethod,
+      amount_received: amountReceived,
+      change_amount: changeAmount,
     };
     onCheckout(saleData);
   };
@@ -338,6 +346,14 @@ function Cart({
         onSuccess={handleAdminAuthSuccess}
         itemName={adminAuthTargetIndex !== null ? items[adminAuthTargetIndex]?.product?.name : ""}
         itemTotal={adminAuthTargetIndex !== null ? items[adminAuthTargetIndex]?.price * items[adminAuthTargetIndex]?.quantity : 0}
+      />
+
+      {/* Cash Payment Modal */}
+      <CashPaymentModal
+        isOpen={showCashPaymentModal}
+        onClose={() => setShowCashPaymentModal(false)}
+        onConfirm={(received, change) => confirmCheckout(received, change)}
+        totalDue={total}
       />
     </div>
   );

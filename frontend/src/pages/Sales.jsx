@@ -7,6 +7,44 @@ import api from '../services/api';
 import ProductSearch from '../components/ProductSearch';
 import Cart from '../components/Cart';
 
+// تأثير صوتي ميكانيكي لفتح درج النقدية باستخدام Web Audio API
+const playDrawerSound = () => {
+  try {
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    
+    // الجزء 1: رنين جرس حاد وسريع (Ding)
+    const osc1 = audioCtx.createOscillator();
+    const gain1 = audioCtx.createGain();
+    osc1.connect(gain1);
+    gain1.connect(audioCtx.destination);
+    
+    osc1.type = 'sine';
+    osc1.frequency.setValueAtTime(987.77, audioCtx.currentTime); // نغمة B5
+    gain1.gain.setValueAtTime(0.12, audioCtx.currentTime);
+    gain1.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+    
+    osc1.start();
+    osc1.stop(audioCtx.currentTime + 0.35);
+    
+    // الجزء 2: صوت انزلاق الدرج المعدني الميكانيكي (Chink)
+    const osc2 = audioCtx.createOscillator();
+    const gain2 = audioCtx.createGain();
+    osc2.connect(gain2);
+    gain2.connect(audioCtx.destination);
+    
+    osc2.type = 'triangle';
+    osc2.frequency.setValueAtTime(140, audioCtx.currentTime);
+    osc2.frequency.exponentialRampToValueAtTime(70, audioCtx.currentTime + 0.25);
+    gain2.gain.setValueAtTime(0.08, audioCtx.currentTime);
+    gain2.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.25);
+    
+    osc2.start();
+    osc2.stop(audioCtx.currentTime + 0.3);
+  } catch (e) {
+    console.error("Audio Context drawer sound failed:", e);
+  }
+};
+
 function Sales() {
   const [cartItems, setCartItems] = useState(() => {
     try {
@@ -34,8 +72,13 @@ function Sales() {
       return response.data;
     },
     onSuccess: (data) => {
+      // تشغيل صوت الدرج وتنبيه بالفتح
+      playDrawerSound();
+      toast.success(t('cashDrawerOpened') || 'Cash drawer opened automatically | تم فتح درج النقدية تلقائياً');
+
       // إعادة تعيين السلة
       setCartItems([]);
+      localStorage.removeItem('pos_cart_items');
       
       // تحديث البيانات
       queryClient.invalidateQueries(['products']);
@@ -43,8 +86,8 @@ function Sales() {
 
       toast.success(t('saleCompletedSuccessfully') || 'Sale completed successfully');
       
-      // توجيه المستخدم لصفحة الفاتورة
-      navigate(`/sales/${data.data.id}/invoice`);
+      // توجيه المستخدم لصفحة الفاتورة مع التفعيل التلقائي للطباعة
+      navigate(`/sales/${data.data.id}/invoice`, { state: { autoPrint: true } });
     },
     onError: (error) => {
       console.error('Sale creation error:', error);

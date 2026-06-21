@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useI18n } from "../context/I18nContext";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -9,6 +9,7 @@ import api from "../services/api";
 function Invoice() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { t } = useI18n();
   const [invoiceHtml, setInvoiceHtml] = useState("");
 
@@ -36,6 +37,18 @@ function Invoice() {
         });
     }
   }, [id]);
+  
+  // طباعة تلقائية للفاتورة مباشرة بعد تحميلها بنجاح إن كانت المعاملة قد تمت للتو
+  useEffect(() => {
+    if (invoiceHtml && location.state?.autoPrint) {
+      const timer = setTimeout(() => {
+        window.print();
+        // مسح الحالة لتفادي إطلاق الطباعة مجدداً عند عمل Refresh يدوي
+        navigate(location.pathname, { replace: true, state: {} });
+      }, 350);
+      return () => clearTimeout(timer);
+    }
+  }, [invoiceHtml, location.state, navigate, location.pathname]);
 
   const handlePrint = () => {
     window.print();
