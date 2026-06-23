@@ -1,6 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useState, useEffect } from "react";
 import api from "../services/api";
+import LockScreen from "../components/LockScreen";
 
 const AuthContext = createContext(null);
 
@@ -16,11 +17,53 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLocked, setIsLocked] = useState(() => {
+    return localStorage.getItem("pos_session_locked") === "true";
+  });
 
   // التحقق من المستخدم عند تحميل التطبيق
   useEffect(() => {
     checkAuth();
   }, []);
+
+  // تعقب النشاط العالمي لقفل الجلسة عند الخمول (120 ثانية)
+  useEffect(() => {
+    if (!isAuthenticated || isLocked) return;
+
+    let timeoutId;
+    const inactivityLimit = 120000; // دقيقتين = 120,000 مللي ثانية
+
+    const resetTimer = () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        lockSession();
+      }, inactivityLimit);
+    };
+
+    const events = ["mousemove", "keydown", "click", "scroll"];
+    events.forEach((event) => {
+      window.addEventListener(event, resetTimer);
+    });
+
+    resetTimer();
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      events.forEach((event) => {
+        window.removeEventListener(event, resetTimer);
+      });
+    };
+  }, [isAuthenticated, isLocked]);
+
+  const lockSession = () => {
+    setIsLocked(true);
+    localStorage.setItem("pos_session_locked", "true");
+  };
+
+  const unlockSession = () => {
+    setIsLocked(false);
+    localStorage.setItem("pos_session_locked", "false");
+  };
 
   const checkAuth = async () => {
     const token = localStorage.getItem("token");
@@ -42,8 +85,10 @@ export const AuthProvider = ({ children }) => {
       // Token غير صالح
       localStorage.removeItem("token");
       localStorage.removeItem("tenant_id");
+      localStorage.removeItem("pos_session_locked");
       setUser(null);
       setIsAuthenticated(false);
+      setIsLocked(false);
     } finally {
       setLoading(false);
     }
@@ -76,6 +121,8 @@ export const AuthProvider = ({ children }) => {
 
       setUser(user);
       setIsAuthenticated(true);
+      setIsLocked(false);
+      localStorage.removeItem("pos_session_locked");
 
       return {
         success: true,
@@ -120,6 +167,8 @@ export const AuthProvider = ({ children }) => {
 
       setUser(user);
       setIsAuthenticated(true);
+      setIsLocked(false);
+      localStorage.removeItem("pos_session_locked");
 
       return { success: true };
     } catch (error) {
@@ -140,8 +189,10 @@ export const AuthProvider = ({ children }) => {
       // مسح البيانات المحلية حتى لو فشل الطلب
       localStorage.removeItem("token");
       localStorage.removeItem("tenant_id");
+      localStorage.removeItem("pos_session_locked");
       setUser(null);
       setIsAuthenticated(false);
+      setIsLocked(false);
     }
   };
 
@@ -149,11 +200,21 @@ export const AuthProvider = ({ children }) => {
     user,
     loading,
     isAuthenticated,
+    isLocked,
+    lockSession,
+    unlockSession,
     login,
     register,
     logout,
     checkAuth,
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+      {isAuthenticated && isLocked && (
+        <LockScreen onUnlock={unlockSession} />
+      )}
+    </AuthContext.Provider>
+  );
 };

@@ -31,7 +31,7 @@ import Tooltip from "../components/Tooltip";
  * Layout حديث واحترافي مع Navigation محسّن
  */
 function Layout() {
-  const { user, logout } = useAuth();
+  const { user, logout, lockSession } = useAuth();
   const { t, language, toggleLanguage } = useI18n();
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
@@ -452,6 +452,18 @@ function Layout() {
                       <button
                         onClick={() => {
                           setUserMenuOpen(false);
+                          lockSession();
+                        }}
+                        className="w-full flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-right rtl:text-left"
+                      >
+                        <span className="mr-3 rtl:ml-3">
+                          <FontAwesomeIcon icon={faUserShield} />
+                        </span>
+                        <span>{t("lockSession")}</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          setUserMenuOpen(false);
                           handleLogout();
                         }}
                         className="w-full flex items-center px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-right rtl:text-left"
@@ -514,6 +526,19 @@ function Layout() {
                   </span>
                   <span>{t("profile")}</span>
                 </Link>
+                <button
+                  onClick={() => {
+                    setUserMenuOpen(false);
+                    setMobileMenuOpen(false);
+                    lockSession();
+                  }}
+                  className="w-full flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-right rtl:text-left"
+                >
+                  <span className="mr-3 rtl:ml-3">
+                    <FontAwesomeIcon icon={faUserShield} />
+                  </span>
+                  <span>{t("lockSession")}</span>
+                </button>
                 <button
                   onClick={() => {
                     setUserMenuOpen(false);
