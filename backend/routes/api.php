@@ -22,6 +22,7 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\ShiftController;
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\TerminalController;
+use App\Http\Controllers\SuspendedSaleController;
 
 /*
 |--------------------------------------------------------------------------
@@ -56,6 +57,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // Audit Logs
     Route::post('/audit-logs', [AuditLogController::class, 'store']);
     
+    // Suspended Sales
+    Route::apiResource('suspended-sales', SuspendedSaleController::class)->only(['index', 'store', 'destroy']);
+
     // Shifts
     Route::post('/shifts/start', [ShiftController::class, 'start']);
     Route::get('/shifts/active', [ShiftController::class, 'active']);

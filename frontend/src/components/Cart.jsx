@@ -4,8 +4,11 @@ import {
   faCartShopping,
   faCashRegister,
   faSpinner,
+  faPause,
+  faFolderOpen,
 } from "@fortawesome/free-solid-svg-icons";
 import { useI18n } from "../context/I18nContext";
+import { useQuery } from "@tanstack/react-query";
 import CartItem from "./CartItem";
 import DiscountModal from "./DiscountModal";
 import PaymentMethod from "./PaymentMethod";
@@ -14,6 +17,8 @@ import AdminAuthModal from "./AdminAuthModal";
 import CashPaymentModal from "./CashPaymentModal";
 import CardPaymentModal from "./CardPaymentModal";
 import HybridPaymentModal from "./HybridPaymentModal";
+import SuspendCartModal from "./SuspendCartModal";
+import SuspendedInvoicesModal from "./SuspendedInvoicesModal";
 import api from "../services/api";
 import toast from "react-hot-toast";
 
@@ -26,6 +31,8 @@ function Cart({
   latestAddedId,
   itemIndexToDelete,
   onClearDeleteIndex,
+  onClearCart,
+  onRestoreCart,
 }) {
   const { t } = useI18n();
   const [discount, setDiscount] = useState(0);
@@ -40,6 +47,24 @@ function Cart({
   const [showCashPaymentModal, setShowCashPaymentModal] = useState(false);
   const [showCardPaymentModal, setShowCardPaymentModal] = useState(false);
   const [showHybridPaymentModal, setShowHybridPaymentModal] = useState(false);
+  const [showSuspendModal, setShowSuspendModal] = useState(false);
+  const [showSuspendedListModal, setShowSuspendedListModal] = useState(false);
+
+  // استعلام فواتير الانتظار المعلقة لمزامنة الشارة والعدد تلقائياً
+  const { data: suspendedSalesList, refetch: refetchSuspended } = useQuery({
+    queryKey: ["suspendedSales"],
+    queryFn: async () => {
+      try {
+        const response = await api.get("/suspended-sales");
+        return response.data.data || [];
+      } catch (err) {
+        console.error("Error loading suspended count:", err);
+        return [];
+      }
+    },
+    refetchInterval: 10000, // تحديث تلقائي كل 10 ثوانٍ
+  });
+  const suspendedCount = suspendedSalesList?.length || 0;
 
   // مراقبة طلبات الحذف القادمة من الأب (مثلاً عند تقليل الكمية في حقل البحث لأقل من 1)
   useEffect(() => {
@@ -53,7 +78,7 @@ function Cart({
   useEffect(() => {
     const handleGlobalKeyDown = (e) => {
       // تجنب تفعيل الاختصارات إذا كانت هناك نافذة منبثقة مفتوحة بالفعل لمنع التعارض
-      if (showConfirmModal || showDiscountModal || showAdminAuthModal || showDeleteItemConfirmModal || showCashPaymentModal || showCardPaymentModal || showHybridPaymentModal) return;
+      if (showConfirmModal || showDiscountModal || showAdminAuthModal || showDeleteItemConfirmModal || showCashPaymentModal || showCardPaymentModal || showHybridPaymentModal || showSuspendModal || showSuspendedListModal) return;
 
       if (e.key === "F2") {
         if (items.length > 0 && !isLoading) {
@@ -72,7 +97,7 @@ function Cart({
     return () => {
       window.removeEventListener("keydown", handleGlobalKeyDown);
     };
-  }, [items, isLoading, showConfirmModal, showDiscountModal, showAdminAuthModal, showDeleteItemConfirmModal, showCashPaymentModal, showCardPaymentModal, showHybridPaymentModal, paymentMethod]);
+  }, [items, isLoading, showConfirmModal, showDiscountModal, showAdminAuthModal, showDeleteItemConfirmModal, showCashPaymentModal, showCardPaymentModal, showHybridPaymentModal, showSuspendModal, showSuspendedListModal, paymentMethod]);
 
   const triggerItemDeletion = (index) => {
     const item = items[index];
@@ -206,6 +231,34 @@ function Cart({
         <span className="px-4 py-2 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded-full text-sm font-bold">
           {items.length} {t("items") || "items"}
         </span>
+      </div>
+
+      {/* شريط أدوات تعليق واستعادة الفواتير */}
+      <div className="flex items-center space-x-2.5 rtl:space-x-reverse mb-4 pb-3 border-b border-gray-200 dark:border-gray-700">
+        <button
+          type="button"
+          disabled={items.length === 0 || isLoading}
+          onClick={() => setShowSuspendModal(true)}
+          className="flex-1 py-2 px-3 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white rounded-xl font-bold text-xs flex items-center justify-center space-x-1.5 rtl:space-x-reverse transition-all active:scale-95 shadow-sm"
+        >
+          <FontAwesomeIcon icon={faPause} />
+          <span>{t("suspendInvoice") || "تعليق الفاتورة"}</span>
+        </button>
+        
+        <button
+          type="button"
+          disabled={isLoading}
+          onClick={() => setShowSuspendedListModal(true)}
+          className="flex-1 py-2 px-3 bg-primary-600 hover:bg-primary-700 disabled:opacity-50 text-white rounded-xl font-bold text-xs flex items-center justify-center space-x-1.5 rtl:space-x-reverse transition-all active:scale-95 shadow-sm relative"
+        >
+          <FontAwesomeIcon icon={faFolderOpen} />
+          <span>{t("suspendedInvoices") || "الفواتير المعلقة"}</span>
+          {suspendedCount > 0 && (
+            <span className="absolute -top-1.5 -right-1 bg-red-500 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-bold shadow-md">
+              {suspendedCount}
+            </span>
+          )}
+        </button>
       </div>
 
       {/* قائمة المنتجات */}
@@ -381,6 +434,36 @@ function Cart({
           confirmCheckout(amountReceived, changeAmount, paymentDetails)
         }
         totalDue={total}
+      />
+
+      {/* Suspend Cart Modal */}
+      <SuspendCartModal
+        isOpen={showSuspendModal}
+        onClose={() => setShowSuspendModal(false)}
+        onConfirm={(suspendedSale) => {
+          setDiscount(0);
+          setDiscountType("fixed");
+          onClearCart();
+          refetchSuspended();
+        }}
+        items={items}
+        total={total}
+        discount={discount}
+        discountType={discountType}
+      />
+
+      {/* Suspended Invoices Modal */}
+      <SuspendedInvoicesModal
+        isOpen={showSuspendedListModal}
+        onClose={() => setShowSuspendedListModal(false)}
+        onRestore={(suspendedSale) => {
+          setDiscount(parseFloat(suspendedSale.discount));
+          setDiscountType(suspendedSale.discount_type);
+          onRestoreCart(suspendedSale.items);
+          refetchSuspended();
+        }}
+        onDeleteSuccess={refetchSuspended}
+        currentCartItemCount={items.length}
       />
     </div>
   );

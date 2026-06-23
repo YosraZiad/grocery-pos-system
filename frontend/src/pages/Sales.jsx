@@ -351,6 +351,8 @@ function Sales() {
             latestAddedId={latestAddedId}
             itemIndexToDelete={itemIndexToDelete}
             onClearDeleteIndex={() => setItemIndexToDelete(null)}
+            onClearCart={() => setCartItems([])}
+            onRestoreCart={(items) => setCartItems(items)}
           />
         </div>
       </div>
