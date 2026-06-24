@@ -9,7 +9,7 @@ function Profile() {
   const { t } = useI18n();
   const { user, checkAuth } = useAuth();
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState('profile'); // profile, password
+  const [activeTab, setActiveTab] = useState('profile'); // profile, password, pin
   const [formData, setFormData] = useState({
     name: user?.name || '',
     email: user?.email || '',
@@ -19,6 +19,44 @@ function Profile() {
     password: '',
     password_confirmation: '',
   });
+  const [pinData, setPinData] = useState({
+    pin: '',
+    pin_confirmation: '',
+  });
+
+  // تحديث الـ PIN
+  const updatePinMutation = useMutation({
+    mutationFn: async (data) => {
+      const response = await api.put('/auth/pin', { pin: data.pin });
+      return response.data;
+    },
+    onSuccess: () => {
+      setPinData({
+        pin: '',
+        pin_confirmation: '',
+      });
+      toast.success(t('pinUpdatedSuccessfully') || 'PIN updated successfully');
+    },
+    onError: (error) => {
+      const message = error.response?.data?.message || 
+        (error.response?.data?.errors ? Object.values(error.response.data.errors).flat().join(', ') : null) ||
+        t('errorUpdatingPin') || 'Error updating PIN';
+      toast.error(message);
+    },
+  });
+
+  const handlePinSubmit = (e) => {
+    e.preventDefault();
+    if (pinData.pin.length !== 4) {
+      toast.error(t('pinMin') || 'PIN must be exactly 4 digits');
+      return;
+    }
+    if (pinData.pin !== pinData.pin_confirmation) {
+      toast.error(t('pinsDoNotMatch') || 'PINs do not match');
+      return;
+    }
+    updatePinMutation.mutate(pinData);
+  };
 
   // تحديث الملف الشخصي
   const updateProfileMutation = useMutation({
@@ -166,6 +204,16 @@ function Profile() {
           >
             {t('changePassword') || 'Change Password'}
           </button>
+          <button
+            onClick={() => setActiveTab('pin')}
+            className={`px-4 py-2 font-medium transition-colors ${
+              activeTab === 'pin'
+                ? 'border-b-2 border-primary-600 text-primary-600 dark:text-primary-400'
+                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+            }`}
+          >
+            {t('fastPinSecurity') || 'Fast PIN'}
+          </button>
         </div>
       </div>
 
@@ -249,6 +297,52 @@ function Profile() {
               className="btn-primary"
             >
               {updatePasswordMutation.isPending ? t('loading') : t('updatePassword') || 'Update Password'}
+            </button>
+          </div>
+        </form>
+      )}
+
+      {/* Change PIN Tab */}
+      {activeTab === 'pin' && (
+        <form onSubmit={handlePinSubmit} className="card space-y-4">
+          <div>
+            <label className="label">{t('newPin') || 'New PIN'} *</label>
+            <input
+              type="password"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              maxLength={4}
+              value={pinData.pin}
+              onChange={(e) => setPinData({ ...pinData, pin: e.target.value.replace(/\D/g, '') })}
+              className="input text-center tracking-widest text-2xl font-bold dark:bg-gray-800 dark:text-white"
+              placeholder="••••"
+              required
+            />
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              {t('pinMin') || 'PIN must be exactly 4 digits'}
+            </p>
+          </div>
+          <div>
+            <label className="label">{t('confirmPin') || 'Confirm PIN'} *</label>
+            <input
+              type="password"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              maxLength={4}
+              value={pinData.pin_confirmation}
+              onChange={(e) => setPinData({ ...pinData, pin_confirmation: e.target.value.replace(/\D/g, '') })}
+              className="input text-center tracking-widest text-2xl font-bold dark:bg-gray-800 dark:text-white"
+              placeholder="••••"
+              required
+            />
+          </div>
+          <div className="flex items-center justify-end space-x-3 rtl:space-x-reverse pt-4">
+            <button
+              type="submit"
+              disabled={updatePinMutation.isPending}
+              className="btn-primary"
+            >
+              {updatePinMutation.isPending ? t('loading') : t('save') || 'Save'}
             </button>
           </div>
         </form>

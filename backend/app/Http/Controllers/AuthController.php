@@ -272,4 +272,59 @@ class AuthController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * تحديث الـ PIN للمستخدم الحالي
+     */
+    public function updatePin(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'pin' => 'required|string|digits:4',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation error',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $user = $request->user();
+        $user->pin = $request->pin;
+        $user->save();
+
+        return response()->json([
+            'message' => 'PIN updated successfully',
+        ], 200);
+    }
+
+    /**
+     * التحقق من الـ PIN للمستخدم الحالي
+     */
+    public function verifyPin(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'pin' => 'required|string|digits:4',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation error',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $user = $request->user();
+
+        if (!$user->pin || !Hash::check($request->pin, $user->pin)) {
+            return response()->json([
+                'message' => 'Invalid PIN',
+            ], 401);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'PIN verified successfully',
+        ], 200);
+    }
 }

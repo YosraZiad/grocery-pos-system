@@ -28,6 +28,7 @@ class UserSeeder extends Seeder
                 'username' => 'admin_main',
                 'employee_barcode' => 'EMP-000001',
                 'password' => Hash::make('password'),
+                'pin' => Hash::make('1234'),
                 'tenant_id' => $tenant->id,
             ]
         );
@@ -45,6 +46,7 @@ class UserSeeder extends Seeder
                 'username' => 'cashier_main',
                 'employee_barcode' => 'EMP-000002',
                 'password' => Hash::make('password'),
+                'pin' => Hash::make('1234'),
                 'tenant_id' => $tenant->id,
             ]
         );

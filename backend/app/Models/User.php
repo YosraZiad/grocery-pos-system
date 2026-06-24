@@ -40,6 +40,7 @@ class User extends Authenticatable
         'employee_barcode',
         'email',
         'password',
+        'pin',
         'tenant_id',
         'failed_login_attempts',
         'locked_until',
@@ -53,6 +54,7 @@ class User extends Authenticatable
      */
     protected $hidden = [
         'password',
+        'pin',
         'remember_token',
     ];
 
@@ -66,6 +68,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'pin' => 'hashed',
             'locked_until' => 'datetime',
             'last_login_at' => 'datetime',
         ];
