@@ -162,9 +162,18 @@
                     @if($sale->payment_method === 'cash') نقدي
                     @elseif($sale->payment_method === 'card') بطاقة
                     @elseif($sale->payment_method === 'transfer') تحويل
-                    @else تحويل
+                    @elseif($sale->payment_method === 'hybrid') مختلط (مقسم)
+                    @else {{ $sale->payment_method }}
                     @endif
                 </p>
+                @if($sale->payment_method === 'hybrid' && is_array($sale->payment_details))
+                    <div style="font-size: 11px; margin-top: 5px; color: #666; border-top: 1px dashed #ddd; padding-top: 5px; line-height: 1.5;">
+                        <strong>تفاصيل الدفع المختلط:</strong>
+                        @foreach($sale->payment_details as $pay)
+                            <div>• {{ $pay['method'] === 'cash' ? 'نقدي' : ($pay['method'] === 'card' ? 'بطاقة' : ($pay['method'] === 'transfer' ? 'تحويل' : 'أخرى')) }}: {{ number_format($pay['amount'], 2) }} ر.س</div>
+                        @endforeach
+                    </div>
+                @endif
             </div>
             <div class="info-box">
                 <h3>معلومات البائع</h3>

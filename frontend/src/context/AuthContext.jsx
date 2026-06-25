@@ -196,6 +196,10 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const hasPermission = (permission) => {
+    return user?.all_permissions?.includes(permission) || false;
+  };
+
   const value = {
     user,
     loading,
@@ -207,6 +211,7 @@ export const AuthProvider = ({ children }) => {
     register,
     logout,
     checkAuth,
+    hasPermission,
   };
 
   return (

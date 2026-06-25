@@ -37,7 +37,7 @@ function DiscountModal({ isOpen, onClose, onApply, currentDiscount = 0, currentD
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
+    <div className="fixed inset-0 z-50 overflow-y-auto modal">
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"

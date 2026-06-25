@@ -42,7 +42,7 @@ class UserSeeder extends Seeder
         $cashier = User::firstOrCreate(
             ['email' => 'cashier@example.com'],
             [
-                'name' => 'كاشير',
+                'name' => 'كاشير سارة',
                 'username' => 'cashier_main',
                 'employee_barcode' => 'EMP-000002',
                 'password' => Hash::make('password'),
@@ -53,6 +53,40 @@ class UserSeeder extends Seeder
         // تعيين الدور مع guard_name صحيح
         $cashier->assignRole(\Spatie\Permission\Models\Role::firstOrCreate([
             'name' => 'cashier',
+            'guard_name' => 'sanctum'
+        ]));
+
+        // إنشاء مشرف متجر (manager)
+        $manager = User::firstOrCreate(
+            ['email' => 'manager@example.com'],
+            [
+                'name' => 'مشرف خالد',
+                'username' => 'manager_main',
+                'employee_barcode' => 'EMP-000003',
+                'password' => Hash::make('password'),
+                'pin' => Hash::make('1234'),
+                'tenant_id' => $tenant->id,
+            ]
+        );
+        $manager->assignRole(\Spatie\Permission\Models\Role::firstOrCreate([
+            'name' => 'manager',
+            'guard_name' => 'sanctum'
+        ]));
+
+        // إنشاء أمين مستودع (inventory_manager)
+        $inventoryManager = User::firstOrCreate(
+            ['email' => 'inventory@example.com'],
+            [
+                'name' => 'أمين المخزن رائد',
+                'username' => 'inventory_main',
+                'employee_barcode' => 'EMP-000004',
+                'password' => Hash::make('password'),
+                'pin' => Hash::make('1234'),
+                'tenant_id' => $tenant->id,
+            ]
+        );
+        $inventoryManager->assignRole(\Spatie\Permission\Models\Role::firstOrCreate([
+            'name' => 'inventory_manager',
             'guard_name' => 'sanctum'
         ]));
     }

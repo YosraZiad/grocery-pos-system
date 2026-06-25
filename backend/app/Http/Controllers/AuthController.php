@@ -45,9 +45,12 @@ class AuthController extends Controller
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
+        $user->load('roles', 'permissions');
+        $user->setAttribute('all_permissions', $user->getAllPermissions()->pluck('name')->toArray());
+
         return response()->json([
             'message' => 'User registered successfully',
-            'user' => $user->load('roles'),
+            'user' => $user,
             'token' => $token,
         ], 201);
     }
@@ -117,9 +120,12 @@ class AuthController extends Controller
         // إنشاء token جديد
         $token = $user->createToken('auth_token')->plainTextToken;
 
+        $user->load('roles', 'permissions');
+        $user->setAttribute('all_permissions', $user->getAllPermissions()->pluck('name')->toArray());
+
         return response()->json([
             'message' => 'Login successful',
-            'user' => $user->load('roles'),
+            'user' => $user,
             'token' => $token,
             'tenant_id' => $user->tenant_id,
             'login_method' => $isBarcodeLogin ? 'barcode' : 'username_password',
@@ -188,13 +194,13 @@ class AuthController extends Controller
         ], 200);
     }
 
-    /**
-     * بيانات المستخدم الحالي
-     */
     public function me(Request $request)
     {
+        $user = $request->user();
+        $user->load('roles', 'permissions');
+        $user->setAttribute('all_permissions', $user->getAllPermissions()->pluck('name')->toArray());
         return response()->json([
-            'user' => $request->user()->load('roles', 'permissions'),
+            'user' => $user,
         ], 200);
     }
 

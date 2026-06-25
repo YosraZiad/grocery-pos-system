@@ -4,6 +4,7 @@ import { useI18n } from '../context/I18nContext';
 import { toast } from 'react-hot-toast';
 import ConfirmationModal from '../components/ConfirmationModal';
 import api from '../services/api';
+import ProtectedComponent from '../components/ProtectedComponent';
 
 function Settings() {
   const { t } = useI18n();
@@ -241,14 +242,16 @@ function Settings() {
                   className="input"
                 />
                 {logoFile && (
-                  <button
-                    type="button"
-                    onClick={handleUploadLogo}
-                    disabled={uploadLogoMutation.isPending}
-                    className="btn-primary mt-2"
-                  >
-                    {uploadLogoMutation.isPending ? t('uploading') : t('upload')}
-                  </button>
+                  <ProtectedComponent permission="edit settings">
+                    <button
+                      type="button"
+                      onClick={handleUploadLogo}
+                      disabled={uploadLogoMutation.isPending}
+                      className="btn-primary mt-2"
+                    >
+                      {uploadLogoMutation.isPending ? t('uploading') : t('upload')}
+                    </button>
+                  </ProtectedComponent>
                 )}
               </div>
             </div>
@@ -301,13 +304,15 @@ function Settings() {
           </div>
 
           <div className="flex items-center justify-end space-x-3 rtl:space-x-reverse">
-            <button
-              type="submit"
-              disabled={updateMutation.isPending}
-              className="btn-primary"
-            >
-              {updateMutation.isPending ? t('loading') : t('save')}
-            </button>
+            <ProtectedComponent permission="edit settings">
+              <button
+                type="submit"
+                disabled={updateMutation.isPending}
+                className="btn-primary"
+              >
+                {updateMutation.isPending ? t('loading') : t('save')}
+              </button>
+            </ProtectedComponent>
           </div>
         </form>
       )}
@@ -347,19 +352,21 @@ function Settings() {
               </p>
             </div>
             <div className="flex items-center justify-end space-x-3 rtl:space-x-reverse">
-              <button
-                onClick={() => {
-                  const printerSettings = {
-                    printer_name: settings.printer_name,
-                    printer_type: settings.printer_type,
-                  };
-                  updateMutation.mutate(printerSettings);
-                }}
-                disabled={updateMutation.isPending}
-                className="btn-primary"
-              >
-                {updateMutation.isPending ? t('loading') : t('save')}
-              </button>
+              <ProtectedComponent permission="edit settings">
+                <button
+                  onClick={() => {
+                    const printerSettings = {
+                      printer_name: settings.printer_name,
+                      printer_type: settings.printer_type,
+                    };
+                    updateMutation.mutate(printerSettings);
+                  }}
+                  disabled={updateMutation.isPending}
+                  className="btn-primary"
+                >
+                  {updateMutation.isPending ? t('loading') : t('save')}
+                </button>
+              </ProtectedComponent>
             </div>
           </div>
         </div>
@@ -377,6 +384,10 @@ function Settings() {
 function BackupManager() {
   const { t } = useI18n();
   const queryClient = useQueryClient();
+  const [showCreateConfirm, setShowCreateConfirm] = useState(false);
+  const [showRestoreConfirm, setShowRestoreConfirm] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [selectedBackupPath, setSelectedBackupPath] = useState(null);
 
   // جلب قائمة النسخ الاحتياطية
   const { data: backupsData, isLoading, refetch } = useQuery({
@@ -465,13 +476,15 @@ function BackupManager() {
 
       {/* Create Backup Button */}
       <div className="mb-6">
-        <button
-          onClick={handleCreateBackup}
-          disabled={createBackupMutation.isPending}
-          className="btn-primary"
-        >
-          {createBackupMutation.isPending ? t('creating') : t('createBackup')}
-        </button>
+        <ProtectedComponent permission="edit settings">
+          <button
+            onClick={handleCreateBackup}
+            disabled={createBackupMutation.isPending}
+            className="btn-primary"
+          >
+            {createBackupMutation.isPending ? t('creating') : t('createBackup')}
+          </button>
+        </ProtectedComponent>
       </div>
 
       {/* Backups List */}
@@ -500,26 +513,32 @@ function BackupManager() {
                   </p>
                 </div>
                 <div className="flex items-center space-x-2 rtl:space-x-reverse">
-                  <button
-                    onClick={() => handleDownload(backup.path)}
-                    className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
-                  >
-                    {t('download')}
-                  </button>
-                  <button
-                    onClick={() => handleRestore(backup.path)}
-                    disabled={restoreBackupMutation.isPending}
-                    className="px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600"
-                  >
-                    {t('restore')}
-                  </button>
-                  <button
-                    onClick={() => handleDelete(backup.path)}
-                    disabled={deleteBackupMutation.isPending}
-                    className="px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600"
-                  >
-                    {t('delete')}
-                  </button>
+                  <ProtectedComponent permission="edit settings">
+                    <button
+                      onClick={() => handleDownload(backup.path)}
+                      className="px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
+                    >
+                      {t('download')}
+                    </button>
+                  </ProtectedComponent>
+                  <ProtectedComponent permission="edit settings">
+                    <button
+                      onClick={() => handleRestore(backup.path)}
+                      disabled={restoreBackupMutation.isPending}
+                      className="px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600"
+                    >
+                      {t('restore')}
+                    </button>
+                  </ProtectedComponent>
+                  <ProtectedComponent permission="edit settings">
+                    <button
+                      onClick={() => handleDelete(backup.path)}
+                      disabled={deleteBackupMutation.isPending}
+                      className="px-3 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600"
+                    >
+                      {t('delete')}
+                    </button>
+                  </ProtectedComponent>
                 </div>
               </div>
             ))}

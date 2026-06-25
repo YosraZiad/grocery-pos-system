@@ -14,6 +14,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import ConfirmationModal from "../components/ConfirmationModal";
 import api from "../services/api";
+import ProtectedComponent from "../components/ProtectedComponent";
 
 function Roles() {
   const { t } = useI18n();
@@ -323,15 +324,17 @@ function Roles() {
             {t("manageRolesAndPermissions")}
           </p>
         </div>
-        <button
-          onClick={() => setShowModal(true)}
-          className="btn-primary flex items-center space-x-2 rtl:space-x-reverse"
-        >
-          <span>
-            <FontAwesomeIcon icon={faPlus} />
-          </span>
-          <span>{t("addRole")}</span>
-        </button>
+        <ProtectedComponent permission="create roles">
+          <button
+            onClick={() => setShowModal(true)}
+            className="btn-primary flex items-center space-x-2 rtl:space-x-reverse"
+          >
+            <span>
+              <FontAwesomeIcon icon={faPlus} />
+            </span>
+            <span>{t("addRole")}</span>
+          </button>
+        </ProtectedComponent>
       </div>
 
       {/* Roles List - Table View */}
@@ -497,27 +500,31 @@ function Roles() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex items-center space-x-2 rtl:space-x-reverse">
-                        <button
-                          onClick={() => handleEdit(role)}
-                          className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-primary-700 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20 hover:bg-primary-100 dark:hover:bg-primary-900/30 rounded-lg transition-colors"
-                          title={t("edit")}
-                        >
-                          <span className="mr-1 rtl:ml-1">
-                            <FontAwesomeIcon icon={faPenToSquare} />
-                          </span>
-                          {t("edit")}
-                        </button>
-                        {!["admin", "cashier"].includes(role.name) && (
+                        <ProtectedComponent permission="edit roles">
                           <button
-                            onClick={() => handleDelete(role.id)}
-                            className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors"
-                            title={t("delete")}
+                            onClick={() => handleEdit(role)}
+                            className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-primary-700 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/20 hover:bg-primary-100 dark:hover:bg-primary-900/30 rounded-lg transition-colors"
+                            title={t("edit")}
                           >
                             <span className="mr-1 rtl:ml-1">
-                              <FontAwesomeIcon icon={faTrashCan} />
+                              <FontAwesomeIcon icon={faPenToSquare} />
                             </span>
-                            {t("delete")}
+                            {t("edit")}
                           </button>
+                        </ProtectedComponent>
+                        {!["admin", "cashier"].includes(role.name) && (
+                          <ProtectedComponent permission="delete roles">
+                            <button
+                              onClick={() => handleDelete(role.id)}
+                              className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors"
+                              title={t("delete")}
+                            >
+                              <span className="mr-1 rtl:ml-1">
+                                <FontAwesomeIcon icon={faTrashCan} />
+                              </span>
+                              {t("delete")}
+                            </button>
+                          </ProtectedComponent>
                         )}
                       </div>
                     </td>

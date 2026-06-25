@@ -70,6 +70,16 @@ function ProductSearch({ onSelectProduct, onUpdateLatestQuantity }) {
   // مستمع عالمي للتركيز التلقائي عند النقر أو الضغط على لوحة المفاتيح (Autofocus)
   useEffect(() => {
     const handleGlobalClick = (e) => {
+      // إذا كانت هناك أي نافذة منبثقة مفتوحة، لا تسرق التركيز مطلقاً
+      if (document.querySelector(".modal")) {
+        return;
+      }
+
+      // إذا كان العنصر الذي تم النقر عليه قد تم حذفه من الشجرة (Unmounted)، لا تسرق التركيز
+      if (!document.body.contains(e.target)) {
+        return;
+      }
+
       // تجنب سرقة التركيز إذا نقر المستخدم على حقول أخرى أو أزرار أو نوافذ منبثقة
       const interactiveTags = ["INPUT", "TEXTAREA", "SELECT", "BUTTON", "A"];
       if (
@@ -87,6 +97,11 @@ function ProductSearch({ onSelectProduct, onUpdateLatestQuantity }) {
     };
 
     const handleGlobalKeyDown = (e) => {
+      // إذا كانت هناك أي نافذة منبثقة مفتوحة، لا تسرق التركيز
+      if (document.querySelector(".modal")) {
+        return;
+      }
+
       // اختصار F4: تفريغ حقل البحث ونقل التركيز إليه فوراً للبحث اليدوي
       if (e.key === "F4") {
         e.preventDefault();

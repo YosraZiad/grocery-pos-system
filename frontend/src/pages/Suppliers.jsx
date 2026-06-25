@@ -10,6 +10,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import ConfirmationModal from "../components/ConfirmationModal";
 import api from "../services/api";
+import ProtectedComponent from "../components/ProtectedComponent";
 
 function Suppliers() {
   const { t } = useI18n();
@@ -199,13 +200,15 @@ function Suppliers() {
             {t("manageSuppliers")}
           </p>
         </div>
-        <button
-          onClick={() => setShowModal(true)}
-          className="btn-primary flex items-center space-x-2 rtl:space-x-reverse"
-        >
-          <span>+</span>
-          <span>{t("addSupplier")}</span>
-        </button>
+        <ProtectedComponent permission="create suppliers">
+          <button
+            onClick={() => setShowModal(true)}
+            className="btn-primary flex items-center space-x-2 rtl:space-x-reverse"
+          >
+            <span>+</span>
+            <span>{t("addSupplier")}</span>
+          </button>
+        </ProtectedComponent>
       </div>
 
       {/* Search */}
@@ -302,20 +305,24 @@ function Suppliers() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex items-center space-x-2 rtl:space-x-reverse">
-                        <button
-                          onClick={() => handleEdit(supplier)}
-                          className="text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300"
-                          title={t("edit")}
-                        >
-                          <FontAwesomeIcon icon={faPenToSquare} />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(supplier.id)}
-                          className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
-                          title={t("delete")}
-                        >
-                          <FontAwesomeIcon icon={faTrashCan} />
-                        </button>
+                        <ProtectedComponent permission="edit suppliers">
+                          <button
+                            onClick={() => handleEdit(supplier)}
+                            className="text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300"
+                            title={t("edit")}
+                          >
+                            <FontAwesomeIcon icon={faPenToSquare} />
+                          </button>
+                        </ProtectedComponent>
+                        <ProtectedComponent permission="delete suppliers">
+                          <button
+                            onClick={() => handleDelete(supplier.id)}
+                            className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
+                            title={t("delete")}
+                          >
+                            <FontAwesomeIcon icon={faTrashCan} />
+                          </button>
+                        </ProtectedComponent>
                       </div>
                     </td>
                   </tr>

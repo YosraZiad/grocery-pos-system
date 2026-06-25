@@ -9,6 +9,7 @@ import {
   faXmark,
 } from "@fortawesome/free-solid-svg-icons";
 import api from "../services/api";
+import ProtectedComponent from "../components/ProtectedComponent";
 
 function PurchaseInvoices() {
   const { t } = useI18n();
@@ -195,9 +196,11 @@ function PurchaseInvoices() {
             {t("managePurchaseInvoices")}
           </p>
         </div>
-        <button onClick={() => setShowModal(true)} className="btn-primary">
-          {t("addPurchaseInvoice")}
-        </button>
+        <ProtectedComponent permission="create purchases">
+          <button onClick={() => setShowModal(true)} className="btn-primary">
+            {t("addPurchaseInvoice")}
+          </button>
+        </ProtectedComponent>
       </div>
 
       {/* Filters */}
@@ -350,17 +353,19 @@ function PurchaseInvoices() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex items-center space-x-2 rtl:space-x-reverse">
                         {invoice.balance > 0 && (
-                          <button
-                            onClick={() => {
-                              setSelectedInvoice(invoice);
-                              setPayAmount(0);
-                              setShowPayModal(true);
-                            }}
-                            className="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300"
-                            title={t("pay")}
-                          >
-                            <FontAwesomeIcon icon={faMoneyBillWave} />
-                          </button>
+                          <ProtectedComponent permission="edit purchases">
+                            <button
+                              onClick={() => {
+                                setSelectedInvoice(invoice);
+                                setPayAmount(0);
+                                setShowPayModal(true);
+                              }}
+                              className="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300"
+                              title={t("pay")}
+                            >
+                              <FontAwesomeIcon icon={faMoneyBillWave} />
+                            </button>
+                          </ProtectedComponent>
                         )}
                       </div>
                     </td>

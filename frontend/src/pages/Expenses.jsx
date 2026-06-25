@@ -11,6 +11,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import ConfirmationModal from "../components/ConfirmationModal";
 import api from "../services/api";
+import ProtectedComponent from "../components/ProtectedComponent";
 
 function Expenses() {
   const { t } = useI18n();
@@ -291,18 +292,22 @@ function Expenses() {
           >
             {showSummary ? t("hideSummary") : t("showSummary")}
           </button>
-          <button
-            onClick={() => setShowCategoryModal(true)}
-            className="btn-secondary"
-          >
-            {t("manageCategories")}
-          </button>
-          <button
-            onClick={() => setShowExpenseModal(true)}
-            className="btn-primary"
-          >
-            {t("addExpense")}
-          </button>
+          <ProtectedComponent permission="create expenses">
+            <button
+              onClick={() => setShowCategoryModal(true)}
+              className="btn-secondary"
+            >
+              {t("manageCategories")}
+            </button>
+          </ProtectedComponent>
+          <ProtectedComponent permission="create expenses">
+            <button
+              onClick={() => setShowExpenseModal(true)}
+              className="btn-primary"
+            >
+              {t("addExpense")}
+            </button>
+          </ProtectedComponent>
         </div>
       </div>
 
@@ -469,20 +474,24 @@ function Expenses() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex items-center space-x-2 rtl:space-x-reverse">
-                        <button
-                          onClick={() => handleEditExpense(expense)}
-                          className="text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300"
-                          title={t("edit")}
-                        >
-                          <FontAwesomeIcon icon={faPenToSquare} />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteExpense(expense.id)}
-                          className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
-                          title={t("delete")}
-                        >
-                          <FontAwesomeIcon icon={faTrashCan} />
-                        </button>
+                        <ProtectedComponent permission="edit expenses">
+                          <button
+                            onClick={() => handleEditExpense(expense)}
+                            className="text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300"
+                            title={t("edit")}
+                          >
+                            <FontAwesomeIcon icon={faPenToSquare} />
+                          </button>
+                        </ProtectedComponent>
+                        <ProtectedComponent permission="delete expenses">
+                          <button
+                            onClick={() => handleDeleteExpense(expense.id)}
+                            className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
+                            title={t("delete")}
+                          >
+                            <FontAwesomeIcon icon={faTrashCan} />
+                          </button>
+                        </ProtectedComponent>
                       </div>
                     </td>
                   </tr>
@@ -674,20 +683,24 @@ function Expenses() {
                       </p>
                     </div>
                     <div className="flex items-center space-x-2 rtl:space-x-reverse">
-                      <button
-                        onClick={() => handleEditCategory(category)}
-                        className="text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300"
-                        title={t("edit")}
-                      >
-                        <FontAwesomeIcon icon={faPenToSquare} />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteCategory(category.id)}
-                        className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
-                        title={t("delete")}
-                      >
-                        <FontAwesomeIcon icon={faTrashCan} />
-                      </button>
+                      <ProtectedComponent permission="edit expenses">
+                        <button
+                          onClick={() => handleEditCategory(category)}
+                          className="text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300"
+                          title={t("edit")}
+                        >
+                          <FontAwesomeIcon icon={faPenToSquare} />
+                        </button>
+                      </ProtectedComponent>
+                      <ProtectedComponent permission="delete expenses">
+                        <button
+                          onClick={() => handleDeleteCategory(category.id)}
+                          className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
+                          title={t("delete")}
+                        >
+                          <FontAwesomeIcon icon={faTrashCan} />
+                        </button>
+                      </ProtectedComponent>
                     </div>
                   </div>
                 ))}

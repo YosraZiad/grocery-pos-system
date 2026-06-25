@@ -19,6 +19,7 @@ class Sale extends BaseModel
         'payment_method',
         'amount_received',
         'change_amount',
+        'payment_details',
         'status',
     ];
 
@@ -27,6 +28,7 @@ class Sale extends BaseModel
         'discount' => 'decimal:2',
         'amount_received' => 'decimal:2',
         'change_amount' => 'decimal:2',
+        'payment_details' => 'array',
     ];
 
     /**

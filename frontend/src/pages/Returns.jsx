@@ -6,6 +6,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBox, faCheck, faXmark } from "@fortawesome/free-solid-svg-icons";
 import ConfirmationModal from "../components/ConfirmationModal";
 import api from "../services/api";
+import ProtectedComponent from "../components/ProtectedComponent";
 
 function Returns() {
   const { t } = useI18n();
@@ -197,9 +198,11 @@ function Returns() {
             {t("manageReturns")}
           </p>
         </div>
-        <button onClick={() => setShowModal(true)} className="btn-primary">
-          {t("addReturn")}
-        </button>
+        <ProtectedComponent permission="create returns">
+          <button onClick={() => setShowModal(true)} className="btn-primary">
+            {t("addReturn")}
+          </button>
+        </ProtectedComponent>
       </div>
 
       {/* Filters */}
@@ -368,28 +371,32 @@ function Returns() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex items-center space-x-2 rtl:space-x-reverse">
                         {returnItem.status === "pending" && (
-                          <>
-                            <button
-                              onClick={() =>
-                                handleUpdateStatus(returnItem.id, "approved")
-                              }
-                              disabled={updateStatusMutation.isPending}
-                              className="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300 disabled:opacity-50"
-                              title={t("approve")}
-                            >
-                              <FontAwesomeIcon icon={faCheck} />
-                            </button>
-                            <button
-                              onClick={() =>
-                                handleUpdateStatus(returnItem.id, "rejected")
-                              }
-                              disabled={updateStatusMutation.isPending}
-                              className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 disabled:opacity-50"
-                              title={t("reject")}
-                            >
-                              <FontAwesomeIcon icon={faXmark} />
-                            </button>
-                          </>
+                          <div className="flex items-center space-x-2 rtl:space-x-reverse">
+                            <ProtectedComponent permission="edit returns">
+                              <button
+                                onClick={() =>
+                                  handleUpdateStatus(returnItem.id, "approved")
+                                }
+                                disabled={updateStatusMutation.isPending}
+                                className="text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300 disabled:opacity-50"
+                                title={t("approve")}
+                              >
+                                <FontAwesomeIcon icon={faCheck} />
+                              </button>
+                            </ProtectedComponent>
+                            <ProtectedComponent permission="edit returns">
+                              <button
+                                onClick={() =>
+                                  handleUpdateStatus(returnItem.id, "rejected")
+                                }
+                                disabled={updateStatusMutation.isPending}
+                                className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 disabled:opacity-50"
+                                title={t("reject")}
+                              >
+                                <FontAwesomeIcon icon={faXmark} />
+                              </button>
+                            </ProtectedComponent>
+                          </div>
                         )}
                       </div>
                     </td>

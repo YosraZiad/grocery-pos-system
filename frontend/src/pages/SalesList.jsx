@@ -11,6 +11,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import ConfirmationModal from "../components/ConfirmationModal";
 import api from "../services/api";
+import ProtectedComponent from "../components/ProtectedComponent";
 
 function SalesList() {
   const { t } = useI18n();
@@ -102,9 +103,11 @@ function SalesList() {
             {t("viewAndManageSales")}
           </p>
         </div>
-        <button onClick={() => navigate("/sales")} className="btn-primary">
-          {t("newSale")}
-        </button>
+        <ProtectedComponent permission="create sales">
+          <button onClick={() => navigate("/sales")} className="btn-primary">
+            {t("newSale")}
+          </button>
+        </ProtectedComponent>
       </div>
 
       {/* Filters */}
@@ -271,14 +274,16 @@ function SalesList() {
                           <FontAwesomeIcon icon={faEye} />
                         </button>
                         {sale.status === "completed" && (
-                          <button
-                            onClick={() => handleCancelSale(sale.id)}
-                            disabled={cancelSaleMutation.isPending}
-                            className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 disabled:opacity-50"
-                            title={t("cancelSale")}
-                          >
-                            <FontAwesomeIcon icon={faTrashCan} />
-                          </button>
+                          <ProtectedComponent permission="edit sales">
+                            <button
+                              onClick={() => handleCancelSale(sale.id)}
+                              disabled={cancelSaleMutation.isPending}
+                              className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 disabled:opacity-50"
+                              title={t("cancelSale")}
+                            >
+                              <FontAwesomeIcon icon={faTrashCan} />
+                            </button>
+                          </ProtectedComponent>
                         )}
                       </div>
                     </td>

@@ -166,4 +166,53 @@ class SaleControllerTest extends TestCase
                 'invoice_number' => 'INV-12345',
             ]);
     }
+
+    public function test_user_can_create_sale_with_hybrid_payment()
+    {
+        $user = $this->actingAsAdmin();
+        $this->createOpenShift($user);
+
+        $category = Category::factory()->create([
+            'tenant_id' => $this->tenant->id,
+        ]);
+
+        $product = Product::factory()->create([
+            'category_id' => $category->id,
+            'tenant_id' => $this->tenant->id,
+            'quantity' => 100,
+            'sale_price' => 10.00,
+        ]);
+
+        $paymentDetails = [
+            ['method' => 'cash', 'amount' => 8.00],
+            ['method' => 'card', 'amount' => 12.00],
+        ];
+
+        $response = $this->postJson('/api/sales', [
+            'items' => [
+                [
+                    'product_id' => $product->id,
+                    'quantity' => 2,
+                    'price' => 10.00,
+                ],
+            ],
+            'payment_method' => 'hybrid',
+            'amount_received' => 20.00,
+            'change_amount' => 0.00,
+            'payment_details' => $paymentDetails,
+        ]);
+
+        $response->assertStatus(201);
+
+        $this->assertDatabaseHas('sales', [
+            'user_id' => $user->id,
+            'tenant_id' => $this->tenant->id,
+            'payment_method' => 'hybrid',
+        ]);
+
+        // التحقق من صحة تفاصيل الدفع المخزنة كـ JSON/Array
+        $sale = Sale::where('payment_method', 'hybrid')->first();
+        $this->assertNotNull($sale);
+        $this->assertEquals($paymentDetails, $sale->payment_details);
+    }
 }

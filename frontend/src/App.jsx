@@ -24,6 +24,7 @@ import Profile from "./pages/Profile";
 import ProtectedRoute from "./components/ProtectedRoute";
 import FastLoginTestPanel from "./pages/FastLoginTestPanel";
 import StartShift from "./pages/StartShift";
+import CardTerminalSimulator from "./pages/CardTerminalSimulator";
 import "./App.css";
 import "./styles/print.css";
 
@@ -36,6 +37,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/fast-login-test" element={<FastLoginTestPanel />} />
+          <Route path="/terminal-simulator" element={<CardTerminalSimulator />} />
 
           {/* Protected routes */}
           <Route
@@ -47,24 +49,143 @@ function App() {
             }
           >
             <Route index element={<Home />} />
-            <Route path="products" element={<Products />} />
-            <Route path="products/:id" element={<ProductCard />} />
-            <Route path="sales" element={<Sales />} />
-            <Route path="sales-list" element={<SalesList />} />
-            <Route path="sales/:id" element={<SaleDetails />} />
-            <Route path="sales/:id/invoice" element={<Invoice />} />
-            <Route path="inventory" element={<Inventory />} />
-            <Route path="returns" element={<Returns />} />
-            <Route path="suppliers" element={<Suppliers />} />
-            <Route path="purchase-invoices" element={<PurchaseInvoices />} />
-            <Route path="expenses" element={<Expenses />} />
-            <Route path="profit-loss" element={<ProfitLoss />} />
-            <Route path="reports" element={<Reports />} />
-            <Route path="settings" element={<Settings />} />
-            <Route path="users" element={<Users />} />
-            <Route path="roles" element={<Roles />} />
+            <Route
+              path="products"
+              element={
+                <ProtectedRoute requiredPermission="view products">
+                  <Products />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="products/:id"
+              element={
+                <ProtectedRoute requiredPermission="view products">
+                  <ProductCard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="sales"
+              element={
+                <ProtectedRoute requiredPermission="create sales">
+                  <Sales />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="sales-list"
+              element={
+                <ProtectedRoute requiredPermission="view sales">
+                  <SalesList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="sales/:id"
+              element={
+                <ProtectedRoute requiredPermission="view sales">
+                  <SaleDetails />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="sales/:id/invoice"
+              element={
+                <ProtectedRoute requiredPermission="view sales">
+                  <Invoice />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="inventory"
+              element={
+                <ProtectedRoute requiredPermission="view inventory">
+                  <Inventory />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="returns"
+              element={
+                <ProtectedRoute requiredPermission="view returns">
+                  <Returns />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="suppliers"
+              element={
+                <ProtectedRoute requiredPermission="view suppliers">
+                  <Suppliers />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="purchase-invoices"
+              element={
+                <ProtectedRoute requiredPermission="view purchases">
+                  <PurchaseInvoices />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="expenses"
+              element={
+                <ProtectedRoute requiredPermission="view expenses">
+                  <Expenses />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="profit-loss"
+              element={
+                <ProtectedRoute requiredPermission="view reports">
+                  <ProfitLoss />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="reports"
+              element={
+                <ProtectedRoute requiredPermission="view reports">
+                  <Reports />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="settings"
+              element={
+                <ProtectedRoute requiredPermission="view settings">
+                  <Settings />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="users"
+              element={
+                <ProtectedRoute requiredPermission="view users">
+                  <Users />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="roles"
+              element={
+                <ProtectedRoute requiredPermission="view roles">
+                  <Roles />
+                </ProtectedRoute>
+              }
+            />
             <Route path="profile" element={<Profile />} />
-            <Route path="start-shift" element={<StartShift />} />
+            <Route
+              path="start-shift"
+              element={
+                <ProtectedRoute requiredPermission="create sales">
+                  <StartShift />
+                </ProtectedRoute>
+              }
+            />
           </Route>
         </Routes>
       </BrowserRouter>

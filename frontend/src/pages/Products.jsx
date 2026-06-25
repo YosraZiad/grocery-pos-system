@@ -23,6 +23,7 @@ import ConfirmationModal from "../components/ConfirmationModal";
 import ProductForm from "../components/ProductForm";
 import Tooltip from "../components/Tooltip";
 import { useI18n } from "../context/I18nContext";
+import ProtectedComponent from "../components/ProtectedComponent";
 import api from "../services/api";
 
 function findTreeNodeById(nodes, id) {
@@ -805,43 +806,51 @@ function Products() {
                 }}
               >
                 {canAddCategoryAtLevel ? (
-                  <button
-                    type="button"
-                    className="w-full text-start px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 text-sm"
-                    onClick={() => openCreateCategory(node.id)}
-                  >
-                    <span className="inline-flex items-center gap-2">
-                      <CategoryTagIcon className="h-3.5 w-3.5" />
-                      {t("addCategory")}
-                    </span>
-                  </button>
+                  <ProtectedComponent permission="create products">
+                    <button
+                      type="button"
+                      className="w-full text-start px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 text-sm"
+                      onClick={() => openCreateCategory(node.id)}
+                    >
+                      <span className="inline-flex items-center gap-2">
+                        <CategoryTagIcon className="h-3.5 w-3.5" />
+                        {t("addCategory")}
+                      </span>
+                    </button>
+                  </ProtectedComponent>
                 ) : null}
                 {canAddProductAtLevel ? (
+                  <ProtectedComponent permission="create products">
+                    <button
+                      type="button"
+                      className="w-full text-start px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 text-sm"
+                      onClick={() => openCreateProductForCategory(node.id)}
+                    >
+                      <span className="inline-flex items-center gap-2">
+                        <ProductBoxIcon className="h-3.5 w-3.5" />
+                        {t("addProduct")}
+                      </span>
+                    </button>
+                  </ProtectedComponent>
+                ) : null}
+                <ProtectedComponent permission="edit products">
                   <button
                     type="button"
                     className="w-full text-start px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 text-sm"
-                    onClick={() => openCreateProductForCategory(node.id)}
+                    onClick={() => openEditCategory(node.id)}
                   >
-                    <span className="inline-flex items-center gap-2">
-                      <ProductBoxIcon className="h-3.5 w-3.5" />
-                      {t("addProduct")}
-                    </span>
+                    {t("editCategory")}
                   </button>
-                ) : null}
-                <button
-                  type="button"
-                  className="w-full text-start px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 text-sm"
-                  onClick={() => openEditCategory(node.id)}
-                >
-                  {t("editCategory")}
-                </button>
-                <button
-                  type="button"
-                  className="w-full text-start px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 text-sm"
-                  onClick={() => openDeleteCategory(node.id)}
-                >
-                  {t("delete")}
-                </button>
+                </ProtectedComponent>
+                <ProtectedComponent permission="delete products">
+                  <button
+                    type="button"
+                    className="w-full text-start px-3 py-2 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 text-sm"
+                    onClick={() => openDeleteCategory(node.id)}
+                  >
+                    {t("delete")}
+                  </button>
+                </ProtectedComponent>
               </div>
             )}
           </div>
@@ -882,28 +891,30 @@ function Products() {
             </p>
           </div>
           <div className="page-header-actions">
-            <button
-              onClick={() => {
-                if (!selectedNode) {
-                  toast.error(t("selectCategoryFirst"));
-                  return;
-                }
+            <ProtectedComponent permission="create products">
+              <button
+                onClick={() => {
+                  if (!selectedNode) {
+                    toast.error(t("selectCategoryFirst"));
+                    return;
+                  }
 
-                if (canCreateProduct) {
-                  setEditingProduct(null);
-                  setShowProductModal(true);
-                  return;
-                }
+                  if (canCreateProduct) {
+                    setEditingProduct(null);
+                    setShowProductModal(true);
+                    return;
+                  }
 
-                toast.error(t("leafOnlyProducts"));
-              }}
-              className="btn-primary rounded-none flex items-center gap-2"
-              aria-label={t("addProduct")}
-            >
-              <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white/20">
-                <ProductBoxIcon className="h-3.5 w-3.5" />
-              </span>
-            </button>
+                  toast.error(t("leafOnlyProducts"));
+                }}
+                className="btn-primary rounded-none flex items-center gap-2"
+                aria-label={t("addProduct")}
+              >
+                <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white/20">
+                  <ProductBoxIcon className="h-3.5 w-3.5" />
+                </span>
+              </button>
+            </ProtectedComponent>
           </div>
         </div>
       </div>
@@ -1036,18 +1047,20 @@ function Products() {
               <h3 className="text-xl font-bold text-gray-900 dark:text-white">
                 {t("categoryTree")}
               </h3>
-              <Tooltip label={t("addCategory")}>
-                <button
-                  type="button"
-                  className="btn-secondary rounded-none text-sm"
-                  onClick={() => openCreateCategory(null)}
-                  aria-label={t("addCategory")}
-                >
-                  <span className="inline-flex h-5 w-5 items-center justify-center">
-                    <CategoryTagIcon />
-                  </span>
-                </button>
-              </Tooltip>
+              <ProtectedComponent permission="create products">
+                <Tooltip label={t("addCategory")}>
+                  <button
+                    type="button"
+                    className="btn-secondary rounded-none text-sm"
+                    onClick={() => openCreateCategory(null)}
+                    aria-label={t("addCategory")}
+                  >
+                    <span className="inline-flex h-5 w-5 items-center justify-center">
+                      <CategoryTagIcon />
+                    </span>
+                  </button>
+                </Tooltip>
+              </ProtectedComponent>
             </div>
             <div
               dir={language === "ar" ? "rtl" : "ltr"}
@@ -1190,34 +1203,38 @@ function Products() {
                                         />
                                       </button>
                                     </Tooltip>
-                                    <Tooltip label={t("edit")}>
-                                      <button
-                                        className="inline-flex h-8 w-8 items-center justify-center rounded-none bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-200"
-                                        onClick={() =>
-                                          handleEditProduct(product)
-                                        }
-                                        aria-label={t("edit")}
-                                      >
-                                        <FontAwesomeIcon
-                                          icon={faPenToSquare}
-                                          className="h-4 w-4"
-                                        />
-                                      </button>
-                                    </Tooltip>
-                                    <Tooltip label={t("delete")}>
-                                      <button
-                                        className="inline-flex h-8 w-8 items-center justify-center rounded-none bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-200"
-                                        onClick={() =>
-                                          handleDeleteProduct(product.id)
-                                        }
-                                        aria-label={t("delete")}
-                                      >
-                                        <FontAwesomeIcon
-                                          icon={faTrashCan}
-                                          className="h-4 w-4"
-                                        />
-                                      </button>
-                                    </Tooltip>
+                                    <ProtectedComponent permission="edit products">
+                                      <Tooltip label={t("edit")}>
+                                        <button
+                                          className="inline-flex h-8 w-8 items-center justify-center rounded-none bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-200"
+                                          onClick={() =>
+                                            handleEditProduct(product)
+                                          }
+                                          aria-label={t("edit")}
+                                        >
+                                          <FontAwesomeIcon
+                                            icon={faPenToSquare}
+                                            className="h-4 w-4"
+                                          />
+                                        </button>
+                                      </Tooltip>
+                                    </ProtectedComponent>
+                                    <ProtectedComponent permission="delete products">
+                                      <Tooltip label={t("delete")}>
+                                        <button
+                                          className="inline-flex h-8 w-8 items-center justify-center rounded-none bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-200"
+                                          onClick={() =>
+                                            handleDeleteProduct(product.id)
+                                          }
+                                          aria-label={t("delete")}
+                                        >
+                                          <FontAwesomeIcon
+                                            icon={faTrashCan}
+                                            className="h-4 w-4"
+                                          />
+                                        </button>
+                                      </Tooltip>
+                                    </ProtectedComponent>
                                   </div>
                                 </td>
                               </tr>

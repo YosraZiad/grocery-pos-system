@@ -21,6 +21,8 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\ShiftController;
 use App\Http\Controllers\AuditLogController;
+use App\Http\Controllers\TerminalController;
+use App\Http\Controllers\SuspendedSaleController;
 
 /*
 |--------------------------------------------------------------------------
@@ -38,6 +40,14 @@ Route::post('/auth/register', [AuthController::class, 'register']);
 Route::post('/auth/login', [AuthController::class, 'login']);
 Route::post('/auth/reset-fast-login', [AuthController::class, 'resetFastLogin']);
 
+// Terminal simulator public routes
+Route::prefix('terminal')->group(function () {
+    Route::post('charge', [TerminalController::class, 'charge']);
+    Route::get('status', [TerminalController::class, 'status']);
+    Route::post('action', [TerminalController::class, 'action']);
+    Route::post('reset', [TerminalController::class, 'reset']);
+});
+
 // Protected routes (تحتاج authentication)
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
@@ -49,6 +59,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // Audit Logs
     Route::post('/audit-logs', [AuditLogController::class, 'store']);
     
+    // Suspended Sales
+    Route::apiResource('suspended-sales', SuspendedSaleController::class)->only(['index', 'store', 'destroy']);
+
     // Shifts
     Route::post('/shifts/start', [ShiftController::class, 'start']);
     Route::get('/shifts/active', [ShiftController::class, 'active']);

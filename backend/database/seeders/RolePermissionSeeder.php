@@ -42,6 +42,12 @@ class RolePermissionSeeder extends Seeder
             'edit suppliers',
             'delete suppliers',
             
+            // Purchases
+            'view purchases',
+            'create purchases',
+            'edit purchases',
+            'delete purchases',
+            
             // Expenses
             'view expenses',
             'create expenses',
@@ -75,13 +81,45 @@ class RolePermissionSeeder extends Seeder
 
         // إنشاء الأدوار
         $adminRole = Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'sanctum']);
+        $managerRole = Role::firstOrCreate(['name' => 'manager', 'guard_name' => 'sanctum']);
+        $inventoryManagerRole = Role::firstOrCreate(['name' => 'inventory_manager', 'guard_name' => 'sanctum']);
         $cashierRole = Role::firstOrCreate(['name' => 'cashier', 'guard_name' => 'sanctum']);
 
         // تعيين جميع الصلاحيات للمدير (فقط صلاحيات guard 'sanctum')
         $sanctumPermissions = Permission::where('guard_name', 'sanctum')->get();
         $adminRole->syncPermissions($sanctumPermissions);
 
-        // تعيين صلاحيات محدودة للكاشير
+        // تعيين صلاحيات المشرف (manager)
+        $managerPermissions = [
+            'view products', 'create products', 'edit products', 'delete products',
+            'view sales', 'create sales', 'edit sales', 'delete sales',
+            'view inventory', 'manage inventory',
+            'view returns', 'create returns', 'edit returns',
+            'view suppliers', 'create suppliers', 'edit suppliers', 'delete suppliers',
+            'view purchases', 'create purchases', 'edit purchases', 'delete purchases',
+            'view expenses', 'create expenses', 'edit expenses', 'delete expenses',
+            'view reports', 'export reports',
+            'view settings'
+        ];
+        $managerPermissionModels = Permission::where('guard_name', 'sanctum')
+            ->whereIn('name', $managerPermissions)
+            ->get();
+        $managerRole->syncPermissions($managerPermissionModels);
+
+        // تعيين صلاحيات أمين المخزن (inventory_manager)
+        $inventoryManagerPermissions = [
+            'view products', 'create products', 'edit products',
+            'view inventory', 'manage inventory',
+            'view suppliers', 'create suppliers', 'edit suppliers',
+            'view purchases', 'create purchases', 'edit purchases',
+            'view returns', 'create returns'
+        ];
+        $inventoryManagerPermissionModels = Permission::where('guard_name', 'sanctum')
+            ->whereIn('name', $inventoryManagerPermissions)
+            ->get();
+        $inventoryManagerRole->syncPermissions($inventoryManagerPermissionModels);
+
+        // تعيين صلاحيات الكاشير
         $cashierPermissions = [
             'view products',
             'view sales',
@@ -90,12 +128,9 @@ class RolePermissionSeeder extends Seeder
             'view returns',
             'create returns',
         ];
-
-        // جلب الصلاحيات من guard 'sanctum' فقط
         $cashierPermissionModels = Permission::where('guard_name', 'sanctum')
             ->whereIn('name', $cashierPermissions)
             ->get();
-        
         $cashierRole->syncPermissions($cashierPermissionModels);
     }
 }

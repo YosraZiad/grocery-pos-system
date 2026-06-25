@@ -1,10 +1,20 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useI18n } from '../context/I18nContext';
+import toast from 'react-hot-toast';
+import { useEffect } from 'react';
 
-function ProtectedRoute({ children }) {
-  const { isAuthenticated, loading } = useAuth();
+function ProtectedRoute({ children, requiredPermission }) {
+  const { isAuthenticated, loading, hasPermission } = useAuth();
   const { t } = useI18n();
+
+  const isAuthorized = !requiredPermission || hasPermission(requiredPermission);
+
+  useEffect(() => {
+    if (isAuthenticated && !loading && !isAuthorized) {
+      toast.error(t('accessDenied') || 'غير مسموح لك بالوصول إلى هذه الصفحة');
+    }
+  }, [isAuthenticated, loading, isAuthorized, t]);
 
   if (loading) {
     return (
@@ -19,6 +29,10 @@ function ProtectedRoute({ children }) {
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
+  }
+
+  if (!isAuthorized) {
+    return <Navigate to="/" replace />;
   }
 
   return children;
