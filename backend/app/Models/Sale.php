@@ -48,6 +48,14 @@ class Sale extends BaseModel
     }
 
     /**
+     * العلاقة مع فواتير المرتجعات
+     */
+    public function returns(): HasMany
+    {
+        return $this->hasMany(SalesReturn::class);
+    }
+
+    /**
      * توليد رقم فاتورة تلقائي
      */
     public static function generateInvoiceNumber(): string

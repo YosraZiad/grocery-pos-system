@@ -25,6 +25,24 @@ class SaleItem extends Model
         'subtotal' => 'decimal:2',
     ];
 
+    protected $appends = ['previously_returned_qty'];
+
+    /**
+     * العلاقة مع عناصر المرتجع
+     */
+    public function returnItems(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(SalesReturnItem::class, 'sale_item_id');
+    }
+
+    /**
+     * حساب الكمية المرتجعة سابقاً
+     */
+    public function getPreviouslyReturnedQtyAttribute(): int
+    {
+        return $this->returnItems()->sum('return_quantity');
+    }
+
     /**
      * العلاقة مع البيع
      */

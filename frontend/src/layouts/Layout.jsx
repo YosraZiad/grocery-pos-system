@@ -86,6 +86,7 @@ function Layout() {
     sales: [
       ...(hasPermission("create sales") ? [{ path: "/sales", label: t("sales"), icon: faMoneyBill }] : []),
       ...(hasPermission("view sales") ? [{ path: "/sales-list", label: t("salesList"), icon: faListCheck }] : []),
+      ...(hasPermission("create returns") ? [{ path: "/sales-returns", label: t("salesReturns") || "مرتجع المبيعات", icon: faRightLeft }] : []),
     ],
     management: [
       ...(hasPermission("view inventory") ? [{ path: "/inventory", label: t("inventory"), icon: faChartColumn }] : []),

@@ -12,6 +12,7 @@ import SaleDetails from "./pages/SaleDetails";
 import Invoice from "./pages/Invoice";
 import Inventory from "./pages/Inventory";
 import Returns from "./pages/Returns";
+import SalesReturn from "./pages/SalesReturn";
 import Suppliers from "./pages/Suppliers";
 import PurchaseInvoices from "./pages/PurchaseInvoices";
 import Expenses from "./pages/Expenses";
@@ -110,6 +111,14 @@ function App() {
               element={
                 <ProtectedRoute requiredPermission="view returns">
                   <Returns />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="sales-returns"
+              element={
+                <ProtectedRoute requiredPermission="create returns">
+                  <SalesReturn />
                 </ProtectedRoute>
               }
             />

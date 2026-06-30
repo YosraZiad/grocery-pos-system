@@ -102,6 +102,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/returns', [ReturnController::class, 'store'])->middleware('permission:create returns');
     Route::get('/returns/{id}', [ReturnController::class, 'show'])->middleware('permission:view returns');
     Route::put('/returns/{id}', [ReturnController::class, 'update'])->middleware('permission:edit returns');
+
+    // Sales Returns
+    Route::post('/sales-returns/verify', [\App\Http\Controllers\SalesReturnController::class, 'verify'])->middleware('permission:create returns');
+    Route::post('/sales-returns', [\App\Http\Controllers\SalesReturnController::class, 'store'])->middleware('permission:create returns');
+    Route::get('/sales-returns', [\App\Http\Controllers\SalesReturnController::class, 'index'])->middleware('permission:view returns');
+    Route::get('/sales-returns/{id}', [\App\Http\Controllers\SalesReturnController::class, 'show'])->middleware('permission:view returns');
     
     // Suppliers
     Route::get('/suppliers', [SupplierController::class, 'index'])->middleware('permission:view suppliers');
