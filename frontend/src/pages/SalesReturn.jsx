@@ -20,6 +20,7 @@ import {
   faCoins,
   faExclamationTriangle,
   faUser,
+  faHistory,
 } from "@fortawesome/free-solid-svg-icons";
 import api from "../services/api";
 import ConfirmationModal from "../components/ConfirmationModal";
@@ -354,7 +355,10 @@ function SalesReturn() {
                 : "text-gray-600 dark:text-gray-300 hover:text-gray-900"
             }`}
           >
-            🔄 إجراء مرتجع
+            <span className="flex items-center gap-1.5">
+              <FontAwesomeIcon icon={faUndo} />
+              <span>إجراء مرتجع</span>
+            </span>
           </button>
           <button
             type="button"
@@ -365,7 +369,10 @@ function SalesReturn() {
                 : "text-gray-600 dark:text-gray-300 hover:text-gray-900"
             }`}
           >
-            📜 سجل المرتجعات
+            <span className="flex items-center gap-1.5">
+              <FontAwesomeIcon icon={faHistory} />
+              <span>سجل المرتجعات</span>
+            </span>
           </button>
         </div>
 
@@ -404,8 +411,8 @@ function SalesReturn() {
           {/* الحالة الافتراضية عند عدم تحديد فاتورة */}
           {!activeInvoice ? (
         <div className="card flex flex-col items-center justify-center text-center py-20 bg-gray-50 dark:bg-gray-850 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-3xl">
-          <div className="w-20 h-20 bg-amber-100 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400 rounded-full flex items-center justify-center text-4xl mb-4">
-            <span>🔍</span>
+          <div className="w-20 h-20 bg-amber-100 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400 rounded-full flex items-center justify-center text-3xl mb-4">
+            <FontAwesomeIcon icon={faSearch} />
           </div>
           <h3 className="text-xl font-bold text-gray-900 dark:text-white">
             بانتظار رقم الفاتورة
@@ -806,9 +813,10 @@ function SalesReturn() {
                   document.body.innerHTML = originalContents;
                   window.location.reload();
                 }}
-                className="btn btn-primary flex-1 font-bold py-2.5"
+                className="btn btn-primary flex-1 font-bold py-2.5 flex items-center justify-center gap-2"
               >
-                طباعة السند 🖨️
+                <FontAwesomeIcon icon={faPrint} />
+                <span>طباعة السند</span>
               </button>
               <button
                 type="button"
@@ -1007,11 +1015,31 @@ function SalesReturn() {
                 </div>
                 <div>
                   <span className="text-gray-400 text-xs block">طريقة الرد المالي:</span>
-                  <span className="font-bold text-gray-900 dark:text-white">
-                    {selectedReturnDetails.refund_method === "cash" && "نقدي 💵"}
-                    {selectedReturnDetails.refund_method === "card" && "بطاقة/شبكة 💳"}
-                    {selectedReturnDetails.refund_method === "transfer" && "تحويل 🏦"}
-                    {selectedReturnDetails.refund_method === "replacement" && "سند استبدال 🔄"}
+                  <span className="font-bold text-gray-900 dark:text-white inline-flex items-center gap-1.5">
+                    {selectedReturnDetails.refund_method === "cash" && (
+                      <>
+                        <FontAwesomeIcon icon={faMoneyBillWave} className="text-green-500" />
+                        <span>نقدي</span>
+                      </>
+                    )}
+                    {selectedReturnDetails.refund_method === "card" && (
+                      <>
+                        <FontAwesomeIcon icon={faCreditCard} className="text-blue-500" />
+                        <span>بطاقة/شبكة</span>
+                      </>
+                    )}
+                    {selectedReturnDetails.refund_method === "transfer" && (
+                      <>
+                        <FontAwesomeIcon icon={faBuildingColumns} className="text-cyan-500" />
+                        <span>تحويل</span>
+                      </>
+                    )}
+                    {selectedReturnDetails.refund_method === "replacement" && (
+                      <>
+                        <FontAwesomeIcon icon={faExchangeAlt} className="text-indigo-500" />
+                        <span>سند استبدال</span>
+                      </>
+                    )}
                   </span>
                 </div>
                 <div>
@@ -1092,7 +1120,7 @@ function SalesReturn() {
                 }}
                 className="btn btn-primary py-2 px-6 font-bold flex items-center gap-1.5"
               >
-                <span>🖨️</span>
+                <FontAwesomeIcon icon={faPrint} />
                 <span>طباعة فاتورة المرتجع</span>
               </button>
               <button

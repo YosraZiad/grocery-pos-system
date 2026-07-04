@@ -145,7 +145,8 @@ function CashPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
                   onClick={handleExactAmount}
                   className="col-span-2 py-3 bg-primary-100 hover:bg-primary-200 dark:bg-primary-950/40 dark:hover:bg-primary-900/50 text-primary-700 dark:text-primary-300 rounded-xl font-bold text-sm transition-all border border-primary-200 dark:border-primary-800"
                 >
-                  💵 {t("exactAmount") || "المبلغ بالضبط"}
+                  <FontAwesomeIcon icon={faCoins} className="ml-1" />
+                  <span>{t("exactAmount") || "المبلغ بالضبط"}</span>
                 </button>
                 {SAR_DENOMINATIONS.map((denom) => (
                   <button

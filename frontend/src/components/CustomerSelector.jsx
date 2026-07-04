@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faUser, faSearch, faSpinner, faTimes, faExclamationTriangle } from "@fortawesome/free-solid-svg-icons";
+import { faUser, faSearch, faSpinner, faTimes, faExclamationTriangle, faUserPlus } from "@fortawesome/free-solid-svg-icons";
 import api from "../services/api";
 import toast from "react-hot-toast";
 
@@ -102,7 +102,7 @@ function CustomerSelector({ selectedCustomer, onSelectCustomer, defaultCustomerN
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2.5 rtl:space-x-reverse text-sm font-bold text-gray-800 dark:text-gray-200">
           <FontAwesomeIcon icon={faUser} className="text-primary-500 text-base" />
-          <span>👤 العميل:</span>
+          <span>العميل:</span>
           {selectedCustomer ? (
             <span className="text-primary-600 dark:text-primary-400 font-black">
               {selectedCustomer.name} 
@@ -160,9 +160,10 @@ function CustomerSelector({ selectedCustomer, onSelectCustomer, defaultCustomerN
               setDuplicateCustomer(null);
               setShowAddBox(true);
             }}
-            className="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-3.5 py-2 rounded-xl shadow-sm active:scale-95 transition-all flex items-center space-x-1 rtl:space-x-reverse"
+            className="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-3.5 py-2 rounded-xl shadow-sm active:scale-95 transition-all flex items-center space-x-1.5 rtl:space-x-reverse"
           >
-            <span>➕ إضافة عميل</span>
+            <FontAwesomeIcon icon={faUserPlus} />
+            <span>إضافة عميل</span>
           </button>
         </div>
       )}
@@ -170,8 +171,9 @@ function CustomerSelector({ selectedCustomer, onSelectCustomer, defaultCustomerN
       {/* نموذج إضافة عميل جديد (تم استبدال Form بـ Div لتجنب تعارض تداخل النماذج وإغلاق المودال) */}
       {showAddBox && (
         <div className="space-y-3 pt-2 border-t border-dashed border-gray-200 dark:border-gray-700">
-          <div className="text-xs font-bold text-amber-600 dark:text-amber-400">
-            ➕ إضافة عميل جديد:
+          <div className="text-xs font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
+            <FontAwesomeIcon icon={faUserPlus} />
+            <span>إضافة عميل جديد:</span>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1">
