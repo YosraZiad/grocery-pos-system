@@ -677,8 +677,9 @@ function SalesReturn() {
               {/* بيانات العميل في حال الاستبدال */}
               {refundMethod === "replacement" && (
                 <div className="space-y-3 p-3 bg-amber-500/5 rounded-2xl border border-amber-500/20 pt-2 animate-fadeIn">
-                  <div className="text-xs font-bold text-amber-700 dark:text-amber-450">
-                    👤 بيانات العميل لسند الاستبدال:
+                  <div className="text-xs font-bold text-amber-700 dark:text-amber-450 flex items-center gap-1.5">
+                    <FontAwesomeIcon icon={faUser} />
+                    <span>بيانات العميل لسند الاستبدال:</span>
                   </div>
                   <div className="space-y-2">
                     <input

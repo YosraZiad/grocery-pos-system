@@ -15,6 +15,7 @@ import {
   faExclamationTriangle,
   faUser,
   faBuildingColumns,
+  faWallet,
 } from "@fortawesome/free-solid-svg-icons";
 import CustomerSelector from "./CustomerSelector";
 
@@ -284,7 +285,7 @@ function HybridPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
           {/* Header */}
           <div className="bg-gradient-to-r from-primary-600 to-primary-700 px-6 py-4 flex justify-between items-center text-white">
             <div className="flex items-center space-x-3 rtl:space-x-reverse">
-              <span className="text-2xl">💰</span>
+              <FontAwesomeIcon icon={faWallet} className="text-2xl text-amber-300" />
               <div>
                 <h3 className="text-xl font-bold">الدفع المختلط (المقسم) | Split Payment</h3>
                 <p className="text-xs opacity-90 mt-0.5">تقسيم قيمة الفاتورة على عدة طرق دفع مختلفة</p>
