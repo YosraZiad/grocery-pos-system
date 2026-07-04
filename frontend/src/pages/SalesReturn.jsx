@@ -337,7 +337,8 @@ function SalesReturn() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
         <div>
           <h2 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <span>↩️</span> {t("salesReturns") || "مرتجع المبيعات (الفاتورة العكسية)"}
+            <FontAwesomeIcon icon={faUndo} className="text-amber-500" />
+            <span>{t("salesReturns") || "مرتجع المبيعات (الفاتورة العكسية)"}</span>
           </h2>
           <p className="text-gray-600 dark:text-gray-400 mt-1">
             البحث عن الفاتورة، التحقق من البنود القابلة للاسترجاع، وإصدار إشعار دائن للعميل
