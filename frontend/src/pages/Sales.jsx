@@ -70,6 +70,7 @@ function Sales() {
   const [discount, setDiscount] = useState(0);
   const [discountType, setDiscountType] = useState('fixed');
   const [showSuspendModal, setShowSuspendModal] = useState(false);
+  const [appliedVoucher, setAppliedVoucher] = useState(null);
 
   // استعلام فواتير الانتظار المعلقة لمزامنة الشارة والعدد تلقائياً
   const { data: suspendedSalesList = [], refetch: refetchSuspended } = useQuery({
@@ -463,6 +464,7 @@ function Sales() {
             <ProductSearch 
               onSelectProduct={handleAddProduct} 
               onUpdateLatestQuantity={handleUpdateLatestProductQuantity}
+              onApplyVoucher={setAppliedVoucher}
             />
           </div>
           
@@ -571,6 +573,8 @@ function Sales() {
             setDiscount={setDiscount}
             discountType={discountType}
             setDiscountType={setDiscountType}
+            appliedVoucher={appliedVoucher}
+            setAppliedVoucher={setAppliedVoucher}
           />
         </div>
       </div>

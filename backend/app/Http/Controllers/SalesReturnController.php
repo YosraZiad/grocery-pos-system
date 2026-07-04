@@ -103,8 +103,10 @@ class SalesReturnController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'sale_id' => 'required|exists:sales,id',
-            'refund_method' => 'required|in:cash,card,transfer,hybrid',
+            'refund_method' => 'required|in:cash,card,transfer,hybrid,replacement',
             'reason' => 'nullable|string|max:500',
+            'customer_name' => 'nullable|string|max:100',
+            'customer_phone' => 'nullable|string|max:20',
             'items' => 'required|array|min:1',
             'items.*.sale_item_id' => 'required|exists:sale_items,id',
             'items.*.return_qty' => 'required|integer|min:1',
@@ -145,6 +147,8 @@ class SalesReturnController extends Controller
                 'refund_method' => $request->refund_method,
                 'status' => 'completed',
                 'reason' => $request->reason,
+                'customer_name' => $request->customer_name,
+                'customer_phone' => $request->customer_phone,
             ]);
 
             $subtotalSum = 0.00;
@@ -210,6 +214,45 @@ class SalesReturnController extends Controller
                 'refund_total' => $refundTotal,
             ]);
 
+            // معالجة طريقة الاستبدال ورصيد العميل
+            $voucher = null;
+            $customer = null;
+            if ($request->refund_method === 'replacement') {
+                $customerPhone = $request->customer_phone;
+                
+                if ($customerPhone) {
+                    $customer = \App\Models\Customer::where('phone', $customerPhone)->first();
+                }
+
+                if (!$customer) {
+                    $customer = \App\Models\Customer::create([
+                        'tenant_id' => $sale->tenant_id,
+                        'name' => $request->customer_name ?? "عميل مؤقت {$returnNumber}",
+                        'phone' => $customerPhone,
+                        'balance' => 0.00,
+                        'is_temporary' => true,
+                    ]);
+                }
+
+                // إضافة الرصيد للعميل
+                $customer->increment('balance', $refundTotal);
+
+                // إنشاء كود الكوبون/السند
+                $voucherCode = "VCH-" . now()->format('Ymd') . "-" . rand(1000, 9999);
+                while (\App\Models\Voucher::where('code', $voucherCode)->exists()) {
+                    $voucherCode = "VCH-" . now()->format('Ymd') . "-" . rand(1000, 9999);
+                }
+
+                $voucher = \App\Models\Voucher::create([
+                    'tenant_id' => $sale->tenant_id,
+                    'customer_id' => $customer->id,
+                    'sales_return_id' => $salesReturn->id,
+                    'code' => $voucherCode,
+                    'amount' => $refundTotal,
+                    'status' => 'active',
+                ]);
+            }
+
             // تحديث حالة الفاتورة الأصلية
             // حساب إجمالي الكميات المسترجعة الآن بعد إدخال حركة المرتجع
             $totalOriginalQty = $sale->items->sum('quantity');
@@ -234,6 +277,12 @@ class SalesReturnController extends Controller
                 'message' => 'تم معالجة وإصدار فاتورة المرتجع بنجاح.',
                 'return_number' => $returnNumber,
                 'data' => $salesReturn->load('items.product'),
+                'voucher' => $voucher ? [
+                    'code' => $voucher->code,
+                    'amount' => $voucher->amount,
+                    'customer_name' => $customer->name,
+                    'customer_phone' => $customer->phone,
+                ] : null,
             ], 201);
 
         } catch (\Exception $e) {
@@ -243,5 +292,18 @@ class SalesReturnController extends Controller
                 'error' => $e->getMessage(),
             ], 500);
         }
+    }
+
+    /**
+     * عرض فاتورة المرتجع كـ HTML للطباعة
+     */
+    public function invoice(string $id)
+    {
+        $salesReturn = SalesReturn::with(['user', 'sale', 'items.product.category'])
+            ->findOrFail($id);
+
+        $html = view('sales_return_invoice', compact('salesReturn'))->render();
+
+        return response($html)->header('Content-Type', 'text/html');
     }
 }

@@ -108,6 +108,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/sales-returns', [\App\Http\Controllers\SalesReturnController::class, 'store'])->middleware('permission:create returns');
     Route::get('/sales-returns', [\App\Http\Controllers\SalesReturnController::class, 'index'])->middleware('permission:view returns');
     Route::get('/sales-returns/{id}', [\App\Http\Controllers\SalesReturnController::class, 'show'])->middleware('permission:view returns');
+    Route::get('/sales-returns/{id}/invoice', [\App\Http\Controllers\SalesReturnController::class, 'invoice'])->middleware('permission:view returns');
+    
+    // Vouchers
+    Route::get('/vouchers/verify', [\App\Http\Controllers\VoucherController::class, 'verify'])->middleware('permission:create sales');
+
+    // Customers
+    Route::get('/customers/search', [\App\Http\Controllers\CustomerController::class, 'search'])->middleware('permission:create sales');
+    Route::post('/customers', [\App\Http\Controllers\CustomerController::class, 'store'])->middleware('permission:create sales');
     
     // Suppliers
     Route::get('/suppliers', [SupplierController::class, 'index'])->middleware('permission:view suppliers');

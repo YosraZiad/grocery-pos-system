@@ -17,15 +17,19 @@ class Sale extends BaseModel
         'discount',
         'discount_type',
         'payment_method',
+        'voucher_code',
+        'voucher_amount',
         'amount_received',
         'change_amount',
         'payment_details',
+        'customer_id',
         'status',
     ];
 
     protected $casts = [
         'total' => 'decimal:2',
         'discount' => 'decimal:2',
+        'voucher_amount' => 'decimal:2',
         'amount_received' => 'decimal:2',
         'change_amount' => 'decimal:2',
         'payment_details' => 'array',
@@ -53,6 +57,14 @@ class Sale extends BaseModel
     public function returns(): HasMany
     {
         return $this->hasMany(SalesReturn::class);
+    }
+
+    /**
+     * العلاقة مع العميل المرتبط بالفاتورة
+     */
+    public function customer(): BelongsTo
+    {
+        return $this->belongsTo(Customer::class);
     }
 
     /**

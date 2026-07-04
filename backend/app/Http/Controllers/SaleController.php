@@ -73,12 +73,14 @@ class SaleController extends Controller
             'items.*.quantity' => 'required|integer|min:1',
             'discount' => 'nullable|numeric|min:0',
             'discount_type' => 'nullable|in:percentage,fixed',
-            'payment_method' => 'required|in:cash,card,transfer,hybrid',
+            'payment_method' => 'required|in:cash,card,transfer,hybrid,account',
             'amount_received' => 'nullable|numeric|min:0',
             'change_amount' => 'nullable|numeric|min:0',
             'payment_details' => 'nullable|array',
-            'payment_details.*.method' => 'required|in:cash,card,transfer',
+            'payment_details.*.method' => 'required|in:cash,card,transfer,account',
             'payment_details.*.amount' => 'required|numeric|min:0.01',
+            'voucher_code' => 'nullable|string|exists:vouchers,code',
+            'customer_id' => 'nullable|integer|exists:customers,id',
         ]);
 
         if ($validator->fails()) {
@@ -99,7 +101,7 @@ class SaleController extends Controller
         }
 
         try {
-            $data = $request->only(['items', 'discount', 'discount_type', 'payment_method', 'amount_received', 'change_amount', 'payment_details']);
+            $data = $request->only(['items', 'discount', 'discount_type', 'payment_method', 'amount_received', 'change_amount', 'payment_details', 'voucher_code', 'customer_id']);
             $sale = $this->service->create($data, $userId, $tenantId);
 
             return response()->json([

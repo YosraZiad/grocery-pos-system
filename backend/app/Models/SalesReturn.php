@@ -18,6 +18,8 @@ class SalesReturn extends BaseModel
         'refund_method',
         'status',
         'reason',
+        'customer_name',
+        'customer_phone',
     ];
 
     protected $casts = [

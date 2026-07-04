@@ -78,7 +78,92 @@ class SaleService
                 $discountAmount = $discount;
             }
 
-            $total = $subtotal - $discountAmount;
+            $totalBeforeVoucher = $subtotal - $discountAmount;
+
+            $voucherCode = null;
+            $voucherAmount = 0.00;
+            $voucher = null;
+            if (isset($data['voucher_code']) && !empty($data['voucher_code'])) {
+                $voucher = \App\Models\Voucher::where('code', $data['voucher_code'])
+                    ->where('status', 'active')
+                    ->first();
+                if ($voucher) {
+                    $voucherCode = $voucher->code;
+                    if ($voucher->amount > $totalBeforeVoucher) {
+                        $voucherAmount = $totalBeforeVoucher;
+                        $voucher->decrement('amount', $totalBeforeVoucher);
+                        if ($voucher->customer) {
+                            $voucher->customer->decrement('balance', $totalBeforeVoucher);
+                        }
+                    } else {
+                        $voucherAmount = $voucher->amount;
+                        $voucher->update([
+                            'status' => 'redeemed',
+                            'amount' => 0.00,
+                            'redeemed_at' => now(),
+                        ]);
+                        if ($voucher->customer) {
+                            $voucher->customer->decrement('balance', $voucherAmount);
+                        }
+                    }
+                }
+            }
+
+            $total = max(0.00, $totalBeforeVoucher - $voucherAmount);
+
+            $customerId = isset($data['customer_id']) && !empty($data['customer_id']) ? $data['customer_id'] : null;
+            if (!$customerId) {
+                $paymentMethod = $data['payment_method'] ?? 'cash';
+                $defaultNames = [
+                    'cash' => 'العميل الافتراضي - كاش',
+                    'card' => 'العميل الافتراضي - شبكة',
+                    'transfer' => 'العميل الافتراضي - تحويل',
+                    'hybrid' => 'العميل الافتراضي - دفع مختلط',
+                ];
+                $name = $defaultNames[$paymentMethod] ?? 'العميل الافتراضي';
+                $phone = 'default-' . $paymentMethod;
+
+                $defaultCustomer = \App\Models\Customer::where('tenant_id', $tenantId)
+                    ->where('phone', $phone)
+                    ->first();
+
+                if (!$defaultCustomer) {
+                    $defaultCustomer = \App\Models\Customer::create([
+                        'tenant_id' => $tenantId,
+                        'name' => $name,
+                        'phone' => $phone,
+                        'balance' => 0.00,
+                        'is_temporary' => true
+                    ]);
+                }
+                $customerId = $defaultCustomer->id;
+            }
+
+            $customer = \App\Models\Customer::findOrFail($customerId);
+
+            // Calculate account deduction amount
+            $accountDeduction = 0.00;
+            if ($data['payment_method'] === 'account') {
+                $accountDeduction = $total;
+            } elseif ($data['payment_method'] === 'hybrid' && isset($data['payment_details']) && is_array($data['payment_details'])) {
+                foreach ($data['payment_details'] as $detail) {
+                    $methodName = $detail['method'] ?? ($detail['payment_method'] ?? null);
+                    if ($methodName === 'account') {
+                        $accountDeduction += $detail['amount'] ?? 0;
+                    }
+                }
+            }
+
+            if ($accountDeduction > 0) {
+                if (!$customer) {
+                    throw new \RuntimeException("يجب اختيار عميل مسجل بالنظام لإجراء عملية الخصم من الحساب.");
+                }
+                if ($customer->balance < $accountDeduction) {
+                    throw new \RuntimeException("رصيد العميل غير كافٍ. الرصيد المتاح: {$customer->balance} ر.س، المطلوب خصمه: {$accountDeduction} ر.س.");
+                }
+                // خصم المبلغ من رصيد حساب العميل
+                $customer->decrement('balance', $accountDeduction);
+            }
 
             // Create sale
             $sale = Sale::create([
@@ -89,11 +174,18 @@ class SaleService
                 'discount' => $discountAmount,
                 'discount_type' => $discountType,
                 'payment_method' => $data['payment_method'],
+                'voucher_code' => $voucherCode,
+                'voucher_amount' => $voucherAmount,
                 'amount_received' => $data['amount_received'] ?? null,
                 'change_amount' => $data['change_amount'] ?? null,
                 'payment_details' => $data['payment_details'] ?? null,
+                'customer_id' => $customerId,
                 'status' => 'completed',
             ]);
+
+            if ($voucher) {
+                $voucher->update(['redeemed_sale_id' => $sale->id]);
+            }
 
             // Create sale items and update inventory
             foreach ($data['items'] as $item) {

@@ -13,6 +13,7 @@ import Invoice from "./pages/Invoice";
 import Inventory from "./pages/Inventory";
 import Returns from "./pages/Returns";
 import SalesReturn from "./pages/SalesReturn";
+import SalesReturnInvoice from "./pages/SalesReturnInvoice";
 import Suppliers from "./pages/Suppliers";
 import PurchaseInvoices from "./pages/PurchaseInvoices";
 import Expenses from "./pages/Expenses";
@@ -95,6 +96,14 @@ function App() {
               element={
                 <ProtectedRoute requiredPermission="view sales">
                   <Invoice />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="sales-returns/:id/invoice"
+              element={
+                <ProtectedRoute requiredPermission="create returns">
+                  <SalesReturnInvoice />
                 </ProtectedRoute>
               }
             />

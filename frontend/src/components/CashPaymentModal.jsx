@@ -2,12 +2,14 @@ import { useState, useEffect, useRef } from "react";
 import { useI18n } from "../context/I18nContext";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMoneyBillWave, faCoins } from "@fortawesome/free-solid-svg-icons";
+import CustomerSelector from "./CustomerSelector";
 
 // الأوراق النقدية السعودية الشائعة
 const SAR_DENOMINATIONS = [5, 10, 50, 100, 200, 500];
 
 function CashPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
   const { t } = useI18n();
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [receivedAmount, setReceivedAmount] = useState("");
   const inputRef = useRef(null);
 
@@ -15,6 +17,7 @@ function CashPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
   useEffect(() => {
     if (isOpen) {
       setReceivedAmount("");
+      setSelectedCustomer(null);
       setTimeout(() => {
         inputRef.current?.focus();
       }, 50);
@@ -47,7 +50,7 @@ function CashPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
   const handleSubmit = (e) => {
     if (e) e.preventDefault();
     if (!isAmountSufficient) return;
-    onConfirm(parsedReceived, changeDue);
+    onConfirm(parsedReceived, changeDue, selectedCustomer ? selectedCustomer.id : null);
     onClose();
   };
 
@@ -99,6 +102,13 @@ function CashPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
                 {totalDue.toFixed(2)} ر.س
               </span>
             </div>
+
+            {/* اختيار العميل */}
+            <CustomerSelector
+              selectedCustomer={selectedCustomer}
+              onSelectCustomer={setSelectedCustomer}
+              defaultCustomerName="العميل الافتراضي - كاش"
+            />
 
             {/* حقل إدخال المبلغ المستلم */}
             <div className="space-y-2">

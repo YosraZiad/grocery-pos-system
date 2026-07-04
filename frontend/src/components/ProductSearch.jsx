@@ -27,7 +27,7 @@ const playSuccessBeep = () => {
   }
 };
 
-function ProductSearch({ onSelectProduct, onUpdateLatestQuantity }) {
+function ProductSearch({ onSelectProduct, onUpdateLatestQuantity, onApplyVoucher }) {
   const { t } = useI18n();
   const [searchQuery, setSearchQuery] = useState("");
   const [showResults, setShowResults] = useState(false);
@@ -160,6 +160,23 @@ function ProductSearch({ onSelectProduct, onUpdateLatestQuantity }) {
     if (e) e.preventDefault();
     const query = searchQuery.trim();
     if (!query) return;
+
+    // فحص إذا كان الكود المدخل هو كود سند استبدال (يبدأ بـ VCH-)
+    if (query.toUpperCase().startsWith("VCH-")) {
+      try {
+        const response = await api.get(`/vouchers/verify?code=${query.toUpperCase()}`);
+        if (response.data?.success && onApplyVoucher) {
+          onApplyVoucher(response.data.data);
+          toast.success(`تم تطبيق سند استبدال بقيمة ${response.data.data.amount} ر.س للعميل ${response.data.data.customer_name}`);
+          setSearchQuery("");
+          setShowResults(false);
+          playSuccessBeep();
+        }
+      } catch (err) {
+        toast.error(err.response?.data?.message || "فشل التحقق من سند الاستبدال.");
+      }
+      return;
+    }
 
     // 1. فحص أنماط تعديل كمية آخر منتج بالسلة (مثال: *5 أو x5 أو +3 أو -2)
     const setQtyMatch = query.match(/^[*xX](\d+)$/);

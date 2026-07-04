@@ -10,6 +10,7 @@ import {
   faCircleXmark,
   faClock,
 } from "@fortawesome/free-solid-svg-icons";
+import CustomerSelector from "./CustomerSelector";
 
 // حالات الاتصال بالماكينة
 const STATES = {
@@ -23,6 +24,7 @@ const STATES = {
 
 function CardPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
   const { t } = useI18n();
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [currentState, setCurrentState] = useState(STATES.CONNECTING);
   const [errorMessage, setErrorMessage] = useState("");
   const pollingIntervalRef = useRef(null);
@@ -33,6 +35,7 @@ function CardPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
     if (isOpen) {
       isConfirmingRef.current = false;
       setErrorMessage("");
+      setSelectedCustomer(null);
       startPaymentProcess();
     }
     return () => {
@@ -106,7 +109,7 @@ function CardPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
             isConfirmingRef.current = true;
             // إعطاء فرصة 1.5 ثانية للعميل لرؤية علامة النجاح ثم إكمال الفاتورة
             setTimeout(() => {
-              onConfirm();
+              onConfirm(null, null, null, selectedCustomer ? selectedCustomer.id : null);
               handleClose();
             }, 1500);
           }
@@ -249,6 +252,13 @@ function CardPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
                 {totalDue.toFixed(2)} ر.س
               </span>
             </div>
+
+            {/* اختيار العميل */}
+            <CustomerSelector
+              selectedCustomer={selectedCustomer}
+              onSelectCustomer={setSelectedCustomer}
+              defaultCustomerName="العميل الافتراضي - شبكة"
+            />
 
             {/* أيقونة وحالة الاتصال */}
             <div className={`w-full p-6 rounded-2xl border-2 flex flex-col items-center justify-center space-y-4 transition-all duration-300 ${config.bg}`}>

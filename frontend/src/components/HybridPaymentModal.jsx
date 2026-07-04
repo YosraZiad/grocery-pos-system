@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useI18n } from "../context/I18nContext";
 import api from "../services/api";
+import toast from "react-hot-toast";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCreditCard,
@@ -12,7 +13,10 @@ import {
   faLock,
   faCheckCircle,
   faExclamationTriangle,
+  faUser,
+  faBuildingColumns,
 } from "@fortawesome/free-solid-svg-icons";
+import CustomerSelector from "./CustomerSelector";
 
 // نغمات الصوت عبر Web Audio API
 const playSound = (type) => {
@@ -54,13 +58,16 @@ const playSound = (type) => {
 
 function HybridPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
   const { t } = useI18n();
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
   
   // المدفوعات المضافة حالياً
   const [payments, setPayments] = useState([]);
   
-  // مدخلات الكاش والبطاقة
+  // مدخلات الكاش والبطاقة والحساب والتحويل
   const [cashInput, setCashInput] = useState("");
   const [cardInput, setCardInput] = useState("");
+  const [transferInput, setTransferInput] = useState("");
+  const [accountInput, setAccountInput] = useState("");
   
   // حالة الماكينة الشبكية لدفعات البطاقة
   const [isTerminalActive, setIsTerminalActive] = useState(false);
@@ -77,9 +84,12 @@ function HybridPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
   // تهيئة المدخلات عند فتح المودال
   useEffect(() => {
     if (isOpen) {
+      setSelectedCustomer(null);
       setPayments([]);
       setCashInput("");
       setCardInput(totalDue.toFixed(2));
+      setTransferInput(totalDue.toFixed(2));
+      setAccountInput("");
       setIsTerminalActive(false);
       setTerminalStatus("idle");
       setErrorMessage("");
@@ -89,14 +99,23 @@ function HybridPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
     };
   }, [isOpen, totalDue]);
 
-  // تحديث مدخل الكارت تلقائياً ليعكس المتبقي طالما لم يتم إدخال قيمة يدوية مغايرة
+  // تحديث مدخل الكارت والحساب والتحويل تلقائياً ليعكس المتبقي طالما لم يتم إدخال قيمة يدوية مغايرة
   useEffect(() => {
     if (remaining > 0) {
       setCardInput(remaining.toFixed(2));
+      setTransferInput(remaining.toFixed(2));
+      if (selectedCustomer && selectedCustomer.balance) {
+        const availableDeduction = Math.min(remaining, parseFloat(selectedCustomer.balance));
+        setAccountInput(availableDeduction.toFixed(2));
+      } else {
+        setAccountInput("");
+      }
     } else {
       setCardInput("");
+      setTransferInput("");
+      setAccountInput("");
     }
-  }, [remaining]);
+  }, [remaining, selectedCustomer]);
 
   // إيقاف إغلاق النافذة بزر Escape أثناء معالجة البطاقة
   useEffect(() => {
@@ -132,6 +151,34 @@ function HybridPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
 
     setPayments((prev) => [...prev, { method: "cash", amount }]);
     setCashInput("");
+  };
+
+  // إضافة الخصم من رصيد حساب العميل
+  const handleAddAccount = () => {
+    if (!selectedCustomer) {
+      toast.error("يرجى اختيار عميل مسجل أولاً.");
+      return;
+    }
+    const amount = parseFloat(accountInput);
+    if (isNaN(amount) || amount <= 0) return;
+
+    const maxAllowed = parseFloat(selectedCustomer.balance);
+    if (amount > maxAllowed) {
+      toast.error(`المبلغ المطلوب خصمه (${amount.toFixed(2)} ر.س) أكبر من رصيد العميل المتاح (${maxAllowed.toFixed(2)} ر.س).`);
+      return;
+    }
+
+    setPayments((prev) => [...prev, { method: "account", amount }]);
+    setAccountInput("");
+  };
+
+  // إضافة مبلغ الدفع بتحويل بنكي
+  const handleAddTransfer = () => {
+    const amount = parseFloat(transferInput);
+    if (isNaN(amount) || amount <= 0) return;
+
+    setPayments((prev) => [...prev, { method: "transfer", amount }]);
+    setTransferInput("");
   };
 
   // أزرار الكاش السريعة
@@ -216,7 +263,7 @@ function HybridPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
   // حفظ الفاتورة وإرسال البيانات للـ Cart
   const handleCompleteSale = () => {
     if (remaining > 0 || isTerminalActive) return;
-    onConfirm(totalPaid, changeAmount, payments);
+    onConfirm(totalPaid, changeAmount, payments, selectedCustomer ? selectedCustomer.id : null);
     onClose();
   };
 
@@ -232,7 +279,7 @@ function HybridPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
 
       {/* Container */}
       <div className="flex min-h-full items-center justify-center p-4">
-        <div className="relative bg-white dark:bg-gray-800 rounded-3xl shadow-2xl max-w-2xl w-full border-2 border-primary-500 overflow-hidden transition-all duration-300">
+        <div className="relative bg-white dark:bg-gray-800 rounded-3xl shadow-2xl max-w-4xl w-full border-2 border-primary-500 overflow-hidden transition-all duration-300">
           
           {/* Header */}
           <div className="bg-gradient-to-r from-primary-600 to-primary-700 px-6 py-4 flex justify-between items-center text-white">
@@ -277,8 +324,15 @@ function HybridPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
               )}
             </div>
 
-            {/* صفحة المدخلات مقسمة لبطاقتين: كاش وبطاقة */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* اختيار العميل */}
+            <CustomerSelector
+              selectedCustomer={selectedCustomer}
+              onSelectCustomer={setSelectedCustomer}
+              defaultCustomerName="العميل الافتراضي - دفع مختلط"
+            />
+
+            {/* صفحة المدخلات مقسمة لأربع بطاقات: كاش، بطاقة، تحويل، وحساب عميل */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               
               {/* بطاقة الدفع النقدي */}
               <div className="border border-gray-200 dark:border-gray-700 p-5 rounded-2xl bg-slate-50/50 dark:bg-slate-900/20 space-y-4">
@@ -299,12 +353,12 @@ function HybridPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
                     onKeyDown={(e) => {
                       if (e.key === "Enter") handleAddCash();
                     }}
-                    className="flex-1 input"
+                    className="flex-1 input text-sm"
                   />
                   <button
                     onClick={handleAddCash}
                     disabled={isTerminalActive || remaining <= 0 || !cashInput}
-                    className="btn-primary py-2 px-4 flex items-center space-x-1 rtl:space-x-reverse"
+                    className="btn-primary py-2 px-3 flex items-center space-x-1 rtl:space-x-reverse text-sm"
                   >
                     <FontAwesomeIcon icon={faPlus} />
                     <span>إضافة</span>
@@ -312,14 +366,14 @@ function HybridPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
                 </div>
 
                 {/* أزرار سريعة للفئات */}
-                <div className="grid grid-cols-5 gap-1.5 pt-1">
+                <div className="grid grid-cols-5 gap-1 pt-1">
                   {[10, 50, 100, 200, 500].map((val) => (
                     <button
                       key={val}
                       type="button"
                       disabled={isTerminalActive || remaining <= 0}
                       onClick={() => handleQuickCash(val)}
-                      className="py-1.5 px-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-xs font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-50 active:scale-95 transition-all"
+                      className="py-1 px-0.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-[10px] font-bold text-gray-700 dark:text-gray-300 hover:bg-gray-50 active:scale-95 transition-all"
                     >
                       +{val}
                     </button>
@@ -344,12 +398,12 @@ function HybridPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
                       value={cardInput}
                       onChange={(e) => setCardInput(e.target.value)}
                       disabled={isTerminalActive || remaining <= 0}
-                      className="flex-1 input font-mono font-bold"
+                      className="flex-1 input font-mono font-bold text-sm"
                     />
                     <button
                       onClick={handleChargeCard}
                       disabled={isTerminalActive || remaining <= 0 || !cardInput || parseFloat(cardInput) <= 0}
-                      className="btn-primary bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 flex items-center space-x-1.5 rtl:space-x-reverse"
+                      className="btn-primary bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-3 flex items-center space-x-1.5 rtl:space-x-reverse text-sm"
                     >
                       <FontAwesomeIcon icon={faWifi} className="rotate-90" />
                       <span>سحب</span>
@@ -358,29 +412,111 @@ function HybridPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
 
                   {/* شاشة اتصال للشبكة */}
                   {isTerminalActive && (
-                    <div className="p-3.5 bg-indigo-50 dark:bg-indigo-950/20 border border-indigo-200 dark:border-indigo-900/30 rounded-xl text-center space-y-2 animate-pulse">
-                      <div className="flex items-center justify-center space-x-2 rtl:space-x-reverse text-indigo-700 dark:text-indigo-400 font-bold text-xs">
-                        <FontAwesomeIcon icon={faCircleNotch} className="animate-spin text-sm" />
+                    <div className="p-2.5 bg-indigo-50 dark:bg-indigo-950/20 border border-indigo-200 dark:border-indigo-900/30 rounded-xl text-center space-y-1 animate-pulse">
+                      <div className="flex items-center justify-center space-x-1.5 rtl:space-x-reverse text-indigo-700 dark:text-indigo-400 font-bold text-[10px]">
+                        <FontAwesomeIcon icon={faCircleNotch} className="animate-spin text-xs" />
                         <span>
-                          {terminalStatus === "connecting" && "جاري الاتصال بالماكينة..."}
-                          {terminalStatus === "waiting_for_card" && "يرجى تمرير البطاقة على الماكينة..."}
-                          {terminalStatus === "processing" && "جاري التحقق من البنك..."}
+                          {terminalStatus === "connecting" && "جاري الاتصال..."}
+                          {terminalStatus === "waiting_for_card" && "تمرير البطاقة..."}
+                          {terminalStatus === "processing" && "جاري التحقق..."}
                         </span>
                       </div>
-                      <span className="text-[10px] text-gray-500 dark:text-gray-400 block font-medium">
-                        المبلغ المرسل: {parseFloat(cardInput).toFixed(2)} ر.س
+                      <span className="text-[9px] text-gray-500 dark:text-gray-400 block font-medium">
+                        المبلغ: {parseFloat(cardInput).toFixed(2)} ر.س
                       </span>
                     </div>
                   )}
 
                   {/* رسائل الخطأ للبطاقة */}
                   {errorMessage && !isTerminalActive && (
-                    <div className="p-2.5 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30 rounded-xl text-red-700 dark:text-red-400 text-xs flex items-center space-x-2 rtl:space-x-reverse font-semibold">
+                    <div className="p-2 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30 rounded-xl text-red-700 dark:text-red-400 text-[10px] flex items-center space-x-1.5 rtl:space-x-reverse font-semibold">
                       <FontAwesomeIcon icon={faExclamationTriangle} />
                       <span>{errorMessage}</span>
                     </div>
                   )}
                 </div>
+              </div>
+
+              {/* بطاقة الدفع بتحويل بنكي (Transfer) */}
+              <div className="border border-gray-200 dark:border-gray-700 p-5 rounded-2xl bg-slate-50/50 dark:bg-slate-900/20 space-y-4">
+                <h4 className="font-bold text-gray-800 dark:text-gray-200 flex items-center space-x-2 rtl:space-x-reverse">
+                  <FontAwesomeIcon icon={faBuildingColumns} className="text-cyan-500" />
+                  <span>🏦 تحويل بنكي (Transfer)</span>
+                </h4>
+                
+                <div className="flex space-x-2 rtl:space-x-reverse">
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="المبلغ المحول"
+                    value={transferInput}
+                    onChange={(e) => setTransferInput(e.target.value)}
+                    disabled={isTerminalActive || remaining <= 0}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") handleAddTransfer();
+                    }}
+                    className="flex-1 input text-sm font-mono font-bold"
+                  />
+                  <button
+                    onClick={handleAddTransfer}
+                    disabled={isTerminalActive || remaining <= 0 || !transferInput || parseFloat(transferInput) <= 0}
+                    className="btn-primary bg-cyan-600 hover:bg-cyan-700 text-white py-2 px-3 flex items-center space-x-1 rtl:space-x-reverse text-sm"
+                  >
+                    <FontAwesomeIcon icon={faPlus} />
+                    <span>إضافة</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* بطاقة الخصم من الحساب (Account Balance) */}
+              <div className="border border-gray-200 dark:border-gray-700 p-5 rounded-2xl bg-slate-50/50 dark:bg-slate-900/20 space-y-4">
+                <h4 className="font-bold text-gray-800 dark:text-gray-200 flex items-center space-x-2 rtl:space-x-reverse">
+                  <FontAwesomeIcon icon={faUser} className="text-amber-500" />
+                  <span>👤 خصم من الحساب (Account)</span>
+                </h4>
+                
+                {selectedCustomer ? (
+                  <div className="space-y-3">
+                    <div className="text-xs text-gray-600 dark:text-gray-400">
+                      <div>العميل: <strong className="text-gray-900 dark:text-white">{selectedCustomer.name}</strong></div>
+                      <div className="mt-1">رصيد الحساب المتاح: <strong className="text-amber-600 dark:text-amber-400 font-mono">{parseFloat(selectedCustomer.balance).toFixed(2)} ر.س</strong></div>
+                    </div>
+                    
+                    <div className="flex space-x-2 rtl:space-x-reverse">
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        placeholder="خصم من الحساب"
+                        value={accountInput}
+                        onChange={(e) => setAccountInput(e.target.value)}
+                        disabled={isTerminalActive || remaining <= 0 || parseFloat(selectedCustomer.balance) <= 0}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") handleAddAccount();
+                        }}
+                        className="flex-1 input text-sm"
+                      />
+                      <button
+                        onClick={handleAddAccount}
+                        disabled={isTerminalActive || remaining <= 0 || !accountInput || parseFloat(accountInput) <= 0 || parseFloat(accountInput) > parseFloat(selectedCustomer.balance)}
+                        className="btn-primary bg-amber-500 hover:bg-amber-600 text-white py-2 px-3 flex items-center space-x-1 rtl:space-x-reverse text-sm"
+                      >
+                        <FontAwesomeIcon icon={faPlus} />
+                        <span>خصم</span>
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-3 bg-amber-50 dark:bg-amber-955/20 border border-dashed border-amber-300 dark:border-amber-900 rounded-xl text-center">
+                    <span className="text-xs text-amber-700 dark:text-amber-400 block font-bold mb-1">
+                      الخصم من الحساب غير متاح
+                    </span>
+                    <span className="text-[10px] text-gray-500 dark:text-gray-400 block leading-relaxed">
+                      يرجى تحديد أو إضافة عميل أولاً من شاشة السلة.
+                    </span>
+                  </div>
+                )}
               </div>
 
             </div>
@@ -407,7 +543,10 @@ function HybridPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
                       {payments.map((p, idx) => (
                         <tr key={idx} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/50">
                           <td className="px-4 py-2 text-xs font-bold text-gray-700 dark:text-gray-300">
-                            {p.method === "cash" ? "💵 نقدي (Cash)" : "💳 بطاقة (Card)"}
+                            {p.method === "cash" ? "💵 نقدي (Cash)" : 
+                             p.method === "card" ? "💳 بطاقة (Card)" : 
+                             p.method === "transfer" ? "🏦 تحويل بنكي (Transfer)" : 
+                             p.method === "account" ? "👤 خصم من الحساب" : "أخرى"}
                           </td>
                           <td className="px-4 py-2 text-xs font-black text-gray-900 dark:text-white font-mono text-left">
                             {p.amount.toFixed(2)} ر.س
