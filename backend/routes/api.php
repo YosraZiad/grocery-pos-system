@@ -114,8 +114,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/vouchers/verify', [\App\Http\Controllers\VoucherController::class, 'verify'])->middleware('permission:create sales');
 
     // Customers
+    Route::get('/customers', [\App\Http\Controllers\CustomerController::class, 'index'])->middleware('permission:view sales');
     Route::get('/customers/search', [\App\Http\Controllers\CustomerController::class, 'search'])->middleware('permission:create sales');
     Route::post('/customers', [\App\Http\Controllers\CustomerController::class, 'store'])->middleware('permission:create sales');
+    Route::put('/customers/{id}', [\App\Http\Controllers\CustomerController::class, 'update'])->middleware('permission:create sales');
+    Route::delete('/customers/{id}', [\App\Http\Controllers\CustomerController::class, 'destroy'])->middleware('permission:create sales');
     
     // Suppliers
     Route::get('/suppliers', [SupplierController::class, 'index'])->middleware('permission:view suppliers');

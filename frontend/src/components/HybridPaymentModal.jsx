@@ -58,7 +58,7 @@ const playSound = (type) => {
 };
 
 function HybridPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   
   // المدفوعات المضافة حالياً
@@ -157,7 +157,7 @@ function HybridPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
   // إضافة الخصم من رصيد حساب العميل
   const handleAddAccount = () => {
     if (!selectedCustomer) {
-      toast.error("يرجى اختيار عميل مسجل أولاً.");
+      toast.error(t("selectCustomerFirst") || "يرجى اختيار عميل مسجل أولاً.");
       return;
     }
     const amount = parseFloat(accountInput);
@@ -165,7 +165,11 @@ function HybridPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
 
     const maxAllowed = parseFloat(selectedCustomer.balance);
     if (amount > maxAllowed) {
-      toast.error(`المبلغ المطلوب خصمه (${amount.toFixed(2)} ر.س) أكبر من رصيد العميل المتاح (${maxAllowed.toFixed(2)} ر.س).`);
+      toast.error(
+        language === "ar"
+          ? `المبلغ المطلوب خصمه (${amount.toFixed(2)} ر.س) أكبر من رصيد العميل المتاح (${maxAllowed.toFixed(2)} ر.س).`
+          : `The requested amount (${amount.toFixed(2)} SAR) exceeds the customer's available balance (${maxAllowed.toFixed(2)} SAR).`
+      );
       return;
     }
 
@@ -208,7 +212,7 @@ function HybridPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
       pollingIntervalRef.current = setInterval(() => checkTerminalStatus(amount), 1000);
     } catch (err) {
       console.error("Failed to connect terminal:", err);
-      setErrorMessage("تعذر الاتصال بماكينة الدفع. يرجى التحقق من الشبكة.");
+      setErrorMessage(t("terminalConnectionFailed") || (language === "ar" ? "تعذر الاتصال بماكينة الدفع. يرجى التحقق من الشبكة." : "Could not connect to payment terminal. Please check network."));
       setTerminalStatus("timeout");
       setIsTerminalActive(false);
       playSound("error");
@@ -232,12 +236,12 @@ function HybridPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
       } else if (serverStatus === "declined") {
         stopPolling();
         playSound("error");
-        setErrorMessage("تم رفض العملية من البنك (الرصيد غير كافٍ).");
+        setErrorMessage(t("transactionDeclinedDesc") || (language === "ar" ? "تم رفض العملية من البنك (الرصيد غير كافٍ)." : "Transaction declined by bank (insufficient balance)."));
         setIsTerminalActive(false);
       } else if (serverStatus === "timeout") {
         stopPolling();
         playSound("error");
-        setErrorMessage("انتهت مهلة إدخال الكارت في الماكينة الشبكية.");
+        setErrorMessage(t("transactionTimeoutDesc") || (language === "ar" ? "انتهت مهلة إدخال الكارت في الماكينة الشبكية." : "Transaction timeout. Card was not inserted in terminal."));
         setIsTerminalActive(false);
       }
     } catch (err) {
@@ -287,8 +291,8 @@ function HybridPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
             <div className="flex items-center space-x-3 rtl:space-x-reverse">
               <FontAwesomeIcon icon={faWallet} className="text-2xl text-amber-300" />
               <div>
-                <h3 className="text-xl font-bold">الدفع المختلط (المقسم) | Split Payment</h3>
-                <p className="text-xs opacity-90 mt-0.5">تقسيم قيمة الفاتورة على عدة طرق دفع مختلفة</p>
+                <h3 className="text-xl font-bold">{t("hybridPayment")}</h3>
+                <p className="text-xs opacity-90 mt-0.5">{language === "ar" ? "تقسيم قيمة الفاتورة على عدة طرق دفع مختلفة" : "Split the invoice total across multiple payment methods"}</p>
               </div>
             </div>
           </div>
@@ -299,27 +303,27 @@ function HybridPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
             {/* مؤشرات المبالغ */}
             <div className="grid grid-cols-3 gap-4">
               <div className="bg-gray-50 dark:bg-gray-900/40 p-4 rounded-2xl border border-gray-100 dark:border-gray-700 text-center">
-                <span className="text-xs text-gray-500 font-bold block mb-1">المبلغ المطلوب</span>
-                <span className="text-xl font-black text-gray-900 dark:text-white font-mono">{totalDue.toFixed(2)} ر.س</span>
+                <span className="text-xs text-gray-500 font-bold block mb-1">{t("totalAmount") || (language === "ar" ? "المبلغ المطلوب" : "Total Required")}</span>
+                <span className="text-xl font-black text-gray-900 dark:text-white font-mono">{totalDue.toFixed(2)} {t("sar") || "ر.س"}</span>
               </div>
               
               <div className="bg-gray-50 dark:bg-gray-900/40 p-4 rounded-2xl border border-gray-100 dark:border-gray-700 text-center">
-                <span className="text-xs text-gray-500 font-bold block mb-1">تم دفعه</span>
-                <span className="text-xl font-black text-green-600 dark:text-green-400 font-mono">{totalPaid.toFixed(2)} ر.س</span>
+                <span className="text-xs text-gray-500 font-bold block mb-1">{t("paidAmount") || (language === "ar" ? "تم دفعه" : "Paid Amount")}</span>
+                <span className="text-xl font-black text-green-600 dark:text-green-400 font-mono">{totalPaid.toFixed(2)} {t("sar") || "ر.س"}</span>
               </div>
 
               {remaining > 0 ? (
                 <div className="bg-amber-50 dark:bg-amber-950/20 p-4 rounded-2xl border border-amber-200 dark:border-amber-900/30 text-center animate-pulse">
-                  <span className="text-xs text-amber-600 dark:text-amber-400 font-bold block mb-1">المتبقي المطلوب</span>
-                  <span className="text-xl font-black text-amber-600 dark:text-amber-400 font-mono">{remaining.toFixed(2)} ر.س</span>
+                  <span className="text-xs text-amber-600 dark:text-amber-400 font-bold block mb-1">{t("remainingDue") || (language === "ar" ? "المتبقي المطلوب" : "Remaining Due")}</span>
+                  <span className="text-xl font-black text-amber-600 dark:text-amber-400 font-mono">{remaining.toFixed(2)} {t("sar") || "ر.س"}</span>
                 </div>
               ) : (
                 <div className="bg-green-50 dark:bg-green-950/20 p-4 rounded-2xl border border-green-200 dark:border-green-900/30 text-center">
                   <span className="text-xs text-green-600 dark:text-green-400 font-bold block mb-1">
-                    {changeAmount > 0 ? "المتبقي للعميل" : "حالة الدفع"}
+                    {changeAmount > 0 ? t("changeDue") : (t("paymentStatus") || "حالة الدفع")}
                   </span>
                   <span className="text-xl font-black text-green-600 dark:text-green-400 font-mono">
-                    {changeAmount > 0 ? `${changeAmount.toFixed(2)} ر.س` : "مدفوع بالكامل"}
+                    {changeAmount > 0 ? `${changeAmount.toFixed(2)} ${t("sar") || "ر.س"}` : (t("paidInFull") || "مدفوع بالكامل")}
                   </span>
                 </div>
               )}
@@ -329,7 +333,7 @@ function HybridPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
             <CustomerSelector
               selectedCustomer={selectedCustomer}
               onSelectCustomer={setSelectedCustomer}
-              defaultCustomerName="العميل الافتراضي - دفع مختلط"
+              defaultCustomerName={t("defaultHybridCustomer") || "العميل الافتراضي - دفع مختلط"}
             />
 
             {/* صفحة المدخلات مقسمة لأربع بطاقات: كاش، بطاقة، تحويل، وحساب عميل */}
@@ -337,9 +341,9 @@ function HybridPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
               
               {/* بطاقة الدفع النقدي */}
               <div className="border border-gray-200 dark:border-gray-700 p-5 rounded-2xl bg-slate-50/50 dark:bg-slate-900/20 space-y-4">
-                <h4 className="font-bold text-gray-800 dark:text-gray-200 flex items-center space-x-2 rtl:space-x-reverse">
+                <h4 className="font-bold text-gray-800 dark:text-gray-200 flex items-center space-x-2 rtl:space-x-reverse text-xs">
                   <FontAwesomeIcon icon={faMoneyBillWave} className="text-green-500" />
-                  <span>💵 الدفع النقدي (Cash)</span>
+                  <span>{t("cashPaymentShort") || (language === "ar" ? "💵 الدفع النقدي (Cash)" : "Cash Payment")}</span>
                 </h4>
                 
                 <div className="flex space-x-2 rtl:space-x-reverse">
@@ -347,7 +351,7 @@ function HybridPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
                     type="number"
                     step="0.01"
                     min="0"
-                    placeholder="المبلغ نقداً"
+                    placeholder={t("amountCash") || (language === "ar" ? "المبلغ نقداً" : "Cash Amount")}
                     value={cashInput}
                     onChange={(e) => setCashInput(e.target.value)}
                     disabled={isTerminalActive || remaining <= 0}
@@ -359,10 +363,10 @@ function HybridPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
                   <button
                     onClick={handleAddCash}
                     disabled={isTerminalActive || remaining <= 0 || !cashInput}
-                    className="btn-primary py-2 px-3 flex items-center space-x-1 rtl:space-x-reverse text-sm"
+                    className="btn-primary py-2 px-3 flex items-center space-x-1 rtl:space-x-reverse text-sm font-bold"
                   >
                     <FontAwesomeIcon icon={faPlus} />
-                    <span>إضافة</span>
+                    <span>{t("add") || "إضافة"}</span>
                   </button>
                 </div>
 
@@ -384,9 +388,9 @@ function HybridPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
 
               {/* بطاقة الدفع بالبطاقة والشبكة */}
               <div className="border border-gray-200 dark:border-gray-700 p-5 rounded-2xl bg-slate-50/50 dark:bg-slate-900/20 space-y-4">
-                <h4 className="font-bold text-gray-800 dark:text-gray-200 flex items-center space-x-2 rtl:space-x-reverse">
+                <h4 className="font-bold text-gray-800 dark:text-gray-200 flex items-center space-x-2 rtl:space-x-reverse text-xs">
                   <FontAwesomeIcon icon={faCreditCard} className="text-blue-500" />
-                  <span>💳 الدفع بالبطاقة (Card)</span>
+                  <span>{t("cardPaymentShort") || (language === "ar" ? "💳 الدفع بالبطاقة (Card)" : "Card Payment")}</span>
                 </h4>
                 
                 <div className="space-y-3">
@@ -395,7 +399,7 @@ function HybridPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
                       type="number"
                       step="0.01"
                       min="0"
-                      placeholder="المبلغ بالبطاقة"
+                      placeholder={t("amountCard") || (language === "ar" ? "المبلغ بالبطاقة" : "Card Amount")}
                       value={cardInput}
                       onChange={(e) => setCardInput(e.target.value)}
                       disabled={isTerminalActive || remaining <= 0}
@@ -404,10 +408,10 @@ function HybridPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
                     <button
                       onClick={handleChargeCard}
                       disabled={isTerminalActive || remaining <= 0 || !cardInput || parseFloat(cardInput) <= 0}
-                      className="btn-primary bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-3 flex items-center space-x-1.5 rtl:space-x-reverse text-sm"
+                      className="btn-primary bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-3 flex items-center space-x-1.5 rtl:space-x-reverse text-sm font-bold"
                     >
                       <FontAwesomeIcon icon={faWifi} className="rotate-90" />
-                      <span>سحب</span>
+                      <span>{language === "ar" ? "سحب" : "Charge"}</span>
                     </button>
                   </div>
 
@@ -417,13 +421,13 @@ function HybridPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
                       <div className="flex items-center justify-center space-x-1.5 rtl:space-x-reverse text-indigo-700 dark:text-indigo-400 font-bold text-[10px]">
                         <FontAwesomeIcon icon={faCircleNotch} className="animate-spin text-xs" />
                         <span>
-                          {terminalStatus === "connecting" && "جاري الاتصال..."}
-                          {terminalStatus === "waiting_for_card" && "تمرير البطاقة..."}
-                          {terminalStatus === "processing" && "جاري التحقق..."}
+                          {terminalStatus === "connecting" && (t("terminalConnecting") || "جاري الاتصال...")}
+                          {terminalStatus === "waiting_for_card" && (t("terminalWaiting") || "تمرير البطاقة...")}
+                          {terminalStatus === "processing" && (t("terminalProcessing") || "جاري التحقق...")}
                         </span>
                       </div>
                       <span className="text-[9px] text-gray-500 dark:text-gray-400 block font-medium">
-                        المبلغ: {parseFloat(cardInput).toFixed(2)} ر.س
+                        {t("amount") || "المبلغ"}: {parseFloat(cardInput).toFixed(2)} {t("sar") || "ر.س"}
                       </span>
                     </div>
                   )}
@@ -440,9 +444,9 @@ function HybridPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
 
               {/* بطاقة الدفع بتحويل بنكي (Transfer) */}
               <div className="border border-gray-200 dark:border-gray-700 p-5 rounded-2xl bg-slate-50/50 dark:bg-slate-900/20 space-y-4">
-                <h4 className="font-bold text-gray-800 dark:text-gray-200 flex items-center space-x-2 rtl:space-x-reverse">
+                <h4 className="font-bold text-gray-800 dark:text-gray-200 flex items-center space-x-2 rtl:space-x-reverse text-xs">
                   <FontAwesomeIcon icon={faBuildingColumns} className="text-cyan-500" />
-                  <span>🏦 تحويل بنكي (Transfer)</span>
+                  <span>{t("transferPaymentShort") || (language === "ar" ? "🏦 تحويل بنكي (Transfer)" : "Bank Transfer")}</span>
                 </h4>
                 
                 <div className="flex space-x-2 rtl:space-x-reverse">
@@ -450,7 +454,7 @@ function HybridPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
                     type="number"
                     step="0.01"
                     min="0"
-                    placeholder="المبلغ المحول"
+                    placeholder={t("amountTransfer") || (language === "ar" ? "المبلغ المحول" : "Transfer Amount")}
                     value={transferInput}
                     onChange={(e) => setTransferInput(e.target.value)}
                     disabled={isTerminalActive || remaining <= 0}
@@ -462,26 +466,26 @@ function HybridPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
                   <button
                     onClick={handleAddTransfer}
                     disabled={isTerminalActive || remaining <= 0 || !transferInput || parseFloat(transferInput) <= 0}
-                    className="btn-primary bg-cyan-600 hover:bg-cyan-700 text-white py-2 px-3 flex items-center space-x-1 rtl:space-x-reverse text-sm"
+                    className="btn-primary bg-cyan-600 hover:bg-cyan-700 text-white py-2 px-3 flex items-center space-x-1 rtl:space-x-reverse text-sm font-bold"
                   >
                     <FontAwesomeIcon icon={faPlus} />
-                    <span>إضافة</span>
+                    <span>{t("add") || "إضافة"}</span>
                   </button>
                 </div>
               </div>
 
               {/* بطاقة الخصم من الحساب (Account Balance) */}
               <div className="border border-gray-200 dark:border-gray-700 p-5 rounded-2xl bg-slate-50/50 dark:bg-slate-900/20 space-y-4">
-                <h4 className="font-bold text-gray-800 dark:text-gray-200 flex items-center space-x-2 rtl:space-x-reverse">
+                <h4 className="font-bold text-gray-800 dark:text-gray-200 flex items-center space-x-2 rtl:space-x-reverse text-xs">
                   <FontAwesomeIcon icon={faUser} className="text-amber-500" />
-                  <span>👤 خصم من الحساب (Account)</span>
+                  <span>{t("accountPaymentShort") || (language === "ar" ? "👤 خصم من الحساب (Account)" : "Account Balance")}</span>
                 </h4>
                 
                 {selectedCustomer ? (
                   <div className="space-y-3">
-                    <div className="text-xs text-gray-600 dark:text-gray-400">
-                      <div>العميل: <strong className="text-gray-900 dark:text-white">{selectedCustomer.name}</strong></div>
-                      <div className="mt-1">رصيد الحساب المتاح: <strong className="text-amber-600 dark:text-amber-400 font-mono">{parseFloat(selectedCustomer.balance).toFixed(2)} ر.س</strong></div>
+                    <div className="text-xs text-gray-600 dark:text-gray-400 font-bold">
+                      <div>{t("customer")}: <strong className="text-gray-900 dark:text-white">{selectedCustomer.name}</strong></div>
+                      <div className="mt-1">{t("customerAvailableBalance") || "رصيد الحساب المتاح"}: <strong className="text-amber-600 dark:text-amber-400 font-mono">{parseFloat(selectedCustomer.balance).toFixed(2)} {t("sar") || "ر.س"}</strong></div>
                     </div>
                     
                     <div className="flex space-x-2 rtl:space-x-reverse">
@@ -489,7 +493,7 @@ function HybridPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
                         type="number"
                         step="0.01"
                         min="0"
-                        placeholder="خصم من الحساب"
+                        placeholder={t("amountAccount") || (language === "ar" ? "خصم من الحساب" : "Account Deduct")}
                         value={accountInput}
                         onChange={(e) => setAccountInput(e.target.value)}
                         disabled={isTerminalActive || remaining <= 0 || parseFloat(selectedCustomer.balance) <= 0}
@@ -501,20 +505,20 @@ function HybridPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
                       <button
                         onClick={handleAddAccount}
                         disabled={isTerminalActive || remaining <= 0 || !accountInput || parseFloat(accountInput) <= 0 || parseFloat(accountInput) > parseFloat(selectedCustomer.balance)}
-                        className="btn-primary bg-amber-500 hover:bg-amber-600 text-white py-2 px-3 flex items-center space-x-1 rtl:space-x-reverse text-sm"
+                        className="btn-primary bg-amber-500 hover:bg-amber-600 text-white py-2 px-3 flex items-center space-x-1 rtl:space-x-reverse text-sm font-bold"
                       >
                         <FontAwesomeIcon icon={faPlus} />
-                        <span>خصم</span>
+                        <span>{t("deduct") || "خصم"}</span>
                       </button>
                     </div>
                   </div>
                 ) : (
                   <div className="p-3 bg-amber-50 dark:bg-amber-955/20 border border-dashed border-amber-300 dark:border-amber-900 rounded-xl text-center">
                     <span className="text-xs text-amber-700 dark:text-amber-400 block font-bold mb-1">
-                      الخصم من الحساب غير متاح
+                      {t("accountPaymentUnavailable") || "الخصم من الحساب غير متاح"}
                     </span>
-                    <span className="text-[10px] text-gray-500 dark:text-gray-400 block leading-relaxed">
-                      يرجى تحديد أو إضافة عميل أولاً من شاشة السلة.
+                    <span className="text-[10px] text-gray-500 dark:text-gray-400 block leading-relaxed font-bold">
+                      {t("accountPaymentUnavailableDesc") || "يرجى تحديد أو إضافة عميل أولاً من شاشة السلة."}
                     </span>
                   </div>
                 )}
@@ -524,33 +528,33 @@ function HybridPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
 
             {/* قائمة الدفعات المضافة */}
             <div className="space-y-2">
-              <h4 className="text-sm font-bold text-gray-700 dark:text-gray-300">المدفوعات المضافة:</h4>
+              <h4 className="text-sm font-bold text-gray-700 dark:text-gray-300">{t("paymentsAdded") || "المدفوعات المضافة:"}</h4>
               
               {payments.length === 0 ? (
                 <div className="p-4 text-center border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-2xl text-gray-400 text-xs font-semibold">
-                  لا توجد دفعات مضافة حتى الآن. يرجى إضافة مبالغ نقدية أو تمرير الكارت لتسوية الحساب.
+                  {t("noPaymentsAdded") || "لا توجد دفعات مضافة حتى الآن. يرجى إضافة مبالغ نقدية أو تمرير الكارت لتسوية الحساب."}
                 </div>
               ) : (
                 <div className="border border-gray-200 dark:border-gray-700 rounded-2xl overflow-hidden bg-white dark:bg-gray-900/20 max-h-[160px] overflow-y-auto">
                   <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                     <thead className="bg-gray-50 dark:bg-gray-800">
                       <tr>
-                        <th className="px-4 py-2 text-right text-xs font-bold text-gray-500 uppercase">وسيلة الدفع</th>
-                        <th className="px-4 py-2 text-left text-xs font-bold text-gray-500 uppercase">المبلغ</th>
-                        <th className="px-4 py-2 text-center text-xs font-bold text-gray-500 uppercase w-16">إجراء</th>
+                        <th className="px-4 py-2 text-right text-xs font-bold text-gray-500 uppercase">{t("paymentMethod")}</th>
+                        <th className="px-4 py-2 text-left text-xs font-bold text-gray-500 uppercase">{t("amount")}</th>
+                        <th className="px-4 py-2 text-center text-xs font-bold text-gray-500 uppercase w-16">{t("action") || "إجراء"}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                       {payments.map((p, idx) => (
                         <tr key={idx} className="hover:bg-gray-50/50 dark:hover:bg-gray-800/50">
                           <td className="px-4 py-2 text-xs font-bold text-gray-700 dark:text-gray-300">
-                            {p.method === "cash" ? "💵 نقدي (Cash)" : 
-                             p.method === "card" ? "💳 بطاقة (Card)" : 
-                             p.method === "transfer" ? "🏦 تحويل بنكي (Transfer)" : 
-                             p.method === "account" ? "👤 خصم من الحساب" : "أخرى"}
+                            {p.method === "cash" ? `💵 ${t("cash") || "نقدي"} (Cash)` : 
+                             p.method === "card" ? `💳 ${t("card") || "بطاقة"} (Card)` : 
+                             p.method === "transfer" ? `🏦 ${t("transfer") || "تحويل بنكي"} (Transfer)` : 
+                             p.method === "account" ? `👤 ${t("account") || "خصم من الحساب"}` : "أخرى"}
                           </td>
                           <td className="px-4 py-2 text-xs font-black text-gray-900 dark:text-white font-mono text-left">
-                            {p.amount.toFixed(2)} ر.س
+                            {p.amount.toFixed(2)} {t("sar") || "ر.س"}
                           </td>
                           <td className="px-4 py-2 text-center">
                             <button
@@ -558,7 +562,7 @@ function HybridPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
                               onClick={() => handleDeletePayment(idx)}
                               disabled={isTerminalActive}
                               className="text-red-500 hover:text-red-700 disabled:opacity-50 transition-colors"
-                              title="حذف هذه الدفعة"
+                              title={t("deleteThisPayment") || "حذف هذه الدفعة"}
                             >
                               <FontAwesomeIcon icon={faTrash} />
                             </button>
@@ -580,7 +584,7 @@ function HybridPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
                 className="flex-1 py-3.5 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-xl hover:from-primary-700 hover:to-primary-800 disabled:opacity-40 disabled:cursor-not-allowed font-bold transition-all shadow-md flex items-center justify-center space-x-2 rtl:space-x-reverse"
               >
                 <FontAwesomeIcon icon={faCheckCircle} />
-                <span>إتمام المعاملة وحفظ الفاتورة</span>
+                <span>{t("completeTransactionSaveInvoice") || "إتمام المعاملة وحفظ الفاتورة"}</span>
               </button>
               
               <button
@@ -594,9 +598,9 @@ function HybridPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
             </div>
 
             {isTerminalActive && (
-              <div className="text-[10px] text-gray-400 dark:text-gray-500 text-center flex items-center justify-center space-x-1.5 rtl:space-x-reverse">
+              <div className="text-[10px] text-gray-400 dark:text-gray-500 text-center flex items-center justify-center space-x-1.5 rtl:space-x-reverse font-bold">
                 <FontAwesomeIcon icon={faLock} />
-                <span>🔒 النظام مغلق مالياً لحين اكتمال عملية التحقق من البطاقة الشبكية</span>
+                <span>🔒 {t("systemLockedTerminal") || "النظام مغلق مالياً لحين اكتمال عملية التحقق من البطاقة الشبكية"}</span>
               </div>
             )}
 

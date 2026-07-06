@@ -5,24 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>فاتورة مرتجع مبيعات #{{ $salesReturn->return_number }}</title>
     <style>
-        * {
+        .invoice-container * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
-        body {
-            font-family: 'Arial', 'Tahoma', sans-serif;
-            direction: rtl;
-            padding: 20px;
-            background: #fff;
-        }
-
         .invoice-container {
+            font-family: 'Arial', 'Tahoma', sans-serif;
+            direction: rtl !important;
+            padding: 30px;
+            background: #fff;
             max-width: 800px;
             margin: 0 auto;
-            background: white;
-            padding: 30px;
             border: 1px solid #ddd;
         }
 
@@ -135,6 +130,7 @@
         @media print {
             body {
                 padding: 0;
+                direction: rtl !important;
             }
 
             .invoice-container {

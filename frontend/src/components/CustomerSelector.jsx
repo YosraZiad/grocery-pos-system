@@ -3,8 +3,10 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUser, faSearch, faSpinner, faTimes, faExclamationTriangle, faUserPlus } from "@fortawesome/free-solid-svg-icons";
 import api from "../services/api";
 import toast from "react-hot-toast";
+import { useI18n } from "../context/I18nContext";
 
 function CustomerSelector({ selectedCustomer, onSelectCustomer, defaultCustomerName }) {
+  const { t, language } = useI18n();
   const [searchPhone, setSearchPhone] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [showAddBox, setShowAddBox] = useState(false);
@@ -25,7 +27,7 @@ function CustomerSelector({ selectedCustomer, onSelectCustomer, defaultCustomerN
           onSelectCustomer(response.data.data);
           setSearchPhone("");
           setShowAddBox(false);
-          toast.success(`تم اختيار العميل: ${response.data.data.name}`);
+          toast.success(t("customerSelected") ? `${t("customerSelected")}: ${response.data.data.name}` : `تم اختيار العميل: ${response.data.data.name}`);
         }
       } catch (err) {
         // لم يتم العثور على العميل
@@ -69,11 +71,11 @@ function CustomerSelector({ selectedCustomer, onSelectCustomer, defaultCustomerN
     }
 
     if (!newName.trim()) {
-      toast.error("يرجى إدخال اسم العميل الجديد");
+      toast.error(t("pleaseFillFields") || "يرجى إدخال اسم العميل الجديد");
       return;
     }
     if (!newPhone.trim()) {
-      toast.error("يرجى إدخال رقم هاتف العميل");
+      toast.error(t("pleaseFillFields") || "يرجى إدخال رقم هاتف العميل");
       return;
     }
 
@@ -89,11 +91,11 @@ function CustomerSelector({ selectedCustomer, onSelectCustomer, defaultCustomerN
         setNewPhone("");
         setDuplicateCustomer(null);
         setShowAddBox(false);
-        toast.success("تم تسجيل واختيار العميل الجديد بنجاح.");
+        toast.success(t("customerAddedSuccessfully") || "تم تسجيل واختيار العميل الجديد بنجاح.");
       }
     } catch (err) {
       console.error(err);
-      toast.error(err.response?.data?.message || "حدث خطأ أثناء تسجيل العميل.");
+      toast.error(err.response?.data?.message || t("errorCreatingCustomer") || "حدث خطأ أثناء تسجيل العميل.");
     }
   };
 
@@ -102,16 +104,16 @@ function CustomerSelector({ selectedCustomer, onSelectCustomer, defaultCustomerN
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2.5 rtl:space-x-reverse text-sm font-bold text-gray-800 dark:text-gray-200">
           <FontAwesomeIcon icon={faUser} className="text-primary-500 text-base" />
-          <span>العميل:</span>
+          <span>{t("customer")}:</span>
           {selectedCustomer ? (
             <span className="text-primary-600 dark:text-primary-400 font-black">
               {selectedCustomer.name} 
               {parseFloat(selectedCustomer.balance) > 0 && 
-                ` (الرصيد: ${parseFloat(selectedCustomer.balance).toFixed(2)} ر.س)`}
+                ` (${t("availableBalance")}: ${parseFloat(selectedCustomer.balance).toFixed(2)} ${t("sar") || "ر.س"})`}
             </span>
           ) : (
             <span className="text-gray-500 dark:text-gray-400 font-medium">
-              {defaultCustomerName || "العميل الافتراضي"}
+              {defaultCustomerName || t("defaultCustomer") || "العميل الافتراضي"}
             </span>
           )}
         </div>
@@ -124,7 +126,7 @@ function CustomerSelector({ selectedCustomer, onSelectCustomer, defaultCustomerN
               onSelectCustomer(null);
             }}
             className="text-red-500 hover:text-red-700 p-1 text-xs"
-            title="إلغاء اختيار العميل"
+            title={t("cancel") || "إلغاء اختيار العميل"}
           >
             <FontAwesomeIcon icon={faTimes} />
           </button>
@@ -137,7 +139,7 @@ function CustomerSelector({ selectedCustomer, onSelectCustomer, defaultCustomerN
           <div className="relative flex-1">
             <input
               type="text"
-              placeholder="البحث برقم الهاتف (مثال: 0512345678)..."
+              placeholder={t("searchByPhone") || "البحث برقم الهاتف (مثال: 0512345678)..."}
               value={searchPhone}
               onChange={(e) => setSearchPhone(e.target.value)}
               className="input pr-9 py-2 text-xs w-full focus:ring-2 focus:ring-primary-500"
@@ -163,24 +165,24 @@ function CustomerSelector({ selectedCustomer, onSelectCustomer, defaultCustomerN
             className="bg-green-600 hover:bg-green-700 text-white text-xs font-bold px-3.5 py-2 rounded-xl shadow-sm active:scale-95 transition-all flex items-center space-x-1.5 rtl:space-x-reverse"
           >
             <FontAwesomeIcon icon={faUserPlus} />
-            <span>إضافة عميل</span>
+            <span>{t("addCustomer")}</span>
           </button>
         </div>
       )}
 
-      {/* نموذج إضافة عميل جديد (تم استبدال Form بـ Div لتجنب تعارض تداخل النماذج وإغلاق المودال) */}
+      {/* نموذج إضافة عميل جديد */}
       {showAddBox && (
         <div className="space-y-3 pt-2 border-t border-dashed border-gray-200 dark:border-gray-700">
           <div className="text-xs font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
             <FontAwesomeIcon icon={faUserPlus} />
-            <span>إضافة عميل جديد:</span>
+            <span>{t("addCustomer")}:</span>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="text-[10px] font-bold text-gray-500 block">رقم الهاتف</label>
+              <label className="text-[10px] font-bold text-gray-500 block">{t("phone")}</label>
               <input
                 type="text"
-                placeholder="رقم الهاتف..."
+                placeholder={t("phone") + "..."}
                 value={newPhone}
                 onChange={(e) => setNewPhone(e.target.value)}
                 className="input py-2 px-3 text-xs w-full focus:ring-2 focus:ring-primary-500 font-mono"
@@ -188,10 +190,10 @@ function CustomerSelector({ selectedCustomer, onSelectCustomer, defaultCustomerN
               />
             </div>
             <div className="space-y-1">
-              <label className="text-[10px] font-bold text-gray-500 block">اسم العميل</label>
+              <label className="text-[10px] font-bold text-gray-500 block">{t("customerName")}</label>
               <input
                 type="text"
-                placeholder="اسم العميل الجديد..."
+                placeholder={t("customerName") + "..."}
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
                 className="input py-2 px-3 text-xs w-full focus:ring-2 focus:ring-primary-500"
@@ -201,12 +203,12 @@ function CustomerSelector({ selectedCustomer, onSelectCustomer, defaultCustomerN
             </div>
           </div>
 
-          {/* تنبيه إذا كان العميل مكرراً وتم العثور عليه أثناء الكتابة */}
+          {/* تنبيه إذا كان العميل مكرراً */}
           {duplicateCustomer && (
             <div className="text-xs text-amber-700 dark:text-amber-400 font-bold flex items-center justify-between p-2.5 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/30 rounded-xl space-x-2 rtl:space-x-reverse animate-pulse">
               <span className="flex items-center space-x-1 rtl:space-x-reverse">
                 <FontAwesomeIcon icon={faExclamationTriangle} />
-                <span>رقم الهاتف هذا مسجل بالفعل لـ: <strong>{duplicateCustomer.name}</strong></span>
+                <span>{t("phoneAlreadyRegistered") || "رقم الهاتف هذا مسجل بالفعل لـ:"} <strong>{duplicateCustomer.name}</strong></span>
               </span>
               <button
                 type="button"
@@ -219,11 +221,11 @@ function CustomerSelector({ selectedCustomer, onSelectCustomer, defaultCustomerN
                   setNewPhone("");
                   setDuplicateCustomer(null);
                   setShowAddBox(false);
-                  toast.success(`تم اختيار العميل: ${duplicateCustomer.name}`);
+                  toast.success(t("customerSelected") ? `${t("customerSelected")}: ${duplicateCustomer.name}` : `تم اختيار العميل: ${duplicateCustomer.name}`);
                 }}
                 className="bg-amber-600 hover:bg-amber-700 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg shadow-sm"
               >
-                اختيار هذا العميل
+                {t("selectThisCustomer") || "اختيار هذا العميل"}
               </button>
             </div>
           )}
@@ -234,7 +236,7 @@ function CustomerSelector({ selectedCustomer, onSelectCustomer, defaultCustomerN
               onClick={handleCreateCustomer}
               className="bg-green-600 hover:bg-green-700 text-white text-xs font-bold py-2 px-4 rounded-xl transition-all shadow-sm"
             >
-              حفظ العميل
+              {t("saveCustomer") || "حفظ العميل"}
             </button>
             <button
               type="button"
@@ -248,7 +250,7 @@ function CustomerSelector({ selectedCustomer, onSelectCustomer, defaultCustomerN
               }}
               className="bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-xs font-bold py-2 px-3 rounded-xl transition-all"
             >
-              إلغاء
+              {t("cancel")}
             </button>
           </div>
         </div>

@@ -63,9 +63,17 @@ class SalesReturnController extends Controller
             ], 422);
         }
 
-        $sale = Sale::with(['items.product', 'user'])
+        $sale = Sale::with(['items.product', 'user', 'customer'])
             ->where('invoice_number', $request->invoice_number)
             ->firstOrFail();
+
+        // 0. التحقق من فترة السماح بالإرجاع
+        $returnPeriodDays = (int)\App\Models\Setting::get('return_period_days', 14);
+        if ($sale->created_at->diffInDays(now()) > $returnPeriodDays) {
+            return response()->json([
+                'message' => "انتهت فترة السماح بالإرجاع لهذه الفاتورة (فترة السماح المتاحة: {$returnPeriodDays} يوماً). تاريخ الفاتورة: " . $sale->created_at->format('Y-m-d'),
+            ], 422);
+        }
 
         // 1. التحقق من حالة الفاتورة
         if ($sale->status !== 'completed' && $sale->status !== 'partially_refunded') {
@@ -107,14 +115,18 @@ class SalesReturnController extends Controller
             'reason' => 'nullable|string|max:500',
             'customer_name' => 'nullable|string|max:100',
             'customer_phone' => 'nullable|string|max:20',
+            'is_not_damaged' => 'required|accepted',
             'items' => 'required|array|min:1',
             'items.*.sale_item_id' => 'required|exists:sale_items,id',
             'items.*.return_qty' => 'required|integer|min:1',
+        ], [
+            'is_not_damaged.accepted' => 'يجب تأكيد أن البضاعة المرتجعة سليمة وغير تالفة لإتمام العملية.',
+            'is_not_damaged.required' => 'يجب تأكيد أن البضاعة المرتجعة سليمة وغير تالفة لإتمام العملية.',
         ]);
 
         if ($validator->fails()) {
             return response()->json([
-                'message' => 'تأكد من صحة المدخلات واختيار منتج واحد على الأقل.',
+                'message' => $validator->errors()->first() ?? 'تأكد من صحة المدخلات واختيار منتج واحد على الأقل.',
                 'errors' => $validator->errors(),
             ], 422);
         }
@@ -123,6 +135,14 @@ class SalesReturnController extends Controller
         try {
             $sale = Sale::with('items.product')->findOrFail($request->sale_id);
             
+            // التحقق من فترة السماح بالإرجاع
+            $returnPeriodDays = (int)\App\Models\Setting::get('return_period_days', 14);
+            if ($sale->created_at->diffInDays(now()) > $returnPeriodDays) {
+                return response()->json([
+                    'message' => "انتهت فترة السماح بالإرجاع لهذه الفاتورة (فترة السماح المتاحة: {$returnPeriodDays} يوماً).",
+                ], 422);
+            }
+
             // التحقق من حالة الفاتورة
             if ($sale->status !== 'completed' && $sale->status !== 'partially_refunded') {
                 return response()->json([
@@ -194,7 +214,6 @@ class SalesReturnController extends Controller
             }
 
             // حساب الخصم النسبي المسترد
-            // إذا كان هناك خصم إجمالي على الفاتورة الأصلية، نقوم بحساب نسبته لتخفيض إجمالي المرتجع
             $originalSaleSubtotal = $sale->items->sum(function ($item) {
                 return $item->price * $item->quantity;
             });
@@ -220,14 +239,23 @@ class SalesReturnController extends Controller
             if ($request->refund_method === 'replacement') {
                 $customerPhone = $request->customer_phone;
                 
-                if ($customerPhone) {
-                    $customer = \App\Models\Customer::where('phone', $customerPhone)->first();
+                // توليد هاتف افتراضي فريد للعميل المؤقت إذا لم يتوفر
+                if (!$customerPhone) {
+                    $randomId = rand(1000, 9999);
+                    $customerPhone = "0500000" . $randomId;
+                    while (\App\Models\Customer::where('phone', $customerPhone)->exists()) {
+                        $randomId = rand(1000, 9999);
+                        $customerPhone = "0500000" . $randomId;
+                    }
                 }
 
+                $customer = \App\Models\Customer::where('phone', $customerPhone)->first();
+
                 if (!$customer) {
+                    $customerName = $request->customer_name ?? "عميل ارجاع فاتورة {$sale->invoice_number}";
                     $customer = \App\Models\Customer::create([
                         'tenant_id' => $sale->tenant_id,
-                        'name' => $request->customer_name ?? "عميل مؤقت {$returnNumber}",
+                        'name' => $customerName,
                         'phone' => $customerPhone,
                         'balance' => 0.00,
                         'is_temporary' => true,

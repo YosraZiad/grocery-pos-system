@@ -120,8 +120,14 @@ class SaleService
                     'transfer' => 'العميل الافتراضي - تحويل',
                     'hybrid' => 'العميل الافتراضي - دفع مختلط',
                 ];
-                $name = $defaultNames[$paymentMethod] ?? 'العميل الافتراضي';
-                $phone = 'default-' . $paymentMethod;
+                $defaultPhones = [
+                    'cash' => '0500000000',
+                    'card' => '0500000001',
+                    'transfer' => '0500000002',
+                    'hybrid' => '0500050000',
+                ];
+                $name = $defaultNames[$paymentMethod] ?? 'العميل الافتراضي - كاش';
+                $phone = $defaultPhones[$paymentMethod] ?? '0500000000';
 
                 $defaultCustomer = \App\Models\Customer::where('tenant_id', $tenantId)
                     ->where('phone', $phone)
@@ -133,7 +139,7 @@ class SaleService
                         'name' => $name,
                         'phone' => $phone,
                         'balance' => 0.00,
-                        'is_temporary' => true
+                        'is_temporary' => false
                     ]);
                 }
                 $customerId = $defaultCustomer->id;

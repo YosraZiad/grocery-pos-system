@@ -21,6 +21,7 @@ import ProfitLoss from "./pages/ProfitLoss";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import Users from "./pages/Users";
+import Customers from "./pages/Customers";
 import Roles from "./pages/Roles";
 import Profile from "./pages/Profile";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -184,6 +185,14 @@ function App() {
               element={
                 <ProtectedRoute requiredPermission="view users">
                   <Users />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="customers"
+              element={
+                <ProtectedRoute requiredPermission="view sales">
+                  <Customers />
                 </ProtectedRoute>
               }
             />

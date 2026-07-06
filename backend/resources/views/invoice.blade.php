@@ -5,24 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>فاتورة #{{ $sale->invoice_number }}</title>
     <style>
-        * {
+        .invoice-container * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
-        body {
-            font-family: 'Arial', 'Tahoma', sans-serif;
-            direction: rtl;
-            padding: 20px;
-            background: #fff;
-        }
-
         .invoice-container {
+            font-family: 'Arial', 'Tahoma', sans-serif;
+            direction: rtl !important;
+            padding: 30px;
+            background: #fff;
             max-width: 800px;
             margin: 0 auto;
-            background: white;
-            padding: 30px;
             border: 1px solid #ddd;
         }
 
@@ -49,17 +44,23 @@
             margin-bottom: 30px;
         }
 
-        .info-box {
+        .info-box-right {
+            text-align: right;
             flex: 1;
         }
 
-        .info-box h3 {
+        .info-box-left {
+            text-align: left;
+            flex: 1;
+        }
+
+        .info-box-right h3, .info-box-left h3 {
             font-size: 16px;
             margin-bottom: 10px;
             color: #333;
         }
 
-        .info-box p {
+        .info-box-right p, .info-box-left p {
             color: #666;
             font-size: 14px;
             margin: 5px 0;
@@ -129,6 +130,7 @@
         @media print {
             body {
                 padding: 0;
+                direction: rtl !important;
             }
 
             .invoice-container {
@@ -154,10 +156,13 @@
         </div>
 
         <div class="invoice-info">
-            <div class="info-box">
-                <h3>معلومات الفاتورة</h3>
+            <div class="info-box-right">
+                <h3>معلومات الفاتورة والعميل</h3>
+                <p><strong>اسم العميل:</strong> {{ $sale->customer->name ?? 'عميل عام' }}</p>
+                @if($sale->customer && $sale->customer->phone)
+                    <p><strong>هاتف العميل:</strong> {{ $sale->customer->phone }}</p>
+                @endif
                 <p><strong>رقم الفاتورة:</strong> {{ $sale->invoice_number }}</p>
-                <p><strong>التاريخ:</strong> {{ $sale->created_at->format('Y-m-d H:i') }}</p>
                 <p><strong>طريقة الدفع:</strong> 
                     @if($sale->payment_method === 'cash') نقدي
                     @elseif($sale->payment_method === 'card') بطاقة
@@ -175,8 +180,9 @@
                     </div>
                 @endif
             </div>
-            <div class="info-box">
-                <h3>معلومات البائع</h3>
+            <div class="info-box-left">
+                <h3>مسؤول المبيعات</h3>
+                <p><strong>التاريخ:</strong> {{ $sale->created_at->format('Y-m-d H:i') }}</p>
                 <p><strong>الاسم:</strong> {{ $sale->user->name }}</p>
                 <p><strong>البريد:</strong> {{ $sale->user->email }}</p>
             </div>

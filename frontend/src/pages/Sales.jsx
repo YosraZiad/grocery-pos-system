@@ -523,7 +523,7 @@ function Sales() {
                         
                         <div className="w-full mt-3 flex items-center justify-between gap-1 flex-wrap">
                           <span className="text-amber-600 dark:text-amber-400 font-extrabold text-sm whitespace-nowrap">
-                            {product.sale_price} <span className="text-[10px] font-normal text-gray-400">ر.س</span>
+                            {product.sale_price} <span className="text-[10px] font-normal text-gray-400">{t('sar')}</span>
                           </span>
                           {isOutOfStock ? (
                             <span className="text-[9px] font-bold text-red-650 bg-red-100 dark:bg-red-900/30 px-1.5 py-0.5 rounded">

@@ -89,6 +89,7 @@ function Layout() {
       ...(hasPermission("create returns") ? [{ path: "/sales-returns", label: t("salesReturns") || "مرتجع المبيعات", icon: faRightLeft }] : []),
     ],
     management: [
+      ...(hasPermission("view sales") ? [{ path: "/customers", label: t("customersManagement") || "إدارة العملاء", icon: faUsers }] : []),
       ...(hasPermission("view inventory") ? [{ path: "/inventory", label: t("inventory"), icon: faChartColumn }] : []),
       ...(hasPermission("view returns") ? [{ path: "/returns", label: t("returnsManagement"), icon: faRightLeft }] : []),
       ...(hasPermission("view suppliers") ? [{ path: "/suppliers", label: t("suppliersManagement"), icon: faUsers }] : []),

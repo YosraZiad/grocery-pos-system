@@ -23,7 +23,7 @@ const STATES = {
 };
 
 function CardPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [currentState, setCurrentState] = useState(STATES.CONNECTING);
   const [errorMessage, setErrorMessage] = useState("");
@@ -84,7 +84,7 @@ function CardPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
       pollingIntervalRef.current = setInterval(checkTerminalStatus, 1000);
     } catch (err) {
       console.error("Failed to connect to card terminal:", err);
-      setErrorMessage(t("terminalConnectionFailed") || "تعذر الاتصال بالماكينة الشبكية. يرجى التأكد من تشغيل الخدمة.");
+      setErrorMessage(t("terminalConnectionFailed") || (language === "ar" ? "تعذر الاتصال بالماكينة الشبكية. يرجى التأكد من تشغيل الخدمة." : "Could not connect to the network terminal. Please make sure the service is running."));
       setCurrentState(STATES.TIMEOUT);
     }
   };
@@ -171,7 +171,7 @@ function CardPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
       pulse: true,
       spin: false,
       title: t("waitingForCard") || "يرجى تمرير أو إدخال البطاقة",
-      desc: t("waitingForCardDesc") || `المبلغ المرسل للجهاز: ${totalDue.toFixed(2)} ر.س`,
+      desc: language === "ar" ? `المبلغ المرسل للجهاز: ${totalDue.toFixed(2)} ر.س` : `Amount sent to terminal: ${totalDue.toFixed(2)} SAR`,
     },
     [STATES.PROCESSING]: {
       bg: "bg-indigo-50 dark:bg-indigo-950/20 border-indigo-200 dark:border-indigo-900/30",
@@ -232,10 +232,10 @@ function CardPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
             <span className="text-2xl">⚡</span>
             <div>
               <h3 className="text-lg font-bold">
-                {t("cardPayment") || "الدفع بالبطاقة والشبكة | Card Checkout"}
+                {t("cardPayment")}
               </h3>
               <p className="text-xs opacity-90 mt-0.5">
-                {t("terminalIntegration") || "تكامل الدفع الإلكتروني المباشر"}
+                {t("terminalIntegration")}
               </p>
             </div>
           </div>
@@ -246,10 +246,10 @@ function CardPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
             {/* إجمالي المبلغ المطلوب سحبه */}
             <div className="w-full p-4 bg-gray-50 dark:bg-gray-900/40 border border-gray-100 dark:border-gray-700 rounded-xl flex justify-between items-center">
               <span className="font-semibold text-gray-600 dark:text-gray-400">
-                {t("amountToCharge") || "مبلغ السحب المطلوب"}
+                {t("amountToCharge")}
               </span>
               <span className="text-2xl font-black text-primary-600 dark:text-primary-400">
-                {totalDue.toFixed(2)} ر.س
+                {totalDue.toFixed(2)} {t("sar") || "ر.س"}
               </span>
             </div>
 
@@ -257,7 +257,7 @@ function CardPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
             <CustomerSelector
               selectedCustomer={selectedCustomer}
               onSelectCustomer={setSelectedCustomer}
-              defaultCustomerName="العميل الافتراضي - شبكة"
+              defaultCustomerName={t("defaultCardCustomer") || "العميل الافتراضي - شبكة"}
             />
 
             {/* أيقونة وحالة الاتصال */}
@@ -284,7 +284,7 @@ function CardPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
                     onClick={startPaymentProcess}
                     className="flex-1 py-3 bg-primary-600 text-white rounded-xl hover:bg-primary-700 font-bold transition-all shadow-md hover:shadow-lg"
                   >
-                    🔄 إعادة الاتصال بالماكينة
+                    🔄 {t("reconnectTerminal") || "إعادة الاتصال بالماكينة"}
                   </button>
                 )}
                 <button
@@ -292,14 +292,14 @@ function CardPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
                   onClick={handleClose}
                   className="flex-1 py-3 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-xl font-bold transition-all"
                 >
-                  {t("backToCart") || "الرجوع للسلة"}
+                  {t("backToCart")}
                 </button>
               </div>
             )}
             
             {isLocked && (
               <div className="text-xs text-gray-400 dark:text-gray-500 font-medium">
-                🔒 الحماية المالية نشطة. لا يمكنك إغلاق النافذة أثناء الاتصال بالبنك.
+                🔒 {t("financialProtectionActive") || "الحماية المالية نشطة. لا يمكنك إغلاق النافذة أثناء الاتصال بالبنك."}
               </div>
             )}
           </div>

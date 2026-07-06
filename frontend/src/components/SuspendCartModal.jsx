@@ -18,7 +18,7 @@ function SuspendCartModal({
   discount,
   discountType,
 }) {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const [note, setNote] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -95,12 +95,12 @@ function SuspendCartModal({
           {/* Body */}
           <div className="p-6 space-y-6">
             {/* ملخص السلة */}
-            <div className="p-4 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/30 rounded-2xl flex justify-between items-center text-amber-800 dark:text-amber-300 font-semibold text-sm">
+            <div className="p-4 bg-amber-50 dark:bg-amber-955/20 border border-amber-200 dark:border-amber-900/30 rounded-2xl flex justify-between items-center text-amber-800 dark:text-amber-300 font-semibold text-sm">
               <span>
                 {t("itemsToSuspend") || "عدد المنتجات للتعليق"}: {items.length}
               </span>
               <span className="text-lg font-black font-mono">
-                {total.toFixed(2)} ر.س
+                {total.toFixed(2)} {t("sar") || "ر.س"}
               </span>
             </div>
 
@@ -108,20 +108,20 @@ function SuspendCartModal({
             <div className="space-y-2">
               <label className="label flex items-center space-x-1.5 rtl:space-x-reverse text-gray-700 dark:text-gray-300 font-bold">
                 <FontAwesomeIcon icon={faKeyboard} className="text-gray-400" />
-                <span>ملاحظة أو اسم العميل للتعليق (اختياري):</span>
+                <span>{t("suspendNoteLabel") || "ملاحظة أو اسم العميل للتعليق (اختياري):"}</span>
               </label>
               <input
                 type="text"
                 maxLength="100"
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
-                placeholder="مثال: زبون السيارة، طاولة 5، ذو القميص الأزرق"
+                placeholder={t("suspendPlaceholder") || "مثال: زبون السيارة، طاولة 5، ذو القميص الأزرق"}
                 disabled={isSubmitting}
                 autoFocus
                 className="input"
               />
               <span className="text-[10px] text-gray-400 block mt-1">
-                تساعدك هذه الملاحظة على تمييز الفاتورة بسرعة بين الفواتير المعلقة الأخرى في الطابور.
+                {t("suspendNoteHelp") || "تساعدك هذه الملاحظة على تمييز الفاتورة بسرعة بين الفواتير المعلقة الأخرى في الطابور."}
               </span>
             </div>
 
@@ -145,7 +145,7 @@ function SuspendCartModal({
                 disabled={isSubmitting}
                 className="py-3 px-6 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-xl font-bold transition-all"
               >
-                {t("cancel") || "إلغاء"}
+                {t("cancel")}
               </button>
             </div>
           </div>

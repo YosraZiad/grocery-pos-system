@@ -5,7 +5,7 @@ import { faBuildingColumns } from "@fortawesome/free-solid-svg-icons";
 import CustomerSelector from "./CustomerSelector";
 
 function TransferPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const [selectedCustomer, setSelectedCustomer] = useState(null);
 
   // إعادة التعيين عند فتح النافذة
@@ -42,10 +42,10 @@ function TransferPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
             </span>
             <div>
               <h3 className="text-lg font-bold">
-                {t("transferPayment") || "الدفع بتحويل بنكي | Bank Transfer"}
+                {t("transferPayment")}
               </h3>
               <p className="text-xs opacity-90 mt-0.5">
-                تأكيد عملية التحويل البنكي وتحديد العميل
+                {language === "ar" ? "تأكيد عملية التحويل البنكي وتحديد العميل" : "Confirm bank transfer and assign customer"}
               </p>
             </div>
           </div>
@@ -55,10 +55,10 @@ function TransferPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
             {/* إجمالي الفاتورة المطلوب */}
             <div className="flex justify-between items-center p-4 bg-gray-50 dark:bg-gray-900/40 rounded-xl border border-gray-150 dark:border-gray-700">
               <span className="text-gray-600 dark:text-gray-400 font-semibold">
-                الإجمالي المطلوب:
+                {t("totalRequired")}:
               </span>
               <span className="text-2xl font-extrabold text-gray-900 dark:text-white">
-                {totalDue.toFixed(2)} ر.س
+                {totalDue.toFixed(2)} {t("sar") || "ر.س"}
               </span>
             </div>
 
@@ -66,7 +66,7 @@ function TransferPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
             <CustomerSelector
               selectedCustomer={selectedCustomer}
               onSelectCustomer={setSelectedCustomer}
-              defaultCustomerName="العميل الافتراضي - تحويل"
+              defaultCustomerName={t("defaultTransferCustomer") || "العميل الافتراضي - تحويل"}
             />
 
             {/* أزرار الإجراءات */}
@@ -75,14 +75,14 @@ function TransferPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
                 type="submit"
                 className="flex-1 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-bold transition-all shadow-md active:scale-95"
               >
-                تأكيد الدفع وإصدار الفاتورة
+                {t("confirmPayment")}
               </button>
               <button
                 type="button"
                 onClick={onClose}
                 className="py-3 px-5 bg-gray-150 hover:bg-gray-200 dark:bg-gray-750 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl font-bold transition-all"
               >
-                {t("cancel") || "إلغاء"}
+                {t("cancel")}
               </button>
             </div>
           </form>

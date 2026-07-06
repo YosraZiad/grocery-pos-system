@@ -20,7 +20,7 @@ function SuspendedInvoicesModal({
   onDeleteSuccess,
   currentCartItemCount,
 }) {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const [suspendedSales, setSuspendedSales] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -42,7 +42,7 @@ function SuspendedInvoicesModal({
       setSuspendedSales(response.data.data || []);
     } catch (err) {
       console.error("Error fetching suspended sales:", err);
-      toast.error("تعذر تحميل قائمة الفواتير المعلقة");
+      toast.error(t("failedToLoadSuspended") || "تعذر تحميل قائمة الفواتير المعلقة");
     } finally {
       setIsLoading(false);
     }
@@ -51,17 +51,17 @@ function SuspendedInvoicesModal({
   // حذف فاتورة معلقة نهائياً
   const handleDelete = async (id) => {
     if (isProcessing) return;
-    if (!window.confirm("هل أنت متأكد من رغبتك في حذف هذه الفاتورة المعلقة نهائياً؟")) return;
+    if (!window.confirm(t("confirmDeleteSuspended") || "هل أنت متأكد من رغبتك في حذف هذه الفاتورة المعلقة نهائياً؟")) return;
 
     setIsProcessing(true);
     try {
       await api.delete(`/suspended-sales/${id}`);
       setSuspendedSales((prev) => prev.filter((sale) => sale.id !== id));
       if (onDeleteSuccess) onDeleteSuccess();
-      toast.success("تم حذف الفاتورة المعلقة بنجاح");
+      toast.success(t("deleteSuspendedSuccess") || "تم حذف الفاتورة المعلقة بنجاح");
     } catch (err) {
       console.error("Error deleting suspended sale:", err);
-      toast.error("تعذر حذف الفاتورة المعلقة");
+      toast.error(t("failedToDeleteSuspended") || "تعذر حذف الفاتورة المعلقة");
     } finally {
       setIsProcessing(false);
     }
@@ -89,11 +89,11 @@ function SuspendedInvoicesModal({
       // 2. تحديث السلة والخصومات في واجهة المحاسب
       onRestore(sale);
       
-      toast.success(`تمت استعادة الفاتورة المعلقة ${sale.suspend_id} بنجاح`);
+      toast.success(`${t("saleRestoredSuccessfully") || "تمت استعادة الفاتورة المعلقة بنجاح"} | ID: ${sale.suspend_id}`);
       onClose();
     } catch (err) {
       console.error("Error resuming sale:", err);
-      toast.error("حدث خطأ أثناء استعادة الفاتورة");
+      toast.error(t("failedToResume") || "حدث خطأ أثناء استعادة الفاتورة");
     } finally {
       setIsProcessing(false);
     }
@@ -102,7 +102,7 @@ function SuspendedInvoicesModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
+    <div className="fixed inset-0 z-50 overflow-y-auto modal">
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-black bg-opacity-50 transition-opacity backdrop-blur-sm"
@@ -111,7 +111,7 @@ function SuspendedInvoicesModal({
         }}
       ></div>
 
-      {/* Modal */}
+      {/* Modal Card */}
       <div className="flex min-h-full items-center justify-center p-4">
         <div className="relative bg-white dark:bg-gray-800 rounded-3xl shadow-2xl max-w-2xl w-full border-2 border-primary-500 overflow-hidden transition-all duration-300">
           
@@ -121,10 +121,10 @@ function SuspendedInvoicesModal({
               <span className="text-2xl">📂</span>
               <div>
                 <h3 className="text-lg font-bold">
-                  {t("suspendedSales") || "قائمة الفواتير المعلقة والانتظار"}
+                  {t("suspendedSales")}
                 </h3>
                 <p className="text-xs opacity-90 mt-0.5">
-                  استرجاع أو إدارة الفواتير المعلقة مؤقتاً لتخفيف الازدحام
+                  {language === "ar" ? "استرجاع أو إدارة الفواتير المعلقة مؤقتاً لتخفيف الازدحام" : "Retrieve or manage temporarily suspended invoices to reduce congestion"}
                 </p>
               </div>
             </div>
@@ -133,7 +133,7 @@ function SuspendedInvoicesModal({
               onClick={fetchSuspendedSales}
               disabled={isLoading || isProcessing}
               className="p-2 hover:bg-white/10 rounded-full text-white/95 hover:text-white transition-all active:scale-95"
-              title="تحديث القائمة"
+              title={t("refresh") || "تحديث"}
             >
               <FontAwesomeIcon icon={faSync} className={isLoading ? "animate-spin" : ""} />
             </button>
@@ -144,13 +144,15 @@ function SuspendedInvoicesModal({
             
             {/* واجهة تحذير تأكيد إفراغ السلة الحالية */}
             {confirmTarget && (
-              <div className="p-4 bg-amber-50 dark:bg-amber-950/20 border-2 border-amber-500/40 rounded-2xl space-y-3 animate-fade-in">
+              <div className="p-4 bg-amber-50 dark:bg-amber-955/20 border-2 border-amber-500/40 rounded-2xl space-y-3 animate-fade-in">
                 <div className="flex items-start space-x-2.5 rtl:space-x-reverse text-amber-800 dark:text-amber-300">
                   <FontAwesomeIcon icon={faExclamationTriangle} className="text-xl mt-0.5" />
                   <div>
-                    <h4 className="font-bold text-sm">تأكيد استبدال سلة المشتريات الحالية!</h4>
+                    <h4 className="font-bold text-sm">{t("confirmReplaceCartTitle") || "تأكيد استبدال سلة المشتريات الحالية!"}</h4>
                     <p className="text-xs mt-1 leading-relaxed">
-                      السلة الحالية تحتوي على <strong>{currentCartItemCount} منتجات</strong>. عند استعادة الفاتورة المعلقة ({confirmTarget.suspend_id})، سيتم **إفراغ المنتجات الحالية بالكامل** واستبدالها بالمنتجات المعلقة. هل تريد الاستمرار؟
+                      {language === "ar"
+                        ? `السلة الحالية تحتوي على ${currentCartItemCount} منتجات. عند استعادة الفاتورة المعلقة (${confirmTarget.suspend_id})، سيتم إفراغ المنتجات الحالية بالكامل واستبدالها بالمنتجات المعلقة. هل تريد الاستمرار؟`
+                        : `The current cart contains ${currentCartItemCount} products. Resuming suspended sale (${confirmTarget.suspend_id}) will completely replace the current cart items. Do you want to continue?`}
                     </p>
                   </div>
                 </div>
@@ -162,13 +164,13 @@ function SuspendedInvoicesModal({
                     }}
                     className="py-1.5 px-4 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-bold transition-all"
                   >
-                    نعم، أفرغ واسترجع المعلقة
+                    {t("confirmReplaceCartBtn") || "نعم، استرجع المعلقة"}
                   </button>
                   <button
                     onClick={() => setConfirmTarget(null)}
                     className="py-1.5 px-4 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-xs font-bold transition-all"
                   >
-                    تراجع
+                    {t("cancel")}
                   </button>
                 </div>
               </div>
@@ -176,26 +178,26 @@ function SuspendedInvoicesModal({
 
             {/* محتوى الجدول والتحميل */}
             {isLoading ? (
-              <div className="py-16 text-center text-gray-500 dark:text-gray-400">
+              <div className="py-16 text-center text-gray-500 dark:text-gray-400 font-bold">
                 <FontAwesomeIcon icon={faSpinner} className="animate-spin text-3xl text-primary-500" />
-                <p className="text-xs font-semibold mt-3">جاري تحميل الفواتير المعلقة...</p>
+                <p className="text-xs font-semibold mt-3">{t("loadingSuspended") || "جاري تحميل الفواتير المعلقة..."}</p>
               </div>
             ) : suspendedSales.length === 0 ? (
-              <div className="py-16 text-center text-gray-400 dark:text-gray-500 space-y-3">
+              <div className="py-16 text-center text-gray-400 dark:text-gray-500 space-y-3 font-bold">
                 <FontAwesomeIcon icon={faFolderOpen} className="text-5xl opacity-40" />
-                <p className="text-sm font-semibold">لا توجد أي فواتير معلقة حالياً.</p>
-                <p className="text-xs text-gray-400/80">عند تعليق فواتير العملاء ستظهر هنا لمتابعتها لاحقاً.</p>
+                <p className="text-sm font-semibold">{t("noSuspendedSales") || "لا توجد أي فواتير معلقة حالياً."}</p>
+                <p className="text-xs text-gray-400/80">{t("suspendedInvoicesHelp") || "عند تعليق فواتير العملاء ستظهر هنا لمتابعتها لاحقاً."}</p>
               </div>
             ) : (
               <div className="border border-gray-200 dark:border-gray-700 rounded-2xl overflow-hidden bg-white dark:bg-gray-900/10 max-h-[300px] overflow-y-auto">
                 <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-right rtl">
                   <thead className="bg-gray-50 dark:bg-gray-800">
                     <tr>
-                      <th className="px-4 py-2.5 text-xs font-bold text-gray-500 uppercase">معرف التعليق</th>
-                      <th className="px-4 py-2.5 text-xs font-bold text-gray-500 uppercase">العميل / الملاحظة</th>
-                      <th className="px-4 py-2.5 text-xs font-bold text-gray-500 uppercase text-center">المنتجات</th>
-                      <th className="px-4 py-2.5 text-xs font-bold text-gray-500 uppercase text-left">الإجمالي</th>
-                      <th className="px-4 py-2.5 text-xs font-bold text-gray-500 uppercase text-center w-24">إجراءات</th>
+                      <th className="px-4 py-2.5 text-xs font-bold text-gray-500 uppercase">{t("suspendIdColumn") || "معرف التعليق"}</th>
+                      <th className="px-4 py-2.5 text-xs font-bold text-gray-500 uppercase">{t("customerNoteColumn") || "العميل / الملاحظة"}</th>
+                      <th className="px-4 py-2.5 text-xs font-bold text-gray-500 uppercase text-center">{t("itemsColumn") || "المنتجات"}</th>
+                      <th className="px-4 py-2.5 text-xs font-bold text-gray-500 uppercase text-left">{t("totalColumn") || "الإجمالي"}</th>
+                      <th className="px-4 py-2.5 text-xs font-bold text-gray-500 uppercase text-center w-24">{t("actionsColumn") || "إجراءات"}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
@@ -208,29 +210,29 @@ function SuspendedInvoicesModal({
                           {sale.suspend_id}
                         </td>
                         <td className="px-4 py-3 text-xs text-gray-700 dark:text-gray-300 font-medium">
-                          {sale.note || <span className="text-gray-400 italic">بدون ملاحظة</span>}
+                          {sale.note || <span className="text-gray-400 italic">{t("noNote") || "بدون ملاحظة"}</span>}
                         </td>
                         <td className="px-4 py-3 text-xs font-bold text-gray-700 dark:text-gray-300 text-center">
                           {sale.items?.length || 0}
                         </td>
                         <td className="px-4 py-3 text-xs font-black text-gray-900 dark:text-white font-mono text-left">
-                          {parseFloat(sale.total).toFixed(2)} ر.س
+                          {parseFloat(sale.total).toFixed(2)} {t("sar") || "ر.س"}
                         </td>
                         <td className="px-4 py-3 text-center flex justify-center space-x-2 rtl:space-x-reverse">
                           <button
                             onClick={() => handleResume(sale)}
                             disabled={isProcessing}
                             className="p-1.5 bg-green-50 hover:bg-green-100 dark:bg-green-950/20 text-green-600 dark:text-green-400 rounded-lg text-xs font-bold transition-all active:scale-95 disabled:opacity-50 flex items-center space-x-1 rtl:space-x-reverse"
-                            title="استعادة الفاتورة"
+                            title={t("resumeSale") || "استعادة الفاتورة"}
                           >
                             <FontAwesomeIcon icon={faPlay} className="text-[10px]" />
-                            <span>استعادة</span>
+                            <span>{t("resume") || "استعادة"}</span>
                           </button>
                           <button
                             onClick={() => handleDelete(sale.id)}
                             disabled={isProcessing}
                             className="p-1.5 bg-red-50 hover:bg-red-100 dark:bg-red-950/20 text-red-500 dark:text-red-400 rounded-lg text-xs transition-all active:scale-95 disabled:opacity-50"
-                            title="حذف نهائي"
+                            title={t("delete") || "حذف"}
                           >
                             <FontAwesomeIcon icon={faTrash} />
                           </button>
@@ -250,10 +252,9 @@ function SuspendedInvoicesModal({
                 disabled={isProcessing}
                 className="py-2.5 px-6 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-xl font-bold transition-all text-sm"
               >
-                {t("close") || "إغلاق"}
+                {t("close")}
               </button>
             </div>
-
           </div>
         </div>
       </div>

@@ -21,12 +21,17 @@ import {
   faExclamationTriangle,
   faUser,
   faHistory,
+  faListCheck,
+  faFileInvoice,
 } from "@fortawesome/free-solid-svg-icons";
 import api from "../services/api";
 import ConfirmationModal from "../components/ConfirmationModal";
+import CustomerSelector from "../components/CustomerSelector";
+import CashRefundModal from "../components/CashRefundModal";
+import VoucherRefundModal from "../components/VoucherRefundModal";
 
 function SalesReturn() {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   
@@ -38,10 +43,13 @@ function SalesReturn() {
   
   const [isVerifying, setIsVerifying] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showCashRefundModal, setShowCashRefundModal] = useState(false);
+  const [showVoucherRefundModal, setShowVoucherRefundModal] = useState(false);
   
   // حقول بيانات عميل الاستبدال وقائمة التحقق
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [checkBranch, setCheckBranch] = useState(false);
   const [checkDate, setCheckDate] = useState(false);
   const [checkCondition, setCheckCondition] = useState(false);
@@ -132,7 +140,13 @@ function SalesReturn() {
       });
       
       if (response.data?.success) {
-        setActiveInvoice(response.data.data);
+        const saleData = response.data.data;
+        setActiveInvoice(saleData);
+        if (saleData.customer) {
+          setSelectedCustomer(saleData.customer);
+          setCustomerName(saleData.customer.name);
+          setCustomerPhone(saleData.customer.phone);
+        }
         toast.success("تم التحقق من الفاتورة وجلب عناصرها.");
       }
     } catch (err) {
@@ -229,13 +243,13 @@ function SalesReturn() {
   const handleBarcodeScanned = (barcode) => {
     if (!activeInvoice) return;
 
-    // البحث عن المنتج المطابق في الفاتورة المفتوحة
+    // البحث عن المنتج المطابق في الفاتورة المفتوحة بالباركود أو SKU
     const matchedSaleItem = activeInvoice.items.find(
-      (item) => item.product.barcode === barcode
+      (item) => item.product.barcode === barcode || item.product.sku === barcode
     );
 
     if (!matchedSaleItem) {
-      toast.error(`المنتج ذو الباركود (${barcode}) غير موجود في هذه الفاتورة!`);
+      toast.error(`المنتج (${barcode}) غير موجود في هذه الفاتورة!`);
       return;
     }
 
@@ -281,6 +295,9 @@ function SalesReturn() {
     },
     onSuccess: (data) => {
       toast.success(`تم إصدار فاتورة المرتجع رقم: ${data.return_number}`);
+      if (refundMethod === "cash") {
+        toast.success(t("cashDrawerOpened") || "تم فتح درج النقدية تلقائياً");
+      }
       if (data.voucher) {
         setPrintedVoucher({
           ...data.voucher,
@@ -296,10 +313,13 @@ function SalesReturn() {
       }
       setCustomerName("");
       setCustomerPhone("");
+      setSelectedCustomer(null);
       setCheckBranch(false);
       setCheckDate(false);
       setCheckCondition(false);
       setShowConfirmModal(false);
+      setShowCashRefundModal(false);
+      setShowVoucherRefundModal(false);
       
       // تحديث الكاش
       queryClient.invalidateQueries(["returns"]);
@@ -320,8 +340,9 @@ function SalesReturn() {
       sale_id: activeInvoice.id,
       refund_method: refundMethod,
       reason: reason.trim() || null,
-      customer_name: refundMethod === "replacement" ? customerName.trim() || null : null,
-      customer_phone: refundMethod === "replacement" ? customerPhone.trim() || null : null,
+      customer_name: selectedCustomer ? selectedCustomer.name : null,
+      customer_phone: selectedCustomer ? selectedCustomer.phone : null,
+      is_not_damaged: checkCondition,
       items: returnCart.map((item) => ({
         sale_item_id: item.sale_item_id,
         return_qty: item.return_qty,
@@ -432,7 +453,8 @@ function SalesReturn() {
             {/* ملخص الفاتورة الأصلية */}
             <div className="card p-5 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-gray-800 dark:to-gray-800/80 border-l-4 border-amber-500">
               <h3 className="text-lg font-bold text-gray-800 dark:text-slate-100 mb-3 flex items-center gap-2">
-                <span>📄</span> بيانات الفاتورة الأصلية
+                <FontAwesomeIcon icon={faFileInvoice} className="text-amber-500" />
+                <span>بيانات الفاتورة الأصلية</span>
               </h3>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm text-gray-700 dark:text-gray-300">
                 <div>
@@ -482,11 +504,20 @@ function SalesReturn() {
             {/* قائمة التحقق الإلزامية لمسؤول المرتجعات */}
             <div className="card p-5 bg-amber-500/5 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-900 rounded-3xl space-y-3">
               <h3 className="text-md font-bold text-amber-800 dark:text-amber-450 flex items-center gap-1.5">
-                <span>📋</span> قائمة التحقق الإلزامية لمسؤول الاسترجاع (Checklist)
+                <FontAwesomeIcon icon={faListCheck} className="text-amber-500" />
+                <span>قائمة التحقق الإلزامية لمسؤول الاسترجاع (Checklist)</span>
               </h3>
               <p className="text-xs text-gray-500 dark:text-gray-400">
                 يرجى التحقق يدويًا وتأكيد استيفاء الشروط التالية مع السلع لاعتماد المرتجع:
               </p>
+              
+              {!isWithinPolicy && (
+                <div className="p-3.5 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30 rounded-2xl text-xs text-red-600 dark:text-red-400 font-bold flex items-center gap-2 animate-pulse">
+                  <FontAwesomeIcon icon={faExclamationTriangle} className="text-red-500" />
+                  <span>تنبيه: لقد تجاوزت هذه الفاتورة فترة الـ 14 يوماً المسموحة للاسترجاع ({invoiceAgeDays} يوم مضى). لا يمكن إتمام المرتجع.</span>
+                </div>
+              )}
+
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-1">
                 <label className="flex items-center gap-2.5 cursor-pointer p-3 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 hover:border-amber-400 transition-all select-none">
                   <input
@@ -501,13 +532,14 @@ function SalesReturn() {
                 </label>
 
                 <label className={`flex items-center gap-2.5 cursor-pointer p-3 bg-white dark:bg-gray-800 rounded-2xl border hover:border-amber-400 transition-all select-none ${
-                  !isWithinPolicy ? "border-red-350 dark:border-red-900 bg-red-500/5" : "border-gray-200 dark:border-gray-700"
+                  !isWithinPolicy ? "border-red-300 dark:border-red-900 bg-red-500/5 opacity-60 cursor-not-allowed" : "border-gray-200 dark:border-gray-700"
                 }`}>
                   <input
                     type="checkbox"
-                    checked={checkDate}
+                    checked={checkDate && isWithinPolicy}
+                    disabled={!isWithinPolicy}
                     onChange={(e) => setCheckDate(e.target.checked)}
-                    className="w-4 h-4 text-amber-500 rounded focus:ring-amber-500 cursor-pointer"
+                    className="w-4 h-4 text-amber-500 rounded focus:ring-amber-500 cursor-pointer disabled:cursor-not-allowed"
                   />
                   <div className="text-xs font-bold text-gray-700 dark:text-gray-300 flex flex-col">
                     <span>المدة مسموحة للإرجاع</span>
@@ -535,11 +567,36 @@ function SalesReturn() {
             <div className="card p-5 overflow-hidden">
               <div className="pb-3 border-b border-gray-150 dark:border-gray-700 mb-4 flex items-center justify-between flex-wrap gap-2">
                 <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                  <span>📦</span> عناصر الفاتورة والكميات
+                  <FontAwesomeIcon icon={faBox} className="text-amber-500" />
+                  <span>عناصر الفاتورة والكميات</span>
                 </h3>
                 <span className="text-xs text-gray-400 bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-full">
-                  يمكنك تمرير باركود المنتجات مباشرةً لإضافتها
+                  يمكنك تمرير باركود المنتجات بالماسح مباشرةً لإضافتها
                 </span>
+              </div>
+
+              {/* حقل إدخال ومسح باركود المنتج */}
+              <div className="mb-5 bg-amber-500/5 p-3 rounded-2xl border border-amber-500/10">
+                <label className="text-xs font-bold text-amber-800 dark:text-amber-450 block mb-1">
+                  مسح باركود السلعة بالماسح أو إدخال الرمز/SKU يدوياً لإضافتها للمرتجع:
+                </label>
+                <div className="flex gap-2 max-w-md">
+                  <input
+                    type="text"
+                    placeholder="امسح الباركود أو اكتب SKU واضغط Enter..."
+                    className="input py-2 px-3 text-xs w-full font-mono focus:ring-2 focus:ring-amber-500"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const val = e.target.value.trim();
+                        if (val) {
+                          handleBarcodeScanned(val);
+                          e.target.value = "";
+                        }
+                      }
+                    }}
+                  />
+                </div>
               </div>
 
               <div className="overflow-x-auto">
@@ -624,38 +681,35 @@ function SalesReturn() {
             <div className="card p-6 bg-slate-50 dark:bg-gray-800 space-y-4">
               <h3 className="text-lg font-bold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2 flex items-center gap-2">
                 <FontAwesomeIcon icon={faCoins} className="text-amber-500" />
-                <span>ملخص المرتجع والرد المالي</span>
+                <span>{t("returnAndRefundSummary")}</span>
               </h3>
 
               <div className="space-y-2 text-sm text-gray-600 dark:text-gray-350">
                 <div className="flex justify-between">
-                  <span>إجمالي قيمة المرتجعات:</span>
-                  <span className="font-bold text-gray-900 dark:text-white">{returnSummary.refund_total.toFixed(2)} ر.س</span>
+                  <span>{t("totalReturnItemsValue")}:</span>
+                  <span className="font-bold text-gray-900 dark:text-white">{returnSummary.refund_total.toFixed(2)} {t("sar")}</span>
                 </div>
                 
                 {proportionalDiscount > 0 && (
                   <div className="flex justify-between text-red-500 font-medium">
-                    <span>خصم مسترجع نسبي:</span>
-                    <span>-{proportionalDiscount.toFixed(2)} ر.س</span>
+                    <span>{t("proportionalDiscount")}:</span>
+                    <span>-{proportionalDiscount.toFixed(2)} {t("sar")}</span>
                   </div>
                 )}
                 
                 <div className="flex justify-between text-lg font-black text-gray-900 dark:text-white border-t border-gray-200 dark:border-gray-700 pt-3">
-                  <span>المبلغ الصافي المسترد:</span>
-                  <span className="text-amber-600 dark:text-amber-400 font-black">{finalRefundTotal.toFixed(2)} ر.س</span>
+                  <span>{t("netAmountRefunded")}:</span>
+                  <span className="text-amber-600 dark:text-amber-400 font-black">{finalRefundTotal.toFixed(2)} {t("sar")}</span>
                 </div>
               </div>
 
               {/* اختيار وسيلة الرد المالي */}
               <div className="space-y-2">
-                <label className="label font-bold">وسيلة رد الأموال:</label>
+                <label className="label font-bold">{t("refundMethod")}:</label>
                 <div className="grid grid-cols-2 gap-2">
                   {[
-                    { value: "cash", label: "نقدي", icon: faMoneyBillWave },
-                    { value: "card", label: "شبكة/كارت", icon: faCreditCard },
-                    { value: "transfer", label: "تحويل", icon: faBuildingColumns },
-                    { value: "hybrid", label: "مختلط", icon: faWallet },
-                    { value: "replacement", label: "استبدال / رصيد عميل", icon: faUndo },
+                    { value: "cash", label: t("cash"), icon: faMoneyBillWave },
+                    { value: "replacement", label: t("replacement"), icon: faUndo },
                   ].map((method) => (
                     <button
                       key={method.value}
@@ -663,9 +717,9 @@ function SalesReturn() {
                       onClick={() => setRefundMethod(method.value)}
                       className={`p-2.5 rounded-xl border flex items-center justify-center gap-1.5 transition-all text-xs font-bold ${
                         refundMethod === method.value
-                          ? "border-amber-500 bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-300 col-span-2 py-3"
+                          ? "border-amber-500 bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-300 py-3"
                           : "border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-900"
-                      } ${method.value === 'replacement' ? 'col-span-2' : ''}`}
+                      }`}
                     >
                       <FontAwesomeIcon icon={method.icon} />
                       <span>{method.label}</span>
@@ -674,44 +728,31 @@ function SalesReturn() {
                 </div>
               </div>
 
-              {/* بيانات العميل في حال الاستبدال */}
-              {refundMethod === "replacement" && (
-                <div className="space-y-3 p-3 bg-amber-500/5 rounded-2xl border border-amber-500/20 pt-2 animate-fadeIn">
-                  <div className="text-xs font-bold text-amber-700 dark:text-amber-450 flex items-center gap-1.5">
-                    <FontAwesomeIcon icon={faUser} />
-                    <span>بيانات العميل لسند الاستبدال:</span>
-                  </div>
-                  <div className="space-y-2">
-                    <input
-                      type="text"
-                      placeholder="اسم العميل (مثال: محمد أحمد)"
-                      value={customerName}
-                      onChange={(e) => setCustomerName(e.target.value)}
-                      className="input w-full text-xs"
-                    />
-                    <input
-                      type="text"
-                      placeholder="رقم الهاتف (مثال: 0501234567)"
-                      value={customerPhone}
-                      onChange={(e) => setCustomerPhone(e.target.value)}
-                      className="input w-full text-xs"
-                    />
-                  </div>
+              {/* اختيار أو إضافة العميل */}
+              <div className="space-y-3 p-3 bg-amber-500/5 rounded-2xl border border-amber-500/20 pt-2 animate-fadeIn">
+                <div className="text-xs font-bold text-amber-700 dark:text-amber-450 flex items-center gap-1.5">
+                  <FontAwesomeIcon icon={faUser} />
+                  <span>{t("clientAssociatedWithReturn")}</span>
                 </div>
-              )}
+                <CustomerSelector
+                  selectedCustomer={selectedCustomer}
+                  onSelectCustomer={setSelectedCustomer}
+                  defaultCustomerName="العميل الافتراضي - كاش"
+                />
+              </div>
 
               {/* ملاحظة أو سبب الاسترجاع */}
               <div className="space-y-2">
                 <label className="label font-bold flex items-center gap-1.5">
                   <FontAwesomeIcon icon={faKeyboard} className="text-gray-400" />
-                  <span>سبب الاسترجاع (اختياري):</span>
+                  <span>{t("returnReasonOptional")}</span>
                 </label>
                 <textarea
                   rows="3"
                   maxLength="200"
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
-                  placeholder="مثال: منتج تالف، رغبة العميل، مقاس غير مناسب..."
+                  placeholder={language === "ar" ? "مثال: منتج تالف، رغبة العميل، مقاس غير مناسب..." : "e.g. damaged product, customer request..."}
                   className="textarea w-full text-sm"
                 />
               </div>
@@ -719,7 +760,15 @@ function SalesReturn() {
               {/* زر الإصدار النهائي */}
               <button
                 type="button"
-                onClick={() => setShowConfirmModal(true)}
+                onClick={() => {
+                  if (refundMethod === "cash") {
+                    setShowCashRefundModal(true);
+                  } else if (refundMethod === "replacement") {
+                    setShowVoucherRefundModal(true);
+                  } else {
+                    setShowConfirmModal(true);
+                  }
+                }}
                 disabled={returnCart.length === 0 || submitReturnMutation.isPending || !checkBranch || !checkDate || !checkCondition}
                 className="w-full py-4 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-750 text-white rounded-xl font-bold text-lg shadow-md hover:shadow-lg transition-all active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
@@ -728,7 +777,7 @@ function SalesReturn() {
                 ) : (
                   <FontAwesomeIcon icon={faUndo} />
                 )}
-                <span>تأكيد وإصدار المرتجع</span>
+                <span>{t("confirmAndIssueReturn") || "تأكيد وإصدار المرتجع"}</span>
               </button>
             </div>
           </div>
@@ -740,15 +789,18 @@ function SalesReturn() {
         isOpen={showConfirmModal}
         onClose={() => setShowConfirmModal(false)}
         onConfirm={handleConfirmReturn}
-        title="تأكيد فاتورة المرتجع"
-        message={`هل أنت متأكد من رغبتك في إصدار فاتورة مرتجع المبيعات (الفاتورة العكسية)؟ سيتم رد مبلغ بقيمة (${finalRefundTotal.toFixed(2)} ر.س) للعميل وسيلة (${
-          refundMethod === "cash" ? "نقداً" :
-          refundMethod === "card" ? "عن طريق كارت شبكة" :
-          refundMethod === "transfer" ? "بتحويل بنكي" :
-          refundMethod === "replacement" ? "سند استبدال مبيعات" : "بطريقة دفع مقسمة"
-        }) وإعادة إدراج السلع المسترجعة في المخازن.`}
-        confirmText="نعم، اعتمد المرتجع"
-        cancelText="تراجع"
+        title={t("confirmReturn") || "تأكيد فاتورة المرتجع"}
+        message={
+          language === "ar"
+            ? `هل أنت متأكد من رغبتك في إصدار فاتورة مرتجع المبيعات (الفاتورة العكسية)؟ سيتم رد مبلغ بقيمة (${finalRefundTotal.toFixed(2)} ر.س) للعميل وسيلة (${
+                refundMethod === "cash" ? "نقداً" : "سند استبدال مبيعات"
+              }) وإعادة إدراج السلع المسترجعة في المخازن.`
+            : `Are you sure you want to issue the sales return invoice (reverse invoice)? A refund of (${finalRefundTotal.toFixed(2)} SAR) will be paid to the customer via (${
+                refundMethod === "cash" ? "Cash" : "Sales Replacement Voucher"
+              }) and the returned items will be returned to inventory.`
+        }
+        confirmText={t("yesConfirm") || "نعم، اعتمد المرتجع"}
+        cancelText={t("cancel") || "تراجع"}
         type="warning"
       />
         </>
@@ -1060,7 +1112,10 @@ function SalesReturn() {
 
               {/* عناصر المرتجع */}
               <div className="space-y-2">
-                <h4 className="font-bold text-gray-900 dark:text-white">📦 البنود المسترجعة:</h4>
+                <h4 className="font-bold text-gray-900 dark:text-white flex items-center gap-1.5">
+                  <FontAwesomeIcon icon={faBox} className="text-amber-500" />
+                  <span>البنود المسترجعة:</span>
+                </h4>
                 <div className="border border-gray-150 dark:border-gray-700 rounded-xl overflow-hidden animate-fadeIn">
                   <table className="w-full text-start text-xs border-collapse">
                     <thead>
@@ -1136,6 +1191,23 @@ function SalesReturn() {
           </div>
         </div>
       )}
+
+      <CashRefundModal
+        isOpen={showCashRefundModal}
+        onClose={() => setShowCashRefundModal(false)}
+        onConfirm={handleConfirmReturn}
+        refundTotal={finalRefundTotal}
+        isProcessing={submitReturnMutation.isPending}
+      />
+
+      <VoucherRefundModal
+        isOpen={showVoucherRefundModal}
+        onClose={() => setShowVoucherRefundModal(false)}
+        onConfirm={handleConfirmReturn}
+        refundTotal={finalRefundTotal}
+        selectedCustomer={selectedCustomer}
+        isProcessing={submitReturnMutation.isPending}
+      />
     </div>
   );
 }

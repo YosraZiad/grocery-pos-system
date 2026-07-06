@@ -8,7 +8,7 @@ import CustomerSelector from "./CustomerSelector";
 const SAR_DENOMINATIONS = [5, 10, 50, 100, 200, 500];
 
 function CashPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [receivedAmount, setReceivedAmount] = useState("");
   const inputRef = useRef(null);
@@ -83,10 +83,10 @@ function CashPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
             </span>
             <div>
               <h3 className="text-lg font-bold">
-                {t("cashPayment") || "الدفع النقدي | Cash Payment"}
+                {t("cashPayment")}
               </h3>
               <p className="text-xs opacity-90 mt-0.5">
-                {t("enterReceivedDesc") || "أدخل المبلغ المستلم من العميل لحساب المتبقي"}
+                {language === "ar" ? "أدخل المبلغ المستلم من العميل لحساب المتبقي" : "Enter the amount received from customer"}
               </p>
             </div>
           </div>
@@ -96,10 +96,10 @@ function CashPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
             {/* إجمالي الفاتورة المطلوب */}
             <div className="flex justify-between items-center p-4 bg-gray-50 dark:bg-gray-900/40 rounded-xl border border-gray-100 dark:border-gray-700">
               <span className="text-gray-600 dark:text-gray-400 font-semibold">
-                {t("totalRequired") || "الإجمالي المطلوب"}:
+                {t("totalRequired")}:
               </span>
               <span className="text-2xl font-extrabold text-gray-900 dark:text-white">
-                {totalDue.toFixed(2)} ر.س
+                {totalDue.toFixed(2)} {t("sar") || "ر.س"}
               </span>
             </div>
 
@@ -107,13 +107,13 @@ function CashPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
             <CustomerSelector
               selectedCustomer={selectedCustomer}
               onSelectCustomer={setSelectedCustomer}
-              defaultCustomerName="العميل الافتراضي - كاش"
+              defaultCustomerName={t("defaultCashCustomer") || "العميل الافتراضي - كاش"}
             />
 
             {/* حقل إدخال المبلغ المستلم */}
             <div className="space-y-2">
               <label htmlFor="receivedInput" className="label text-sm font-bold text-gray-700 dark:text-gray-300">
-                {t("amountReceived") || "المبلغ المستلم"} (ر.س)
+                {t("amountReceived")} ({t("sar") || "ر.س"})
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none rtl:left-auto rtl:right-0 rtl:pr-3">
@@ -137,7 +137,7 @@ function CashPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
             {/* أزرار الفئات السريعة */}
             <div className="space-y-2">
               <div className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                {t("quickSelect") || "خيارات سريعة"}
+                {t("quickSelect")}
               </div>
               <div className="grid grid-cols-4 gap-2">
                 <button
@@ -146,7 +146,7 @@ function CashPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
                   className="col-span-2 py-3 bg-primary-100 hover:bg-primary-200 dark:bg-primary-950/40 dark:hover:bg-primary-900/50 text-primary-700 dark:text-primary-300 rounded-xl font-bold text-sm transition-all border border-primary-200 dark:border-primary-800"
                 >
                   <FontAwesomeIcon icon={faCoins} className="ml-1" />
-                  <span>{t("exactAmount") || "المبلغ بالضبط"}</span>
+                  <span>{t("exactAmount")}</span>
                 </button>
                 {SAR_DENOMINATIONS.map((denom) => (
                   <button
@@ -155,7 +155,7 @@ function CashPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
                     onClick={() => handleDenominationClick(denom)}
                     className="py-3 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 rounded-xl font-bold text-sm transition-all border border-gray-200 dark:border-gray-600"
                   >
-                    {denom} ر.س
+                    {denom} {t("sar") || "ر.س"}
                   </button>
                 ))}
               </div>
@@ -170,13 +170,13 @@ function CashPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
               <div className={`text-xs font-bold uppercase tracking-wider ${
                 isAmountSufficient ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
               }`}>
-                {isAmountSufficient ? (t("changeDue") || "المبلغ المتبقي للعميل (الباقي)") : (t("insufficientAmount") || "المبلغ غير كافٍ")}
+                {isAmountSufficient ? t("changeDue") : t("insufficientAmount")}
               </div>
               <div className={`text-5xl font-black ${
                 isAmountSufficient ? "text-green-600 dark:text-green-400 animate-pulse" : "text-red-600 dark:text-red-400"
               }`}>
                 {isAmountSufficient ? changeDue.toFixed(2) : (totalDue - parsedReceived).toFixed(2)}
-                <span className="text-xl font-bold ml-1.5 rtl:mr-1.5">ر.س</span>
+                <span className="text-xl font-bold ml-1.5 rtl:mr-1.5">{t("sar") || "ر.س"}</span>
               </div>
             </div>
 
@@ -187,7 +187,7 @@ function CashPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
                 onClick={onClose}
                 className="px-5 py-3 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 font-semibold transition-all duration-200"
               >
-                {t("cancel") || "إلغاء"}
+                {t("cancel")}
               </button>
               <button
                 type="submit"
@@ -197,7 +197,7 @@ function CashPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
                 <span>
                   <FontAwesomeIcon icon={faCoins} />
                 </span>
-                <span>{t("confirmPayment") || "تأكيد الدفع وإتمام الفاتورة"}</span>
+                <span>{t("confirmPayment")}</span>
               </button>
             </div>
           </form>

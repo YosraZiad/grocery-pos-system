@@ -333,6 +333,47 @@ class RealisticDataSeeder extends Seeder
             );
         }
 
+        // إنشاء الإعدادات الافتراضية
+        \App\Models\Setting::firstOrCreate(
+            ['key' => 'return_period_days', 'tenant_id' => $tenant->id],
+            ['value' => '14']
+        );
+
+        // إنشاء العملاء الافتراضيين
+        $defaultCustomers = [
+            [
+                'name' => 'العميل الافتراضي - كاش',
+                'phone' => '0500000000',
+                'balance' => 0.00,
+                'is_temporary' => false,
+            ],
+            [
+                'name' => 'العميل الافتراضي - شبكة',
+                'phone' => '0500000001',
+                'balance' => 0.00,
+                'is_temporary' => false,
+            ],
+            [
+                'name' => 'العميل الافتراضي - تحويل',
+                'phone' => '0500000002',
+                'balance' => 0.00,
+                'is_temporary' => false,
+            ],
+            [
+                'name' => 'العميل الافتراضي - دفع مختلط',
+                'phone' => '0500050000',
+                'balance' => 0.00,
+                'is_temporary' => false,
+            ],
+        ];
+
+        foreach ($defaultCustomers as $cust) {
+            \App\Models\Customer::firstOrCreate(
+                ['phone' => $cust['phone'], 'tenant_id' => $tenant->id],
+                array_merge($cust, ['tenant_id' => $tenant->id])
+            );
+        }
+
         $this->command->info('✅ تم إنشاء البيانات الواقعية بنجاح!');
         $this->command->info('📧 المدير: admin@example.com / password');
         $this->command->info('📧 الكاشير: cashier@example.com / password');
