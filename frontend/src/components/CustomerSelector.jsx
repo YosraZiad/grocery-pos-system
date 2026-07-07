@@ -15,7 +15,7 @@ function CustomerSelector({ selectedCustomer, onSelectCustomer, defaultCustomerN
   const [newPhone, setNewPhone] = useState("");
   const [duplicateCustomer, setDuplicateCustomer] = useState(null);
 
-  // 1. البحث التلقائي بالاسم أو الهاتف (Debounced) من شاشة البحث الرئيسية
+  // 1. البحث التلقائي بالاسم أو الهاتف أو رقم فاتورة المرتجع (Debounced) من شاشة البحث الرئيسية
   useEffect(() => {
     const trimmed = searchPhone.trim();
     if (trimmed.length < 2) {
@@ -26,6 +26,35 @@ function CustomerSelector({ selectedCustomer, onSelectCustomer, defaultCustomerN
     const delayDebounceFn = setTimeout(async () => {
       setIsSearching(true);
       try {
+        // التحقق مما إذا كان المدخل رقم مرتجع أو رمز سند
+        if (trimmed.toUpperCase().startsWith("RTN-") || trimmed.toUpperCase().startsWith("VCH-")) {
+          const response = await api.get(`/vouchers/verify-balance?query=${trimmed}`);
+          if (response.data?.success && response.data?.data) {
+            const voucherData = response.data.data;
+            
+            // اختيار وتفعيل رصيد السند فوراً بشكل تلقائي
+            onSelectCustomer({
+              id: voucherData.customer_id,
+              name: voucherData.customer_name || "عميل عام",
+              phone: voucherData.customer_phone,
+              balance: voucherData.amount,
+              voucher_code: voucherData.code
+            });
+
+            setSearchPhone("");
+            setSearchResults([]);
+            toast.success(
+              language === "en"
+                ? `Voucher balance of ${voucherData.amount.toFixed(2)} SAR applied successfully!`
+                : `تم بنجاح تطبيق رصيد المرتجع بقيمة ${voucherData.amount.toFixed(2)} ر.س!`
+            );
+          } else {
+            setSearchResults([]);
+          }
+          return;
+        }
+
+        // البحث العادي عن العملاء بالاسم أو الهاتف
         const response = await api.get(`/customers?search=${trimmed}`);
         if (response.data && response.data.data) {
           // Response represents a paginated list of customers, check data array
@@ -149,10 +178,32 @@ function CustomerSelector({ selectedCustomer, onSelectCustomer, defaultCustomerN
           <div className="relative flex-1">
             <input
               type="text"
-              placeholder={language === "en" ? "Search customer by name or phone..." : "ابحث بالاسم أو رقم الهاتف..."}
+              placeholder={language === "en" ? "Search customer by name or phone or RTN..." : "ابحث بالاسم، هاتف العميل، أو رقم الفاتورة RTN..."}
               value={searchPhone}
               onChange={(e) => setSearchPhone(e.target.value)}
-              className="input pr-9 py-2 text-xs w-full focus:ring-2 focus:ring-primary-500"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  if (searchResults.length === 1) {
+                    const cust = searchResults[0];
+                    if (cust.is_voucher) {
+                      onSelectCustomer({
+                        id: cust.customer_id,
+                        name: cust.customer_name || "عميل عام",
+                        phone: cust.customer_phone,
+                        balance: cust.balance,
+                        voucher_code: cust.voucher_code
+                      });
+                    } else {
+                      onSelectCustomer(cust);
+                    }
+                    setSearchPhone("");
+                    setSearchResults([]);
+                    toast.success(language === "en" ? `Customer selected` : `تم اختيار العميل وتفعيل رصيده`);
+                  }
+                }
+              }}
+              className="input pr-9 py-2 text-xs w-full focus:ring-2 focus:ring-primary-500 font-mono"
             />
             <span className="absolute right-3 top-3 text-gray-400">
               {isSearching ? (
@@ -172,10 +223,20 @@ function CustomerSelector({ selectedCustomer, onSelectCustomer, defaultCustomerN
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
-                      onSelectCustomer(cust);
+                      if (cust.is_voucher) {
+                        onSelectCustomer({
+                          id: cust.customer_id,
+                          name: cust.customer_name || "عميل عام",
+                          phone: cust.customer_phone,
+                          balance: cust.balance,
+                          voucher_code: cust.voucher_code
+                        });
+                      } else {
+                        onSelectCustomer(cust);
+                      }
                       setSearchPhone("");
                       setSearchResults([]);
-                      toast.success(language === "en" ? `Customer selected: ${cust.name}` : `تم اختيار العميل: ${cust.name}`);
+                      toast.success(language === "en" ? `Customer selected` : `تم اختيار العميل وتفعيل رصيده`);
                     }}
                     className="w-full text-start px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-750 text-xs text-gray-700 dark:text-gray-300 transition-all font-semibold flex flex-col"
                   >

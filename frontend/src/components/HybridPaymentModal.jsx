@@ -130,6 +130,19 @@ function HybridPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
     }
   }, [remaining, selectedCustomer]);
 
+  // مزامنة حالة كود السند المستعلم عنه عند تغيير العميل المحدد
+  useEffect(() => {
+    if (selectedCustomer) {
+      if (selectedCustomer.voucher_code) {
+        setFoundVoucherCode(selectedCustomer.voucher_code);
+        setFoundReturnBalance(parseFloat(selectedCustomer.balance));
+      }
+    } else {
+      setFoundVoucherCode(null);
+      setFoundReturnBalance(null);
+    }
+  }, [selectedCustomer]);
+
   // إيقاف إغلاق النافذة بزر Escape أثناء معالجة البطاقة
   useEffect(() => {
     if (!isOpen) return;
@@ -371,7 +384,7 @@ function HybridPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
           </div>
 
           {/* Body */}
-          <div className="p-6 space-y-6">
+          <div className="p-6 space-y-6 max-h-[calc(100vh-280px)] overflow-y-auto">
             
             {/* مؤشرات المبالغ */}
             <div className="grid grid-cols-3 gap-4">
@@ -702,13 +715,16 @@ function HybridPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
               )}
             </div>
 
-            {/* أزرار الحفظ والإغلاق */}
-            <div className="flex space-x-3 rtl:space-x-reverse pt-4 border-t border-gray-200 dark:border-gray-700">
+          </div>
+
+          {/* Footer (أزرار الحفظ والإغلاق) */}
+          <div className="p-5 bg-gray-50 dark:bg-gray-850 border-t border-gray-200 dark:border-gray-750 flex flex-col space-y-3">
+            <div className="flex space-x-3 rtl:space-x-reverse">
               <button
                 type="button"
                 onClick={handleCompleteSale}
                 disabled={remaining > 0 || isTerminalActive}
-                className="flex-1 py-3.5 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-xl hover:from-primary-700 hover:to-primary-800 disabled:opacity-40 disabled:cursor-not-allowed font-bold transition-all shadow-md flex items-center justify-center space-x-2 rtl:space-x-reverse"
+                className="flex-1 py-3.5 bg-gradient-to-r from-primary-600 to-primary-700 text-white rounded-xl hover:from-primary-700 hover:to-primary-800 disabled:opacity-40 disabled:cursor-not-allowed font-bold transition-all shadow-md flex items-center justify-center space-x-2 rtl:space-x-reverse text-sm"
               >
                 <FontAwesomeIcon icon={faCheckCircle} />
                 <span>{t("completeTransactionSaveInvoice") || "إتمام المعاملة وحفظ الفاتورة"}</span>
@@ -718,7 +734,7 @@ function HybridPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
                 type="button"
                 onClick={handleClose}
                 disabled={isTerminalActive}
-                className="py-3.5 px-6 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-xl font-bold transition-all disabled:opacity-50"
+                className="py-3.5 px-6 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-xl font-bold transition-all disabled:opacity-50 text-sm"
               >
                 {t("cancel") || "إلغاء"}
               </button>
@@ -727,10 +743,9 @@ function HybridPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
             {isTerminalActive && (
               <div className="text-[10px] text-gray-400 dark:text-gray-500 text-center flex items-center justify-center space-x-1.5 rtl:space-x-reverse font-bold">
                 <FontAwesomeIcon icon={faLock} />
-                <span>🔒 {t("systemLockedTerminal") || "النظام مغلق مالياً لحين اكتمال عملية التحقق من البطاقة الشبكية"}</span>
+                <span>{t("systemLockedTerminal") || "النظام مغلق مالياً لحين اكتمال عملية التحقق من البطاقة الشبكية"}</span>
               </div>
             )}
-
           </div>
 
         </div>

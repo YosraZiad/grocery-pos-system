@@ -62,14 +62,46 @@ class VoucherController extends Controller
             ->where('status', 'active')
             ->first();
 
-        // 2. إذا لم يعثر عليه، نبحث برقم فاتورة المرتجع المرتبطة بالسند
+        // 2. إذا لم يعثر عليه، نبحث برقم فاتورة المرتجع ونقوم بإنشاء سند له تلقائياً إن لم يكن موجوداً
         if (!$voucher) {
             $salesReturn = \App\Models\SalesReturn::where('return_number', $query)->first();
             if ($salesReturn) {
-                $voucher = Voucher::with('customer')
-                    ->where('sales_return_id', $salesReturn->id)
-                    ->where('status', 'active')
-                    ->first();
+                $existingVoucher = Voucher::where('sales_return_id', $salesReturn->id)->first();
+                if ($existingVoucher) {
+                    if ($existingVoucher->status !== 'active') {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'تم استهلاك رصيد هذا المرتجع مسبقاً بالكامل.',
+                        ], 422);
+                    }
+                    $voucher = $existingVoucher;
+                } else {
+                    $customer = null;
+                    $sale = $salesReturn->sale;
+                    if ($sale && $sale->customer_id) {
+                        $customer = \App\Models\Customer::find($sale->customer_id);
+                    }
+                    if (!$customer) {
+                        $customerPhone = $salesReturn->customer_phone ?: "0500000" . rand(1000, 9999);
+                        $customer = \App\Models\Customer::firstOrCreate(
+                            ['phone' => $customerPhone],
+                            [
+                                'tenant_id' => $salesReturn->tenant_id,
+                                'name' => $salesReturn->customer_name ?: "عميل ارجاع {$salesReturn->return_number}",
+                                'balance' => 0.00,
+                                'is_temporary' => true
+                            ]
+                        );
+                    }
+                    $voucher = Voucher::create([
+                        'tenant_id' => $salesReturn->tenant_id,
+                        'customer_id' => $customer->id,
+                        'sales_return_id' => $salesReturn->id,
+                        'code' => $salesReturn->return_number,
+                        'amount' => $salesReturn->refund_total,
+                        'status' => 'active',
+                    ]);
+                }
             }
         }
 
