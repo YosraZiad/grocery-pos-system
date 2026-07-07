@@ -16,6 +16,8 @@ import {
   faUser,
   faBuildingColumns,
   faWallet,
+  faXmark,
+  faSpinner,
 } from "@fortawesome/free-solid-svg-icons";
 import CustomerSelector from "./CustomerSelector";
 
@@ -61,6 +63,12 @@ function HybridPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
   const { t, language } = useI18n();
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   
+  // حقل البحث بفاتورة المرتجع
+  const [returnSearchQuery, setReturnSearchQuery] = useState("");
+  const [isSearchingReturn, setIsSearchingReturn] = useState(false);
+  const [foundReturnBalance, setFoundReturnBalance] = useState(null);
+  const [foundVoucherCode, setFoundVoucherCode] = useState(null);
+
   // المدفوعات المضافة حالياً
   const [payments, setPayments] = useState([]);
   
@@ -91,6 +99,10 @@ function HybridPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
       setCardInput(totalDue.toFixed(2));
       setTransferInput(totalDue.toFixed(2));
       setAccountInput("");
+      setReturnSearchQuery("");
+      setIsSearchingReturn(false);
+      setFoundReturnBalance(null);
+      setFoundVoucherCode(null);
       setIsTerminalActive(false);
       setTerminalStatus("idle");
       setErrorMessage("");
@@ -154,6 +166,55 @@ function HybridPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
     setCashInput("");
   };
 
+  // البحث عن رصيد فاتورة المرتجع أو رمز السند والتحقق منه
+  const handleSearchReturnInvoice = async () => {
+    const trimmed = returnSearchQuery.trim();
+    if (!trimmed) return;
+
+    setIsSearchingReturn(true);
+    setFoundReturnBalance(null);
+    setFoundVoucherCode(null);
+    try {
+      const response = await api.get(`/vouchers/verify-balance?query=${trimmed}`);
+      if (response.data?.success && response.data?.data) {
+        const voucherData = response.data.data;
+        
+        // التحقق من عدم إضافة السند مسبقاً في قائمة الدفعات
+        const isAlreadyAdded = payments.some(p => p.voucher_code === voucherData.code);
+        if (isAlreadyAdded) {
+          toast.error(language === "ar" ? "هذا السند مضاف بالفعل في قائمة الدفع." : "This voucher is already added to the payment list.");
+          return;
+        }
+
+        setFoundReturnBalance(voucherData.amount);
+        setFoundVoucherCode(voucherData.code);
+        
+        // ربط العميل صاحب السند تلقائياً بالدفع الهجين وتحويل قيمة الفاتورة لرصيد حسابه
+        setSelectedCustomer({
+          id: voucherData.customer_id,
+          name: voucherData.customer_name,
+          phone: voucherData.customer_phone,
+          balance: voucherData.amount // تحويل الفلوس اللي في الفاتورة إلى رصيد حساب العميل
+        });
+
+        // تعبئة حقل إدخال مبلغ الحساب تلقائياً بالرصيد المتاح من السند لتسهيل الخصم
+        const availableDeduction = Math.min(remaining, voucherData.amount);
+        setAccountInput(availableDeduction.toFixed(2));
+
+        toast.success(
+          language === "ar"
+            ? `تم العثور على رصيد مرتجع بقيمة: ${voucherData.amount.toFixed(2)} ر.س وتحويله إلى رصيد الحساب!`
+            : `Found returned balance of: ${voucherData.amount.toFixed(2)} SAR and converted it to Account Balance!`
+        );
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error(err.response?.data?.message || (language === "ar" ? "لم يتم العثور على رصيد نشط." : "No active balance found."));
+    } finally {
+      setIsSearchingReturn(false);
+    }
+  };
+
   // إضافة الخصم من رصيد حساب العميل
   const handleAddAccount = () => {
     if (!selectedCustomer) {
@@ -173,8 +234,11 @@ function HybridPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
       return;
     }
 
-    setPayments((prev) => [...prev, { method: "account", amount }]);
+    setPayments((prev) => [...prev, { method: "account", amount, voucher_code: foundVoucherCode }]);
     setAccountInput("");
+    setReturnSearchQuery("");
+    setFoundReturnBalance(null);
+    setFoundVoucherCode(null);
   };
 
   // إضافة مبلغ الدفع بتحويل بنكي
@@ -287,14 +351,23 @@ function HybridPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
         <div className="relative bg-white dark:bg-gray-800 rounded-3xl shadow-2xl max-w-4xl w-full border-2 border-primary-500 overflow-hidden transition-all duration-300">
           
           {/* Header */}
-          <div className="bg-gradient-to-r from-primary-600 to-primary-700 px-6 py-4 flex justify-between items-center text-white">
-            <div className="flex items-center space-x-3 rtl:space-x-reverse">
-              <FontAwesomeIcon icon={faWallet} className="text-2xl text-amber-300" />
-              <div>
-                <h3 className="text-xl font-bold">{t("hybridPayment")}</h3>
-                <p className="text-xs opacity-90 mt-0.5">{language === "ar" ? "تقسيم قيمة الفاتورة على عدة طرق دفع مختلفة" : "Split the invoice total across multiple payment methods"}</p>
+          <div className="flex items-center justify-between p-5 bg-gray-50 dark:bg-gray-850 border-b border-gray-200 dark:border-gray-750">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+              <FontAwesomeIcon icon={faWallet} className="text-primary-500 text-xl" />
+              <div className="flex flex-col text-start leading-tight">
+                <span>{t("hybridPayment")}</span>
+                <span className="text-[10px] text-gray-500 font-medium mt-0.5">
+                  {language === "ar" ? "تقسيم قيمة الفاتورة على عدة طرق دفع مختلفة" : "Split the invoice total across multiple payment methods"}
+                </span>
               </div>
-            </div>
+            </h3>
+            <button
+              type="button"
+              onClick={handleClose}
+              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-750 transition-all"
+            >
+              <FontAwesomeIcon icon={faXmark} />
+            </button>
           </div>
 
           {/* Body */}
@@ -481,8 +554,62 @@ function HybridPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
                   <span>{t("accountPaymentShort") || (language === "ar" ? "👤 خصم من الحساب (Account)" : "Account Balance")}</span>
                 </h4>
                 
+                {/* حقل البحث بفاتورة المرتجع / رمز السند */}
+                <div className="bg-white dark:bg-gray-800/80 p-3.5 rounded-xl border border-gray-200 dark:border-gray-700 space-y-3">
+                  <span className="text-[10px] font-bold text-gray-500 dark:text-gray-400 block">
+                    {language === "ar" ? "البحث برقم فاتورة المرتجع أو رمز السند:" : "Search by Return Invoice or Voucher Code:"}
+                  </span>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder="RTN-XXXXXXXX-XXXX / VCH-..."
+                      value={returnSearchQuery}
+                      onChange={(e) => setReturnSearchQuery(e.target.value)}
+                      className="input py-1.5 px-3 text-xs flex-1 font-mono focus:ring-2 focus:ring-amber-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleSearchReturnInvoice}
+                      disabled={isSearchingReturn || !returnSearchQuery.trim()}
+                      className="bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold px-3.5 py-1.5 rounded-lg disabled:opacity-50 transition-all flex items-center space-x-1.5 rtl:space-x-reverse"
+                    >
+                      {isSearchingReturn ? (
+                        <FontAwesomeIcon icon={faCircleNotch} className="animate-spin text-xs" />
+                      ) : (
+                        <span>{language === "ar" ? "تحقق" : "Verify"}</span>
+                      )}
+                    </button>
+                  </div>
+                  
+                  {foundReturnBalance !== null && (
+                    <div className="p-3 rounded-xl bg-gray-50 dark:bg-gray-750 text-xs space-y-2 border border-gray-150 dark:border-gray-700 animate-fadeIn">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-500 dark:text-gray-400 font-semibold">Paid Amount (رصيد الاسترجاع):</span>
+                        <span className="font-extrabold font-mono text-sm text-amber-600 dark:text-amber-400">
+                          {foundReturnBalance.toFixed(2)} ر.س
+                        </span>
+                      </div>
+                      <div className="text-[10px] leading-relaxed font-bold border-t border-gray-200 dark:border-gray-700 pt-1.5 mt-1.5">
+                        {Math.abs(foundReturnBalance - totalDue) < 0.01 ? (
+                          <span className="text-emerald-600 dark:text-emerald-400 block">
+                            ✓ قيمة المرتجع (Paid Amount) موازية تماماً لقيمة الفاتورة المطلوبة.
+                          </span>
+                        ) : foundReturnBalance < totalDue ? (
+                          <span className="text-red-500 dark:text-red-400 block">
+                            ⚠ قيمة المرتجع (Paid Amount) أقل من قيمة الفاتورة المطلوبة، لسه محتاج إضافة قيمة ثانية بقيمة: {(totalDue - foundReturnBalance).toFixed(2)} ر.س.
+                          </span>
+                        ) : (
+                          <span className="text-emerald-600 dark:text-emerald-400 block">
+                            ✓ قيمة المرتجع (Paid Amount) تغطي الفاتورة بالكامل وتزيد بمقدار {(foundReturnBalance - totalDue).toFixed(2)} ر.س.
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
                 {selectedCustomer ? (
-                  <div className="space-y-3">
+                  <div className="space-y-3 bg-white dark:bg-gray-800/40 p-3 rounded-xl border border-gray-150 dark:border-gray-750">
                     <div className="text-xs text-gray-600 dark:text-gray-400 font-bold">
                       <div>{t("customer")}: <strong className="text-gray-900 dark:text-white">{selectedCustomer.name}</strong></div>
                       <div className="mt-1">{t("customerAvailableBalance") || "رصيد الحساب المتاح"}: <strong className="text-amber-600 dark:text-amber-400 font-mono">{parseFloat(selectedCustomer.balance).toFixed(2)} {t("sar") || "ر.س"}</strong></div>
@@ -500,7 +627,7 @@ function HybridPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
                         onKeyDown={(e) => {
                           if (e.key === "Enter") handleAddAccount();
                         }}
-                        className="flex-1 input text-sm"
+                        className="flex-1 input text-sm font-bold font-mono"
                       />
                       <button
                         onClick={handleAddAccount}

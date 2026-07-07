@@ -20,23 +20,25 @@ function SalesList() {
   const [search, setSearch] = useState("");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
+  const [typeFilter, setTypeFilter] = useState("all");
   const [page, setPage] = useState(1);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [saleToCancel, setSaleToCancel] = useState(null);
 
-  // جلب المبيعات
+  // جلب المبيعات والمرتجعات الموحدة
   const { data: salesData, isLoading } = useQuery({
-    queryKey: ["sales", page, search, fromDate, toDate],
+    queryKey: ["salesUnified", page, search, fromDate, toDate, typeFilter],
     queryFn: async () => {
       const params = new URLSearchParams({
         page: page.toString(),
-        per_page: "20",
+        per_page: "10",
       });
       if (search) params.append("search", search);
       if (fromDate) params.append("from", fromDate);
       if (toDate) params.append("to", toDate);
+      if (typeFilter && typeFilter !== "all") params.append("type", typeFilter);
 
-      const response = await api.get(`/sales?${params}`);
+      const response = await api.get(`/sales/unified?${params}`);
       return response.data;
     },
   });
@@ -89,7 +91,7 @@ function SalesList() {
   }
 
   const sales = salesData?.data || [];
-  const pagination = salesData?.meta || {};
+  const pagination = salesData || {};
 
   return (
     <div className="space-y-6">
@@ -112,9 +114,9 @@ function SalesList() {
 
       {/* Filters */}
       <div className="card">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           <div>
-            <label className="label">{t("search")}</label>
+            <label className="label">{t("search") || "بحث"}</label>
             <input
               type="text"
               value={search}
@@ -122,12 +124,27 @@ function SalesList() {
                 setSearch(e.target.value);
                 setPage(1);
               }}
-              placeholder={t("searchByInvoiceNumber")}
+              placeholder={t("searchByInvoiceNumber") || "ابحث برقم الفاتورة..."}
               className="input"
             />
           </div>
           <div>
-            <label className="label">{t("fromDate")}</label>
+            <label className="label">{t("type") || "النوع"}</label>
+            <select
+              value={typeFilter}
+              onChange={(e) => {
+                setTypeFilter(e.target.value);
+                setPage(1);
+              }}
+              className="input w-full"
+            >
+              <option value="all">{t("all") || "الكل"}</option>
+              <option value="sale">{t("sales") || "المبيعات"}</option>
+              <option value="return">{t("returns") || "المرتجعات"}</option>
+            </select>
+          </div>
+          <div>
+            <label className="label">{t("fromDate") || "من تاريخ"}</label>
             <input
               type="date"
               value={fromDate}
@@ -139,7 +156,7 @@ function SalesList() {
             />
           </div>
           <div>
-            <label className="label">{t("toDate")}</label>
+            <label className="label">{t("toDate") || "إلى تاريخ"}</label>
             <input
               type="date"
               value={toDate}
@@ -156,11 +173,12 @@ function SalesList() {
                 setSearch("");
                 setFromDate("");
                 setToDate("");
+                setTypeFilter("all");
                 setPage(1);
               }}
               className="btn-secondary w-full"
             >
-              {t("clearFilters")}
+              {t("clearFilters") || "مسح الفلاتر"}
             </button>
           </div>
         </div>
@@ -173,53 +191,67 @@ function SalesList() {
             <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
               <tr>
                 <th className="px-6 py-3 text-right rtl:text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  {t("invoiceNumber")}
+                  {t("invoiceNumber") || "رقم الفاتورة"}
                 </th>
                 <th className="px-6 py-3 text-right rtl:text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  {t("date")}
+                  {t("type") || "النوع"}
                 </th>
                 <th className="px-6 py-3 text-right rtl:text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  {t("user")}
+                  {t("date") || "التاريخ"}
                 </th>
                 <th className="px-6 py-3 text-right rtl:text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  {t("items")}
+                  {t("user") || "المستخدم"}
                 </th>
                 <th className="px-6 py-3 text-right rtl:text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  {t("total")}
+                  {t("items") || "البنود"}
                 </th>
                 <th className="px-6 py-3 text-right rtl:text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  {t("paymentMethod")}
+                  {t("total") || "الإجمالي"}
                 </th>
                 <th className="px-6 py-3 text-right rtl:text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  {t("status")}
+                  {t("paymentMethod") || "طريقة الدفع/الرد"}
                 </th>
                 <th className="px-6 py-3 text-right rtl:text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  {t("actions")}
+                  {t("status") || "الحالة"}
+                </th>
+                <th className="px-6 py-3 text-right rtl:text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  {t("actions") || "الإجراءات"}
                 </th>
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
               {sales.length === 0 ? (
                 <tr>
-                  <td colSpan="8" className="px-6 py-12 text-center">
+                  <td colSpan="9" className="px-6 py-12 text-center">
                     <div className="text-gray-500 dark:text-gray-400">
                       <div className="text-4xl mb-4">
                         <FontAwesomeIcon icon={faClipboardList} />
                       </div>
-                      <p className="text-lg">{t("noSalesFound")}</p>
+                      <p className="text-lg">{t("noSalesFound") || "لا توجد معاملات بعد."}</p>
                     </div>
                   </td>
                 </tr>
               ) : (
                 sales.map((sale) => (
                   <tr
-                    key={sale.id}
+                    key={`${sale.type}-${sale.id}`}
                     className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-150"
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900 dark:text-white">
-                        {sale.invoice_number}
+                      <div className="text-sm font-bold text-gray-900 dark:text-white font-mono">
+                        {sale.number}
                       </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {sale.type === "sale" ? (
+                        <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-emerald-100 dark:bg-emerald-950/20 text-emerald-800 dark:text-emerald-400">
+                          {t("sale") || "مبيعات"}
+                        </span>
+                      ) : (
+                        <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-amber-100 dark:bg-amber-950/20 text-amber-800 dark:text-amber-400">
+                          {t("return") || "مرتجع مبيعات"}
+                        </span>
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-600 dark:text-gray-400">
@@ -228,22 +260,27 @@ function SalesList() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-600 dark:text-gray-400">
-                        {sale.user?.name || "-"}
+                        {sale.user_name || "-"}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-600 dark:text-gray-400">
-                        {sale.items?.length || 0} {t("items")}
+                        {sale.items_count || 0} {t("items") || "بنود"}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-semibold text-gray-900 dark:text-white">
-                        {formatCurrency(sale.total)}
+                      <div className="text-sm font-black text-gray-900 dark:text-white">
+                        {sale.type === "return" ? "-" : ""}{formatCurrency(sale.amount)}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300">
-                        {t(sale.payment_method)}
+                        {sale.payment_method === "cash" ? (t("cash") || "نقدي") :
+                         sale.payment_method === "card" ? (t("card") || "بطاقة") :
+                         sale.payment_method === "transfer" ? (t("transfer") || "تحويل") :
+                         sale.payment_method === "replacement" ? (t("replacement") || "سند استبدال") :
+                         sale.payment_method === "hybrid" ? (t("hybrid") || "مختلط") :
+                         t(sale.payment_method)}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -254,36 +291,50 @@ function SalesList() {
                             : "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300"
                         }`}
                       >
-                        {t(sale.status)}
+                        {sale.status === "completed" ? (t("completed") || "مكتمل") :
+                         sale.status === "cancelled" ? (t("cancelled") || "ملغي") :
+                         t(sale.status)}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex items-center space-x-2 rtl:space-x-reverse">
-                        <button
-                          onClick={() => navigate(`/sales/${sale.id}`)}
-                          className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
-                          title={t("viewDetails")}
-                        >
-                          <FontAwesomeIcon icon={faClipboardList} />
-                        </button>
-                        <button
-                          onClick={() => navigate(`/sales/${sale.id}/invoice`)}
-                          className="text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300"
-                          title={t("viewInvoice")}
-                        >
-                          <FontAwesomeIcon icon={faEye} />
-                        </button>
-                        {sale.status === "completed" && (
-                          <ProtectedComponent permission="edit sales">
+                        {sale.type === "sale" ? (
+                          <>
                             <button
-                              onClick={() => handleCancelSale(sale.id)}
-                              disabled={cancelSaleMutation.isPending}
-                              className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 disabled:opacity-50"
-                              title={t("cancelSale")}
+                              onClick={() => navigate(`/sales/${sale.id}`)}
+                              className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
+                              title={t("viewDetails") || "عرض التفاصيل"}
                             >
-                              <FontAwesomeIcon icon={faTrashCan} />
+                              <FontAwesomeIcon icon={faClipboardList} />
                             </button>
-                          </ProtectedComponent>
+                            <button
+                              onClick={() => navigate(`/sales/${sale.id}/invoice`)}
+                              className="text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300"
+                              title={t("viewInvoice") || "عرض الفاتورة"}
+                            >
+                              <FontAwesomeIcon icon={faEye} />
+                            </button>
+                            {sale.status === "completed" && (
+                              <ProtectedComponent permission="edit sales">
+                                <button
+                                  onClick={() => handleCancelSale(sale.id)}
+                                  disabled={cancelSaleMutation.isPending}
+                                  className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 disabled:opacity-50"
+                                  title={t("cancelSale") || "إلغاء الفاتورة"}
+                                >
+                                  <FontAwesomeIcon icon={faTrashCan} />
+                                </button>
+                              </ProtectedComponent>
+                            )}
+                          </>
+                        ) : (
+                          <button
+                            onClick={() => navigate(`/sales-returns/${sale.id}/invoice`)}
+                            className="text-primary-600 dark:text-primary-400 hover:text-primary-800 dark:hover:text-primary-300"
+                            title={t("viewInvoice") || "عرض فاتورة المرتجع"}
+                          >
+                            <FontAwesomeIcon icon={faEye} />
+                          </button>
                         )}
                       </div>
                     </td>
@@ -301,20 +352,48 @@ function SalesList() {
               {t("showing")} {pagination.from} {t("to")} {pagination.to}{" "}
               {t("of")} {pagination.total} {t("results")}
             </div>
-            <div className="flex space-x-2 rtl:space-x-reverse">
+            <div className="flex items-center space-x-1.5 rtl:space-x-reverse">
               <button
                 onClick={() => setPage(page - 1)}
                 disabled={page === 1}
-                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-800"
+                className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-800 text-xs font-bold transition-all"
               >
-                {t("previous")}
+                {t("previous") || "السابق"}
               </button>
+
+              {/* أرقام الصفحات التفاعلية */}
+              {Array.from({ length: pagination.last_page }, (_, i) => i + 1).map((pageNum) => {
+                const isNearCurrent = Math.abs(pageNum - page) <= 1;
+                const isFirstOrLast = pageNum === 1 || pageNum === pagination.last_page;
+
+                if (!isNearCurrent && !isFirstOrLast) {
+                  if (pageNum === 2 || pageNum === pagination.last_page - 1) {
+                    return <span key={pageNum} className="text-gray-400 dark:text-gray-500 px-1 text-xs">...</span>;
+                  }
+                  return null;
+                }
+
+                return (
+                  <button
+                    key={pageNum}
+                    onClick={() => setPage(pageNum)}
+                    className={`w-7 h-7 flex items-center justify-center rounded-xl text-xs font-black transition-all border ${
+                      page === pageNum
+                        ? "bg-amber-500 border-amber-500 text-white shadow-sm"
+                        : "border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-850 text-gray-700 dark:text-gray-300"
+                    }`}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
+
               <button
                 onClick={() => setPage(page + 1)}
                 disabled={page === pagination.last_page}
-                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-800"
+                className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 dark:hover:bg-gray-800 text-xs font-bold transition-all"
               >
-                {t("next")}
+                {t("next") || "التالي"}
               </button>
             </div>
           </div>

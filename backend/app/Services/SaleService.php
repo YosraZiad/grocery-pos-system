@@ -149,6 +149,7 @@ class SaleService
 
             // Calculate account deduction amount
             $accountDeduction = 0.00;
+            $appliedVoucher = null;
             if ($data['payment_method'] === 'account') {
                 $accountDeduction = $total;
             } elseif ($data['payment_method'] === 'hybrid' && isset($data['payment_details']) && is_array($data['payment_details'])) {
@@ -156,6 +157,9 @@ class SaleService
                     $methodName = $detail['method'] ?? ($detail['payment_method'] ?? null);
                     if ($methodName === 'account') {
                         $accountDeduction += $detail['amount'] ?? 0;
+                        if (isset($detail['voucher_code']) && !empty($detail['voucher_code'])) {
+                            $appliedVoucher = \App\Models\Voucher::where('code', $detail['voucher_code'])->first();
+                        }
                     }
                 }
             }
@@ -169,6 +173,19 @@ class SaleService
                 }
                 // خصم المبلغ من رصيد حساب العميل
                 $customer->decrement('balance', $accountDeduction);
+
+                // إذا كانت دفعة الحساب مرتبطة بسند استبدال/مرتجع محدد، نقوم بتحديث السند أيضاً لمنع استخدامه مجدداً
+                if ($appliedVoucher && $appliedVoucher->status === 'active') {
+                    if ($appliedVoucher->amount > $accountDeduction) {
+                        $appliedVoucher->decrement('amount', $accountDeduction);
+                    } else {
+                        $appliedVoucher->update([
+                            'status' => 'redeemed',
+                            'amount' => 0.00,
+                            'redeemed_at' => now(),
+                        ]);
+                    }
+                }
             }
 
             // Create sale

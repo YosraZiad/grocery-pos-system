@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="{{ $lang ?? 'ar' }}" dir="{{ ($lang ?? 'ar') === 'en' ? 'ltr' : 'rtl' }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,7 +13,7 @@
 
         .invoice-container {
             font-family: 'Arial', 'Tahoma', sans-serif;
-            direction: rtl !important;
+            direction: {{ ($lang ?? 'ar') === 'en' ? 'ltr' : 'rtl' }} !important;
             padding: 30px;
             background: #fff;
             max-width: 800px;
@@ -45,12 +45,12 @@
         }
 
         .info-box-right {
-            text-align: right;
+            text-align: {{ ($lang ?? 'ar') === 'en' ? 'left' : 'right' }};
             flex: 1;
         }
 
         .info-box-left {
-            text-align: left;
+            text-align: {{ ($lang ?? 'ar') === 'en' ? 'right' : 'left' }};
             flex: 1;
         }
 
@@ -74,7 +74,7 @@
 
         th, td {
             padding: 12px;
-            text-align: right;
+            text-align: {{ ($lang ?? 'ar') === 'en' ? 'left' : 'right' }};
             border-bottom: 1px solid #ddd;
         }
 
@@ -85,11 +85,11 @@
         }
 
         .text-left {
-            text-align: left;
+            text-align: {{ ($lang ?? 'ar') === 'en' ? 'right' : 'left' }};
         }
 
         .text-right {
-            text-align: right;
+            text-align: {{ ($lang ?? 'ar') === 'en' ? 'left' : 'right' }};
         }
 
         .text-center {
@@ -130,7 +130,7 @@
         @media print {
             body {
                 padding: 0;
-                direction: rtl !important;
+                direction: {{ ($lang ?? 'ar') === 'en' ? 'ltr' : 'rtl' }} !important;
             }
 
             .invoice-container {
@@ -151,40 +151,40 @@
 <body>
     <div class="invoice-container">
         <div class="header">
-            <h1>🛒 متجر المواد الغذائية</h1>
-            <p>فاتورة مبيعات</p>
+            <h1>🛒 {{ ($lang ?? 'ar') === 'en' ? 'Grocery POS Store' : 'متجر المواد الغذائية' }}</h1>
+            <p>{{ ($lang ?? 'ar') === 'en' ? 'Sales Invoice' : 'فاتورة مبيعات' }}</p>
         </div>
 
         <div class="invoice-info">
             <div class="info-box-right">
-                <h3>معلومات الفاتورة والعميل</h3>
-                <p><strong>اسم العميل:</strong> {{ $sale->customer->name ?? 'عميل عام' }}</p>
+                <h3>{{ ($lang ?? 'ar') === 'en' ? 'Invoice & Customer Information' : 'معلومات الفاتورة والعميل' }}</h3>
+                <p><strong>{{ ($lang ?? 'ar') === 'en' ? 'Customer Name' : 'اسم العميل' }}:</strong> {{ $sale->customer->name ?? (($lang ?? 'ar') === 'en' ? 'General Customer' : 'عميل عام') }}</p>
                 @if($sale->customer && $sale->customer->phone)
-                    <p><strong>هاتف العميل:</strong> {{ $sale->customer->phone }}</p>
+                    <p><strong>{{ ($lang ?? 'ar') === 'en' ? 'Customer Phone' : 'هاتف العميل' }}:</strong> {{ $sale->customer->phone }}</p>
                 @endif
-                <p><strong>رقم الفاتورة:</strong> {{ $sale->invoice_number }}</p>
-                <p><strong>طريقة الدفع:</strong> 
-                    @if($sale->payment_method === 'cash') نقدي
-                    @elseif($sale->payment_method === 'card') بطاقة
-                    @elseif($sale->payment_method === 'transfer') تحويل
-                    @elseif($sale->payment_method === 'hybrid') مختلط (مقسم)
+                <p><strong>{{ ($lang ?? 'ar') === 'en' ? 'Invoice Number' : 'رقم الفاتورة' }}:</strong> {{ $sale->invoice_number }}</p>
+                <p><strong>{{ ($lang ?? 'ar') === 'en' ? 'Payment Method' : 'طريقة الدفع' }}:</strong> 
+                    @if($sale->payment_method === 'cash') {{ ($lang ?? 'ar') === 'en' ? 'Cash' : 'نقدي' }}
+                    @elseif($sale->payment_method === 'card') {{ ($lang ?? 'ar') === 'en' ? 'Card' : 'بطاقة' }}
+                    @elseif($sale->payment_method === 'transfer') {{ ($lang ?? 'ar') === 'en' ? 'Transfer' : 'تحويل' }}
+                    @elseif($sale->payment_method === 'hybrid') {{ ($lang ?? 'ar') === 'en' ? 'Hybrid' : 'مختلط (مقسم)' }}
                     @else {{ $sale->payment_method }}
                     @endif
                 </p>
                 @if($sale->payment_method === 'hybrid' && is_array($sale->payment_details))
                     <div style="font-size: 11px; margin-top: 5px; color: #666; border-top: 1px dashed #ddd; padding-top: 5px; line-height: 1.5;">
-                        <strong>تفاصيل الدفع المختلط:</strong>
+                        <strong>{{ ($lang ?? 'ar') === 'en' ? 'Hybrid Payment Details:' : 'تفاصيل الدفع المختلط:' }}</strong>
                         @foreach($sale->payment_details as $pay)
-                            <div>• {{ $pay['method'] === 'cash' ? 'نقدي' : ($pay['method'] === 'card' ? 'بطاقة' : ($pay['method'] === 'transfer' ? 'تحويل' : 'أخرى')) }}: {{ number_format($pay['amount'], 2) }} ر.س</div>
+                            <div>• {{ $pay['method'] === 'cash' ? (($lang ?? 'ar') === 'en' ? 'Cash' : 'نقدي') : ($pay['method'] === 'card' ? (($lang ?? 'ar') === 'en' ? 'Card' : 'بطاقة') : ($pay['method'] === 'transfer' ? (($lang ?? 'ar') === 'en' ? 'Transfer' : 'تحويل') : (($lang ?? 'ar') === 'en' ? 'Other' : 'أخرى'))) }}: {{ number_format($pay['amount'], 2) }} {{ ($lang ?? 'ar') === 'en' ? 'SAR' : 'ر.س' }}</div>
                         @endforeach
                     </div>
                 @endif
             </div>
             <div class="info-box-left">
-                <h3>مسؤول المبيعات</h3>
-                <p><strong>التاريخ:</strong> {{ $sale->created_at->format('Y-m-d H:i') }}</p>
-                <p><strong>الاسم:</strong> {{ $sale->user->name }}</p>
-                <p><strong>البريد:</strong> {{ $sale->user->email }}</p>
+                <h3>{{ ($lang ?? 'ar') === 'en' ? 'Sales Officer' : 'مسؤول المبيعات' }}</h3>
+                <p><strong>{{ ($lang ?? 'ar') === 'en' ? 'Date' : 'التاريخ' }}:</strong> {{ $sale->created_at->format('Y-m-d H:i') }}</p>
+                <p><strong>{{ ($lang ?? 'ar') === 'en' ? 'Name' : 'الاسم' }}:</strong> {{ $sale->user->name }}</p>
+                <p><strong>{{ ($lang ?? 'ar') === 'en' ? 'Email' : 'البريد' }}:</strong> {{ $sale->user->email }}</p>
             </div>
         </div>
 
@@ -192,10 +192,10 @@
             <thead>
                 <tr>
                     <th>#</th>
-                    <th>المنتج</th>
-                    <th>الكمية</th>
-                    <th>السعر</th>
-                    <th>الإجمالي</th>
+                    <th>{{ ($lang ?? 'ar') === 'en' ? 'Product' : 'المنتج' }}</th>
+                    <th class="text-center">{{ ($lang ?? 'ar') === 'en' ? 'Quantity' : 'الكمية' }}</th>
+                    <th class="text-left">{{ ($lang ?? 'ar') === 'en' ? 'Price' : 'السعر' }}</th>
+                    <th class="text-left">{{ ($lang ?? 'ar') === 'en' ? 'Total' : 'الإجمالي' }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -207,8 +207,8 @@
                         <small style="color: #666;">{{ $item->product->category->name ?? '' }}</small>
                     </td>
                     <td class="text-center">{{ $item->quantity }}</td>
-                    <td class="text-left">{{ number_format($item->price, 2) }} ر.س</td>
-                    <td class="text-left">{{ number_format($item->subtotal, 2) }} ر.س</td>
+                    <td class="text-left">{{ number_format($item->price, 2) }} {{ ($lang ?? 'ar') === 'en' ? 'SAR' : 'ر.س' }}</td>
+                    <td class="text-left">{{ number_format($item->subtotal, 2) }} {{ ($lang ?? 'ar') === 'en' ? 'SAR' : 'ر.س' }}</td>
                 </tr>
                 @endforeach
             </tbody>
@@ -216,28 +216,28 @@
 
         <div class="totals">
             <div class="totals-row">
-                <span>الإجمالي الفرعي:</span>
-                <span>{{ number_format($sale->items->sum('subtotal'), 2) }} ر.س</span>
+                <span>{{ ($lang ?? 'ar') === 'en' ? 'Subtotal:' : 'الإجمالي الفرعي:' }}</span>
+                <span>{{ number_format($sale->items->sum('subtotal'), 2) }} {{ ($lang ?? 'ar') === 'en' ? 'SAR' : 'ر.س' }}</span>
             </div>
             @if($sale->discount > 0)
             <div class="totals-row" style="color: #d32f2f;">
-                <span>الخصم 
+                <span>{{ ($lang ?? 'ar') === 'en' ? 'Discount' : 'الخصم' }} 
                     @if($sale->discount_type === 'percentage')
                         ({{ $sale->discount }}%)
                     @endif
                 :</span>
-                <span>-{{ number_format($sale->discount, 2) }} ر.س</span>
+                <span>-{{ number_format($sale->discount, 2) }} {{ ($lang ?? 'ar') === 'en' ? 'SAR' : 'ر.س' }}</span>
             </div>
             @endif
             <div class="totals-row total">
-                <span>الإجمالي النهائي:</span>
-                <span>{{ number_format($sale->total, 2) }} ر.س</span>
+                <span>{{ ($lang ?? 'ar') === 'en' ? 'Final Total:' : 'الإجمالي النهائي:' }}</span>
+                <span>{{ number_format($sale->total, 2) }} {{ ($lang ?? 'ar') === 'en' ? 'SAR' : 'ر.س' }}</span>
             </div>
         </div>
 
         <div class="footer">
-            <p>شكراً لزيارتك!</p>
-            <p>للاستفسار: info@store.com</p>
+            <p>{{ ($lang ?? 'ar') === 'en' ? 'Thank you for your visit!' : 'شكراً لزيارتك!' }}</p>
+            <p>{{ ($lang ?? 'ar') === 'en' ? 'Support:' : 'للاستفسار:' }} info@store.com</p>
         </div>
     </div>
 

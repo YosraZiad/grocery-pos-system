@@ -10,7 +10,7 @@ function Invoice() {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const [invoiceHtml, setInvoiceHtml] = useState("");
 
   // جلب الفاتورة
@@ -24,9 +24,9 @@ function Invoice() {
 
   // جلب HTML الفاتورة
   useEffect(() => {
-    if (id) {
+    if (id && language) {
       api
-        .get(`/sales/${id}/invoice`, {
+        .get(`/sales/${id}/invoice?lang=${language}`, {
           responseType: "text",
         })
         .then((response) => {
@@ -36,7 +36,7 @@ function Invoice() {
           console.error("Error loading invoice:", error);
         });
     }
-  }, [id]);
+  }, [id, language]);
   
   // طباعة تلقائية للفاتورة مباشرة بعد تحميلها بنجاح إن كانت المعاملة قد تمت للتو
   useEffect(() => {

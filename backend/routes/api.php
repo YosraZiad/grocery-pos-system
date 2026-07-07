@@ -83,6 +83,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/products/{id}', [ProductController::class, 'destroy'])->middleware('permission:delete products');
     
     // Sales
+    Route::get('/sales/unified', [SaleController::class, 'unified'])->middleware('permission:view sales');
     Route::get('/sales', [SaleController::class, 'index'])->middleware('permission:view sales');
     Route::post('/sales', [SaleController::class, 'store'])->middleware('permission:create sales');
     Route::get('/sales/{id}', [SaleController::class, 'show'])->middleware('permission:view sales');
@@ -111,6 +112,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/sales-returns/{id}/invoice', [\App\Http\Controllers\SalesReturnController::class, 'invoice'])->middleware('permission:view returns');
     
     // Vouchers
+    Route::get('/vouchers/verify-balance', [\App\Http\Controllers\VoucherController::class, 'verifyReturnBalance'])->middleware('permission:create sales');
     Route::get('/vouchers/verify', [\App\Http\Controllers\VoucherController::class, 'verify'])->middleware('permission:create sales');
 
     // Customers

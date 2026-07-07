@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useI18n } from "../context/I18nContext";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faMoneyBillWave, faCoins, faSpinner } from "@fortawesome/free-solid-svg-icons";
+import { faMoneyBillWave, faCoins, faSpinner, faXmark, faPlug } from "@fortawesome/free-solid-svg-icons";
 
 function CashRefundModal({ isOpen, onClose, onConfirm, refundTotal, isProcessing }) {
   const { t, language } = useI18n();
@@ -65,25 +65,32 @@ function CashRefundModal({ isOpen, onClose, onConfirm, refundTotal, isProcessing
         <div className="relative bg-white dark:bg-gray-800 rounded-3xl shadow-2xl max-w-lg w-full border-2 border-emerald-500 overflow-hidden transition-all duration-300">
           
           {/* Header */}
-          <div className="bg-gradient-to-r from-emerald-600 to-teal-700 px-6 py-5 flex items-center space-x-3 rtl:space-x-reverse text-white">
-            <span className="text-2xl">
-              <FontAwesomeIcon icon={faMoneyBillWave} />
-            </span>
-            <div>
-              <h3 className="text-lg font-bold">
-                {language === "ar" ? "تسوية المرتجع النقدي" : "Cash Refund Settlement"}
-              </h3>
-              <p className="text-xs opacity-90 mt-0.5">
-                {language === "ar" ? "تأكيد تسليم المبلغ النقدي المرتجع للعميل وفتح درج النقدية" : "Confirm returned cash amount handed to customer and open drawer"}
-              </p>
-            </div>
+          <div className="flex items-center justify-between p-5 bg-gray-50 dark:bg-gray-855 border-b border-gray-200 dark:border-gray-750">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+              <FontAwesomeIcon icon={faMoneyBillWave} className="text-emerald-600 text-xl" />
+              <div className="flex flex-col text-start leading-tight">
+                <span>{language === "ar" ? "تسوية المرتجع النقدي" : "Cash Refund Settlement"}</span>
+                <span className="text-[10px] text-gray-500 font-medium mt-0.5">
+                  {language === "ar" ? "تأكيد تسليم المبلغ النقدي المرتجع للعميل وفتح درج النقدية" : "Confirm returned cash amount handed to customer and open drawer"}
+                </span>
+              </div>
+            </h3>
+            <button
+              type="button"
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-750 transition-all"
+            >
+              <FontAwesomeIcon icon={faXmark} />
+            </button>
           </div>
 
           {/* Body */}
           <form onSubmit={handleSubmit} className="p-6 space-y-5">
             {/* إشعار فتح درج النقدية */}
             <div className="p-4 bg-emerald-50 dark:bg-emerald-950/20 border-2 border-emerald-500/30 rounded-2xl flex items-center gap-3">
-              <span className="text-2xl">🔌</span>
+              <span className="text-xl text-emerald-600">
+                <FontAwesomeIcon icon={faPlug} />
+              </span>
               <div>
                 <h4 className="text-xs font-bold text-emerald-800 dark:text-emerald-400">
                   {language === "ar" ? "محاكاة فتح درج النقدية تلقائياً" : "Automatic Cash Drawer Opening"}

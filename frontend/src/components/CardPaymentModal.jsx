@@ -9,6 +9,8 @@ import {
   faCircleCheck,
   faCircleXmark,
   faClock,
+  faXmark,
+  faRotateRight,
 } from "@fortawesome/free-solid-svg-icons";
 import CustomerSelector from "./CustomerSelector";
 
@@ -228,16 +230,24 @@ function CardPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
         <div className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full border-2 border-primary-500 overflow-hidden transition-all duration-300">
           
           {/* Header */}
-          <div className="bg-gradient-to-r from-primary-600 to-primary-700 px-6 py-4 flex items-center space-x-3 rtl:space-x-reverse text-white">
-            <span className="text-2xl">⚡</span>
-            <div>
-              <h3 className="text-lg font-bold">
-                {t("cardPayment")}
-              </h3>
-              <p className="text-xs opacity-90 mt-0.5">
-                {t("terminalIntegration")}
-              </p>
-            </div>
+          <div className="flex items-center justify-between p-5 bg-gray-50 dark:bg-gray-850 border-b border-gray-200 dark:border-gray-750">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+              <FontAwesomeIcon icon={faCreditCard} className="text-primary-500 text-xl" />
+              <div className="flex flex-col text-start leading-tight">
+                <span>{t("cardPayment")}</span>
+                <span className="text-[10px] text-gray-500 font-medium mt-0.5">
+                  {t("terminalIntegration")}
+                </span>
+              </div>
+            </h3>
+            <button
+              type="button"
+              onClick={handleClose}
+              disabled={isLocked}
+              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 w-8 h-8 rounded-full flex items-center justify-center hover:bg-gray-100 dark:hover:bg-gray-750 transition-all disabled:opacity-30"
+            >
+              <FontAwesomeIcon icon={faXmark} />
+            </button>
           </div>
 
           {/* Body */}
@@ -282,9 +292,10 @@ function CardPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
                   <button
                     type="button"
                     onClick={startPaymentProcess}
-                    className="flex-1 py-3 bg-primary-600 text-white rounded-xl hover:bg-primary-700 font-bold transition-all shadow-md hover:shadow-lg"
+                    className="flex-1 py-3 bg-primary-600 text-white rounded-xl hover:bg-primary-700 font-bold transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-1.5"
                   >
-                    🔄 {t("reconnectTerminal") || "إعادة الاتصال بالماكينة"}
+                    <FontAwesomeIcon icon={faRotateRight} />
+                    <span>{t("reconnectTerminal") || "إعادة الاتصال بالماكينة"}</span>
                   </button>
                 )}
                 <button

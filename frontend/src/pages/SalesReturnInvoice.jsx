@@ -10,7 +10,7 @@ function SalesReturnInvoice() {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const [invoiceHtml, setInvoiceHtml] = useState("");
 
   // جلب الفاتورة المرتجعة
@@ -24,9 +24,9 @@ function SalesReturnInvoice() {
 
   // جلب HTML الفاتورة
   useEffect(() => {
-    if (id) {
+    if (id && language) {
       api
-        .get(`/sales-returns/${id}/invoice`, {
+        .get(`/sales-returns/${id}/invoice?lang=${language}`, {
           responseType: "text",
         })
         .then((response) => {
@@ -36,7 +36,7 @@ function SalesReturnInvoice() {
           console.error("Error loading sales return invoice:", error);
         });
     }
-  }, [id]);
+  }, [id, language]);
   
   // طباعة تلقائية للفاتورة مباشرة بعد تحميلها بنجاح
   useEffect(() => {

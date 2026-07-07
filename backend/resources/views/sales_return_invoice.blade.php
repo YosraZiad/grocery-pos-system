@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="{{ $lang ?? 'ar' }}" dir="{{ ($lang ?? 'ar') === 'en' ? 'ltr' : 'rtl' }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,7 +13,7 @@
 
         .invoice-container {
             font-family: 'Arial', 'Tahoma', sans-serif;
-            direction: rtl !important;
+            direction: {{ ($lang ?? 'ar') === 'en' ? 'ltr' : 'rtl' }} !important;
             padding: 30px;
             background: #fff;
             max-width: 800px;
@@ -45,12 +45,12 @@
         }
 
         .info-box-right {
-            text-align: right;
+            text-align: {{ ($lang ?? 'ar') === 'en' ? 'left' : 'right' }};
             flex: 1;
         }
 
         .info-box-left {
-            text-align: left;
+            text-align: {{ ($lang ?? 'ar') === 'en' ? 'right' : 'left' }};
             flex: 1;
         }
 
@@ -74,7 +74,7 @@
 
         th, td {
             padding: 12px;
-            text-align: right;
+            text-align: {{ ($lang ?? 'ar') === 'en' ? 'left' : 'right' }};
             border-bottom: 1px solid #ddd;
         }
 
@@ -85,11 +85,11 @@
         }
 
         .text-left {
-            text-align: left;
+            text-align: {{ ($lang ?? 'ar') === 'en' ? 'right' : 'left' }};
         }
 
         .text-right {
-            text-align: right;
+            text-align: {{ ($lang ?? 'ar') === 'en' ? 'left' : 'right' }};
         }
 
         .text-center {
@@ -130,7 +130,7 @@
         @media print {
             body {
                 padding: 0;
-                direction: rtl !important;
+                direction: {{ ($lang ?? 'ar') === 'en' ? 'ltr' : 'rtl' }} !important;
             }
 
             .invoice-container {
@@ -151,36 +151,33 @@
 <body>
     <div class="invoice-container">
         <div class="header">
-            <h1>🛒 متجر المواد الغذائية</h1>
-            <p>فاتورة مرتجعات</p>
+            <h1>🛒 {{ ($lang ?? 'ar') === 'en' ? 'Grocery POS Store' : 'متجر المواد الغذائية' }}</h1>
+            <p>{{ ($lang ?? 'ar') === 'en' ? 'Returns Invoice' : 'فاتورة مرتجعات' }}</p>
         </div>
 
         <div class="invoice-info">
             <div class="info-box-right">
-                <h3>معلومات المرتجع</h3>
-                <p><strong>اسم العميل:</strong> {{ $salesReturn->customer_name ?? 'عميل عام' }}</p>
-                <p><strong>رقم الفاتورة:</strong> {{ $salesReturn->return_number }}</p>
-                <p><strong>طريقة الدفع:</strong> 
-                    @if($salesReturn->refund_method === 'cash') نقدي
-                    @elseif($salesReturn->refund_method === 'card') بطاقة
-                    @elseif($salesReturn->refund_method === 'transfer') تحويل
-                    @elseif($salesReturn->refund_method === 'replacement') سند استبدال
-                    @elseif($salesReturn->refund_method === 'hybrid') مختلط (مقسم)
+                <h3>{{ ($lang ?? 'ar') === 'en' ? 'Return Information' : 'معلومات المرتجع' }}</h3>
+                <p><strong>{{ ($lang ?? 'ar') === 'en' ? 'Customer Name' : 'اسم العميل' }}:</strong> {{ $salesReturn->customer_name ?? (($lang ?? 'ar') === 'en' ? 'General Customer' : 'عميل عام') }}</p>
+                <p><strong>{{ ($lang ?? 'ar') === 'en' ? 'Return Number' : 'رقم المرتجع' }}:</strong> {{ $salesReturn->return_number }}</p>
+                <p><strong>{{ ($lang ?? 'ar') === 'en' ? 'Refund Method' : 'طريقة الرد' }}:</strong> 
+                    @if($salesReturn->refund_method === 'cash') {{ ($lang ?? 'ar') === 'en' ? 'Cash' : 'نقدي' }}
+                    @elseif($salesReturn->refund_method === 'card') {{ ($lang ?? 'ar') === 'en' ? 'Card' : 'بطاقة' }}
+                    @elseif($salesReturn->refund_method === 'transfer') {{ ($lang ?? 'ar') === 'en' ? 'Transfer' : 'تحويل' }}
+                    @elseif($salesReturn->refund_method === 'replacement') {{ ($lang ?? 'ar') === 'en' ? 'Replacement Voucher' : 'سند استبدال' }}
+                    @elseif($salesReturn->refund_method === 'hybrid') {{ ($lang ?? 'ar') === 'en' ? 'Hybrid' : 'مختلط (مقسم)' }}
                     @else {{ $salesReturn->refund_method }}
                     @endif
                 </p>
                 @if($salesReturn->customer_phone)
-                    <p><strong>هاتف العميل:</strong> {{ $salesReturn->customer_phone }}</p>
+                    <p><strong>{{ ($lang ?? 'ar') === 'en' ? 'Customer Phone' : 'هاتف العميل' }}:</strong> {{ $salesReturn->customer_phone }}</p>
                 @endif
-                <p style="font-size: 12px; color: #888; margin-top: 5px;">
-                    <strong>مرتبط بالفاتورة الأصلية:</strong> {{ $salesReturn->sale->invoice_number }}
-                </p>
             </div>
             <div class="info-box-left">
-                <h3>مسؤول الارتجاع</h3>
-                <p><strong>التاريخ:</strong> {{ $salesReturn->created_at->format('Y-m-d H:i') }}</p>
-                <p><strong>الاسم:</strong> {{ $salesReturn->user->name }}</p>
-                <p><strong>البريد:</strong> {{ $salesReturn->user->email }}</p>
+                <h3>{{ ($lang ?? 'ar') === 'en' ? 'Return Officer' : 'مسؤول الارتجاع' }}</h3>
+                <p><strong>{{ ($lang ?? 'ar') === 'en' ? 'Date' : 'التاريخ' }}:</strong> {{ $salesReturn->created_at->format('Y-m-d H:i') }}</p>
+                <p><strong>{{ ($lang ?? 'ar') === 'en' ? 'Name' : 'الاسم' }}:</strong> {{ $salesReturn->user->name }}</p>
+                <p><strong>{{ ($lang ?? 'ar') === 'en' ? 'Email' : 'البريد' }}:</strong> {{ $salesReturn->user->email }}</p>
             </div>
         </div>
 
@@ -188,10 +185,10 @@
             <thead>
                 <tr>
                     <th>#</th>
-                    <th>المنتج</th>
-                    <th>الكمية المسترجعة</th>
-                    <th>سعر الوحدة</th>
-                    <th>الإجمالي</th>
+                    <th>{{ ($lang ?? 'ar') === 'en' ? 'Product' : 'المنتج' }}</th>
+                    <th class="text-center">{{ ($lang ?? 'ar') === 'en' ? 'Returned Qty' : 'الكمية المسترجعة' }}</th>
+                    <th class="text-left">{{ ($lang ?? 'ar') === 'en' ? 'Unit Price' : 'سعر الوحدة' }}</th>
+                    <th class="text-left">{{ ($lang ?? 'ar') === 'en' ? 'Total' : 'الإجمالي' }}</th>
                 </tr>
             </thead>
             <tbody>
@@ -203,8 +200,8 @@
                         <small style="color: #666;">{{ $item->product->category->name ?? '' }}</small>
                     </td>
                     <td class="text-center">{{ $item->return_quantity }}</td>
-                    <td class="text-left">{{ number_format($item->price, 2) }} ر.س</td>
-                    <td class="text-left">{{ number_format($item->subtotal, 2) }} ر.س</td>
+                    <td class="text-left">{{ number_format($item->price, 2) }} {{ ($lang ?? 'ar') === 'en' ? 'SAR' : 'ر.س' }}</td>
+                    <td class="text-left">{{ number_format($item->subtotal, 2) }} {{ ($lang ?? 'ar') === 'en' ? 'SAR' : 'ر.س' }}</td>
                 </tr>
                 @endforeach
             </tbody>
@@ -212,30 +209,30 @@
 
         <div class="totals">
             <div class="totals-row">
-                <span>إجمالي قيمة المرتجعات:</span>
-                <span>{{ number_format($salesReturn->subtotal, 2) }} ر.س</span>
+                <span>{{ ($lang ?? 'ar') === 'en' ? 'Total Returns Value:' : 'إجمالي قيمة المرتجعات:' }}</span>
+                <span>{{ number_format($salesReturn->subtotal, 2) }} {{ ($lang ?? 'ar') === 'en' ? 'SAR' : 'ر.س' }}</span>
             </div>
             @if($salesReturn->discount_amount > 0)
             <div class="totals-row" style="color: #d32f2f;">
-                <span>خصم نسبي مسترجع:</span>
-                <span>-{{ number_format($salesReturn->discount_amount, 2) }} ر.س</span>
+                <span>{{ ($lang ?? 'ar') === 'en' ? 'Proportional Discount Refunded:' : 'خصم نسبي مسترجع:' }}</span>
+                <span>-{{ number_format($salesReturn->discount_amount, 2) }} {{ ($lang ?? 'ar') === 'en' ? 'SAR' : 'ر.س' }}</span>
             </div>
             @endif
             <div class="totals-row total">
-                <span>الصافي المسترد:</span>
-                <span>{{ number_format($salesReturn->refund_total, 2) }} ر.س</span>
+                <span>{{ ($lang ?? 'ar') === 'en' ? 'Net Refunded:' : 'الصافي المسترد:' }}</span>
+                <span>{{ number_format($salesReturn->refund_total, 2) }} {{ ($lang ?? 'ar') === 'en' ? 'SAR' : 'ر.س' }}</span>
             </div>
         </div>
 
         @if($salesReturn->reason)
         <div style="margin-top: 20px; padding: 10px; background-color: #f9f9f9; border-right: 3px solid #ffa000; font-size: 13px;">
-            <strong>سبب الاسترجاع:</strong> {{ $salesReturn->reason }}
+            <strong>{{ ($lang ?? 'ar') === 'en' ? 'Return Reason:' : 'سبب الاسترجاع:' }}</strong> {{ $salesReturn->reason }}
         </div>
         @endif
 
         <div class="footer">
-            <p>تم إصدار فاتورة المرتجع بنجاح.</p>
-            <p>شكراً لتعاملكم معنا!</p>
+            <p>{{ ($lang ?? 'ar') === 'en' ? 'Return invoice issued successfully.' : 'تم إصدار فاتورة المرتجع بنجاح.' }}</p>
+            <p>{{ ($lang ?? 'ar') === 'en' ? 'Thank you for dealing with us!' : 'شكراً لتعاملكم معنا!' }}</p>
         </div>
     </div>
 

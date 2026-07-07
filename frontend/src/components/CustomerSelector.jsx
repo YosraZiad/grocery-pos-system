@@ -9,36 +9,40 @@ function CustomerSelector({ selectedCustomer, onSelectCustomer, defaultCustomerN
   const { t, language } = useI18n();
   const [searchPhone, setSearchPhone] = useState("");
   const [isSearching, setIsSearching] = useState(false);
+  const [searchResults, setSearchResults] = useState([]);
   const [showAddBox, setShowAddBox] = useState(false);
   const [newName, setNewName] = useState("");
   const [newPhone, setNewPhone] = useState("");
   const [duplicateCustomer, setDuplicateCustomer] = useState(null);
 
-  // 1. البحث التلقائي برقم الهاتف (Debounced) من شاشة البحث الرئيسية
+  // 1. البحث التلقائي بالاسم أو الهاتف (Debounced) من شاشة البحث الرئيسية
   useEffect(() => {
     const trimmed = searchPhone.trim();
-    if (trimmed.length < 3) return;
+    if (trimmed.length < 2) {
+      setSearchResults([]);
+      return;
+    }
 
     const delayDebounceFn = setTimeout(async () => {
       setIsSearching(true);
       try {
-        const response = await api.get(`/customers/search?phone=${trimmed}`);
-        if (response.data?.success && response.data?.data) {
-          onSelectCustomer(response.data.data);
-          setSearchPhone("");
-          setShowAddBox(false);
-          toast.success(t("customerSelected") ? `${t("customerSelected")}: ${response.data.data.name}` : `تم اختيار العميل: ${response.data.data.name}`);
+        const response = await api.get(`/customers?search=${trimmed}`);
+        if (response.data && response.data.data) {
+          // Response represents a paginated list of customers, check data array
+          setSearchResults(response.data.data || response.data.data.data || []);
+        } else {
+          setSearchResults([]);
         }
       } catch (err) {
-        // لم يتم العثور على العميل
         console.log("Customer search did not return a match");
+        setSearchResults([]);
       } finally {
         setIsSearching(false);
       }
-    }, 500);
+    }, 400);
 
     return () => clearTimeout(delayDebounceFn);
-  }, [searchPhone, onSelectCustomer]);
+  }, [searchPhone]);
 
   // 2. البحث التلقائي برقم الهاتف المكتوب في نموذج الإضافة للتحقق من عدم تكراره
   useEffect(() => {
@@ -64,11 +68,14 @@ function CustomerSelector({ selectedCustomer, onSelectCustomer, defaultCustomerN
     return () => clearTimeout(delayDebounceFn);
   }, [newPhone]);
 
+  const [isSaving, setIsSaving] = useState(false);
+
   const handleCreateCustomer = async (e) => {
     if (e) {
       e.preventDefault();
       e.stopPropagation();
     }
+    if (isSaving) return;
 
     if (!newName.trim()) {
       toast.error(t("pleaseFillFields") || "يرجى إدخال اسم العميل الجديد");
@@ -79,6 +86,7 @@ function CustomerSelector({ selectedCustomer, onSelectCustomer, defaultCustomerN
       return;
     }
 
+    setIsSaving(true);
     try {
       const response = await api.post("/customers", {
         name: newName.trim(),
@@ -96,6 +104,8 @@ function CustomerSelector({ selectedCustomer, onSelectCustomer, defaultCustomerN
     } catch (err) {
       console.error(err);
       toast.error(err.response?.data?.message || t("errorCreatingCustomer") || "حدث خطأ أثناء تسجيل العميل.");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -133,13 +143,13 @@ function CustomerSelector({ selectedCustomer, onSelectCustomer, defaultCustomerN
         )}
       </div>
 
-      {/* حقل البحث بالهاتف */}
+      {/* حقل البحث بالهاتف والاسم */}
       {!selectedCustomer && !showAddBox && (
         <div className="flex gap-2">
           <div className="relative flex-1">
             <input
               type="text"
-              placeholder={t("searchByPhone") || "البحث برقم الهاتف (مثال: 0512345678)..."}
+              placeholder={language === "en" ? "Search customer by name or phone..." : "ابحث بالاسم أو رقم الهاتف..."}
               value={searchPhone}
               onChange={(e) => setSearchPhone(e.target.value)}
               className="input pr-9 py-2 text-xs w-full focus:ring-2 focus:ring-primary-500"
@@ -151,6 +161,30 @@ function CustomerSelector({ selectedCustomer, onSelectCustomer, defaultCustomerN
                 <FontAwesomeIcon icon={faSearch} className="text-xs" />
               )}
             </span>
+
+            {/* قائمة نتائج البحث المنبثقة */}
+            {searchResults.length > 0 && (
+              <div className="absolute left-0 right-0 top-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg z-50 max-h-48 overflow-y-auto divide-y divide-gray-100 dark:divide-gray-750 animate-fadeIn">
+                {searchResults.map((cust) => (
+                  <button
+                    key={cust.id}
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onSelectCustomer(cust);
+                      setSearchPhone("");
+                      setSearchResults([]);
+                      toast.success(language === "en" ? `Customer selected: ${cust.name}` : `تم اختيار العميل: ${cust.name}`);
+                    }}
+                    className="w-full text-start px-4 py-2 hover:bg-gray-50 dark:hover:bg-gray-750 text-xs text-gray-700 dark:text-gray-300 transition-all font-semibold flex flex-col"
+                  >
+                    <span className="text-gray-900 dark:text-white font-bold">{cust.name}</span>
+                    <span className="text-[10px] text-gray-500 font-mono mt-0.5">{cust.phone}</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
           <button
             type="button"
@@ -234,9 +268,10 @@ function CustomerSelector({ selectedCustomer, onSelectCustomer, defaultCustomerN
             <button
               type="button"
               onClick={handleCreateCustomer}
-              className="bg-green-600 hover:bg-green-700 text-white text-xs font-bold py-2 px-4 rounded-xl transition-all shadow-sm"
+              disabled={isSaving}
+              className="bg-green-600 hover:bg-green-700 text-white text-xs font-bold py-2 px-4 rounded-xl transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {t("saveCustomer") || "حفظ العميل"}
+              {isSaving ? (t("saving") || "جاري الحفظ...") : (t("saveCustomer") || "حفظ العميل")}
             </button>
             <button
               type="button"
