@@ -419,11 +419,11 @@ function HybridPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
             <CustomerSelector
               selectedCustomer={selectedCustomer}
               onSelectCustomer={setSelectedCustomer}
-              defaultCustomerName={t("defaultHybridCustomer") || "العميل الافتراضي - دفع مختلط"}
+              defaultCustomerName={t("defaultHybridCustomer") || "العميل الافتراضي"}
             />
 
-            {/* صفحة المدخلات مقسمة لأربع بطاقات: كاش، بطاقة، تحويل، وحساب عميل */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* صفحة المدخلات مقسمة لأربع بطاقات: كاش، بطاقة، تحويل، وحساب عميل (2 في كل صف لتجنب الازدحام) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               
               {/* بطاقة الدفع النقدي */}
               <div className="border border-gray-200 dark:border-gray-700 p-5 rounded-2xl bg-slate-50/50 dark:bg-slate-900/20 space-y-4">
@@ -578,6 +578,12 @@ function HybridPaymentModal({ isOpen, onClose, onConfirm, totalDue }) {
                       placeholder="RTN-XXXXXXXX-XXXX / VCH-..."
                       value={returnSearchQuery}
                       onChange={(e) => setReturnSearchQuery(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleSearchReturnInvoice();
+                        }
+                      }}
                       className="input py-1.5 px-3 text-xs flex-1 font-mono focus:ring-2 focus:ring-amber-500"
                     />
                     <button

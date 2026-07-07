@@ -195,7 +195,7 @@ function Layout() {
     : `right-0 ${mobileMenuOpen ? "translate-x-0" : "translate-x-full"}`;
 
   return (
-    <div className="min-h-screen flex flex-row bg-gray-50 dark:bg-gray-900 transition-colors duration-200 overflow-x-hidden">
+    <div className="h-screen w-screen flex flex-row bg-gray-50 dark:bg-gray-900 transition-colors duration-200 overflow-hidden">
       
       {/* 1. الشريط الجانبي المكتبي (Desktop Collapsible Sidebar) */}
       <aside
@@ -276,7 +276,7 @@ function Layout() {
       </aside>
 
       {/* 3. حاوي المحتوى الرئيسي (Main Content Wrapper) */}
-      <div className="flex-1 flex flex-col min-w-0 min-h-screen">
+      <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
         {/* شريط الإجراءات العلوي (Top Navbar) */}
         <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 h-16 flex items-center justify-between px-6 sticky top-0 z-40 transition-colors duration-200 shadow-sm">
           {/* الجانب الأيمن (أو الأيسر LTR): زر القائمة للهاتف واسم المتجر */}
