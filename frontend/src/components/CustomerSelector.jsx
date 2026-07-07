@@ -31,23 +31,20 @@ function CustomerSelector({ selectedCustomer, onSelectCustomer, defaultCustomerN
           const response = await api.get(`/vouchers/verify-balance?query=${trimmed}`);
           if (response.data?.success && response.data?.data) {
             const voucherData = response.data.data;
-            
-            // اختيار وتفعيل رصيد السند فوراً بشكل تلقائي
-            onSelectCustomer({
-              id: voucherData.customer_id,
-              name: voucherData.customer_name || "عميل عام",
-              phone: voucherData.customer_phone,
-              balance: voucherData.amount,
-              voucher_code: voucherData.code
-            });
-
-            setSearchPhone("");
-            setSearchResults([]);
-            toast.success(
-              language === "en"
-                ? `Voucher balance of ${voucherData.amount.toFixed(2)} SAR applied successfully!`
-                : `تم بنجاح تطبيق رصيد المرتجع بقيمة ${voucherData.amount.toFixed(2)} ر.س!`
-            );
+            // عرض السند في نتائج البحث ليقوم المستخدم باختياره وتطبيقه يدوياً من القائمة المنسدلة
+            setSearchResults([
+              {
+                id: "voucher_" + voucherData.code,
+                name: `سند مرتجع بقيمة ${voucherData.amount.toFixed(2)} ر.س للعميل ${voucherData.customer_name}`,
+                phone: voucherData.code,
+                balance: voucherData.amount,
+                customer_id: voucherData.customer_id,
+                customer_name: voucherData.customer_name,
+                customer_phone: voucherData.customer_phone,
+                voucher_code: voucherData.code,
+                is_voucher: true
+              }
+            ]);
           } else {
             setSearchResults([]);
           }
