@@ -28,6 +28,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import FastLoginTestPanel from "./pages/FastLoginTestPanel";
 import StartShift from "./pages/StartShift";
 import CardTerminalSimulator from "./pages/CardTerminalSimulator";
+import ZReport from "./pages/ZReport";
 import "./App.css";
 import "./styles/print.css";
 
@@ -210,6 +211,14 @@ function App() {
               element={
                 <ProtectedRoute requiredPermission="create sales">
                   <StartShift />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="shifts/:id/z-report"
+              element={
+                <ProtectedRoute requiredPermission="create sales">
+                  <ZReport />
                 </ProtectedRoute>
               }
             />

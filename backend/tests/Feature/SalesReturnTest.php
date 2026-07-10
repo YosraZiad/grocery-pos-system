@@ -112,6 +112,7 @@ class SalesReturnTest extends TestCase
         $response = $this->postJson('/api/sales-returns', [
             'sale_id' => $this->sale->id,
             'refund_method' => 'cash',
+            'is_not_damaged' => true,
             'reason' => 'Customer request',
             'items' => [
                 [
@@ -127,9 +128,9 @@ class SalesReturnTest extends TestCase
                 'message' => 'تم معالجة وإصدار فاتورة المرتجع بنجاح.'
             ]);
 
-        // التحقق من تحديث حالة الفاتورة لـ partially_refunded
+        // التحقق من بقاء حالة الفاتورة مكتملة التزاماً بالمبادئ المحاسبية
         $this->sale->refresh();
-        $this->assertEquals('partially_refunded', $this->sale->status);
+        $this->assertEquals('completed', $this->sale->status);
 
         // التحقق من تحديث المخزون
         $this->product1->refresh();
@@ -156,6 +157,7 @@ class SalesReturnTest extends TestCase
         $response = $this->postJson('/api/sales-returns', [
             'sale_id' => $this->sale->id,
             'refund_method' => 'cash',
+            'is_not_damaged' => true,
             'reason' => 'Full refund request',
             'items' => [
                 [
@@ -171,9 +173,9 @@ class SalesReturnTest extends TestCase
 
         $response->assertStatus(201);
 
-        // التحقق من تحديث حالة الفاتورة لـ refunded بالكامل
+        // التحقق من بقاء حالة الفاتورة مكتملة التزاماً بالمبادئ المحاسبية
         $this->sale->refresh();
-        $this->assertEquals('refunded', $this->sale->status);
+        $this->assertEquals('completed', $this->sale->status);
 
         // التحقق من تحديث المخزون
         $this->product1->refresh();
@@ -198,6 +200,7 @@ class SalesReturnTest extends TestCase
         $response = $this->postJson('/api/sales-returns', [
             'sale_id' => $this->sale->id,
             'refund_method' => 'cash',
+            'is_not_damaged' => true,
             'reason' => 'Error request',
             'items' => [
                 [

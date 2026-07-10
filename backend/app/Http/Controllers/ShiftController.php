@@ -79,12 +79,97 @@ class ShiftController extends Controller
     }
 
     /**
+     * الحصول على معاينة لتسوية العهدة للوردية النشطة
+     */
+    public function reconciliation()
+    {
+        $shift = Shift::where('user_id', auth()->id())
+            ->where('status', 'open')
+            ->first();
+
+        if (!$shift) {
+            return response()->json([
+                'message' => 'No active shift found. | لا توجد وردية نشطة حالياً.',
+            ], 400);
+        }
+
+        // احتساب المبالغ المتوقعة
+        $expectedCash = floatval($shift->opening_float);
+        $expectedCard = 0.00;
+        $totalSales = 0.00;
+        $totalReturns = 0.00;
+
+        // مبيعات الوردية
+        $sales = \App\Models\Sale::where('user_id', $shift->user_id)
+            ->where('status', 'completed')
+            ->where('created_at', '>=', $shift->opened_at)
+            ->get();
+
+        foreach ($sales as $sale) {
+            $totalSales += floatval($sale->total);
+            if ($sale->payment_method === 'cash') {
+                $expectedCash += floatval($sale->total);
+            } elseif ($sale->payment_method === 'card') {
+                $expectedCard += floatval($sale->total);
+            } elseif ($sale->payment_method === 'hybrid') {
+                if (is_array($sale->payment_details)) {
+                    foreach ($sale->payment_details as $detail) {
+                        $method = $detail['method'] ?? ($detail['payment_method'] ?? null);
+                        $amount = floatval($detail['amount'] ?? 0);
+                        if ($method === 'cash') {
+                            $expectedCash += $amount;
+                        } elseif ($method === 'card') {
+                            $expectedCard += $amount;
+                        }
+                    }
+                }
+            }
+        }
+
+        // مرتجعات الوردية
+        $returns = \App\Models\SalesReturn::where('user_id', $shift->user_id)
+            ->where('status', 'completed')
+            ->where('created_at', '>=', $shift->opened_at)
+            ->get();
+
+        foreach ($returns as $ret) {
+            $totalReturns += floatval($ret->refund_total);
+            if ($ret->refund_method === 'cash') {
+                $expectedCash -= floatval($ret->refund_total);
+            } elseif ($ret->refund_method === 'card') {
+                $expectedCard -= floatval($ret->refund_total);
+            }
+        }
+
+        $hasSuspendedSales = \App\Models\SuspendedSale::where('user_id', auth()->id())->exists();
+
+        return response()->json([
+            'expected_cash' => $expectedCash,
+            'expected_card' => $expectedCard,
+            'total_sales' => $totalSales,
+            'total_returns' => $totalReturns,
+            'has_suspended_sales' => $hasSuspendedSales,
+            'opening_float' => floatval($shift->opening_float),
+        ], 200);
+    }
+
+    /**
      * إنهاء الوردية النشطة
      */
     public function end(Request $request)
     {
+        // 1. التحقق من وجود فواتير معلقة
+        $hasSuspended = \App\Models\SuspendedSale::where('user_id', auth()->id())->exists();
+        if ($hasSuspended) {
+            return response()->json([
+                'message' => 'لا يمكن إغلاق الوردية، يرجى إنهاء أو إلغاء الفواتير المعلقة. | Cannot close shift, please complete or cancel suspended sales.'
+            ], 422);
+        }
+
         $validator = Validator::make($request->all(), [
-            'closing_float' => 'required|numeric|min:0',
+            'actual_cash' => 'required|numeric|min:0',
+            'actual_card' => 'required|numeric|min:0',
+            'notes' => 'nullable|string',
         ]);
 
         if ($validator->fails()) {
@@ -104,8 +189,81 @@ class ShiftController extends Controller
             ], 400);
         }
 
+        // 2. احتساب المبالغ المتوقعة
+        $expectedCash = floatval($shift->opening_float);
+        $expectedCard = 0.00;
+        $totalSales = 0.00;
+        $totalReturns = 0.00;
+
+        // مبيعات الوردية
+        $sales = \App\Models\Sale::where('user_id', $shift->user_id)
+            ->where('status', 'completed')
+            ->where('created_at', '>=', $shift->opened_at)
+            ->get();
+
+        foreach ($sales as $sale) {
+            $totalSales += floatval($sale->total);
+            if ($sale->payment_method === 'cash') {
+                $expectedCash += floatval($sale->total);
+            } elseif ($sale->payment_method === 'card') {
+                $expectedCard += floatval($sale->total);
+            } elseif ($sale->payment_method === 'hybrid') {
+                if (is_array($sale->payment_details)) {
+                    foreach ($sale->payment_details as $detail) {
+                        $method = $detail['method'] ?? ($detail['payment_method'] ?? null);
+                        $amount = floatval($detail['amount'] ?? 0);
+                        if ($method === 'cash') {
+                            $expectedCash += $amount;
+                        } elseif ($method === 'card') {
+                            $expectedCard += $amount;
+                        }
+                    }
+                }
+            }
+        }
+
+        // مرتجعات الوردية
+        $returns = \App\Models\SalesReturn::where('user_id', $shift->user_id)
+            ->where('status', 'completed')
+            ->where('created_at', '>=', $shift->opened_at)
+            ->get();
+
+        foreach ($returns as $ret) {
+            $totalReturns += floatval($ret->refund_total);
+            if ($ret->refund_method === 'cash') {
+                $expectedCash -= floatval($ret->refund_total);
+            } elseif ($ret->refund_method === 'card') {
+                $expectedCard -= floatval($ret->refund_total);
+            }
+        }
+
+        $actualCash = floatval($request->actual_cash);
+        $actualCard = floatval($request->actual_card);
+
+        $difference = ($actualCash + $actualCard) - ($expectedCash + $expectedCard);
+
+        // 3. التحقق من كتابة التبرير عند وجود فروقات (عجز أو زيادة)
+        $hasDifference = (abs($actualCash - $expectedCash) >= 0.01) || (abs($actualCard - $expectedCard) >= 0.01);
+        if ($hasDifference && empty(trim($request->notes ?? ''))) {
+            return response()->json([
+                'message' => 'يجب تقديم تبرير لوجود فروقات في الوردية. | Justification is required for shift differences.',
+                'errors' => [
+                    'notes' => ['يجب تقديم تبرير لوجود فروقات في الوردية.']
+                ]
+            ], 422);
+        }
+
+        // 4. تحديث الوردية وإقفالها
         $shift->update([
-            'closing_float' => $request->closing_float,
+            'closing_float' => $actualCash,
+            'actual_cash' => $actualCash,
+            'actual_card' => $actualCard,
+            'expected_cash' => $expectedCash,
+            'expected_card' => $expectedCard,
+            'difference' => $difference,
+            'total_sales' => $totalSales,
+            'total_returns' => $totalReturns,
+            'notes' => $request->notes,
             'closed_at' => now(),
             'status' => 'closed',
         ]);
@@ -114,5 +272,23 @@ class ShiftController extends Controller
             'message' => 'Shift ended successfully',
             'shift' => $shift,
         ], 200);
+    }
+
+    /**
+     * عرض تقرير Z-Report كـ HTML للطباعة
+     */
+    public function zReport(Request $request, string $id)
+    {
+        $shift = Shift::with('user')->findOrFail($id);
+        $lang = $request->get('lang', 'ar');
+
+        $tenantName = $shift->tenant_id ? \App\Models\Tenant::find($shift->tenant_id)?->name : null;
+        if (!$tenantName) {
+            $tenantName = auth()->user()->tenant?->name ?? 'Grocery POS';
+        }
+
+        $html = view('z_report', compact('shift', 'lang', 'tenantName'))->render();
+
+        return response($html)->header('Content-Type', 'text/html');
     }
 }

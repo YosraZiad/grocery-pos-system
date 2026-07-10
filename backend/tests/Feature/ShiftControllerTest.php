@@ -91,7 +91,9 @@ class ShiftControllerTest extends TestCase
         $shift = $this->createOpenShift($user);
 
         $response = $this->postJson('/api/shifts/end', [
-            'closing_float' => 350.50,
+            'actual_cash' => 350.50,
+            'actual_card' => 0.00,
+            'notes' => 'Matching shift totals.',
         ]);
 
         $response->assertStatus(200)
@@ -99,17 +101,90 @@ class ShiftControllerTest extends TestCase
                 'message',
                 'shift' => [
                     'id',
-                    'closing_float',
-                    'closed_at',
+                    'actual_cash',
+                    'actual_card',
+                    'expected_cash',
+                    'expected_card',
+                    'difference',
                     'status',
                 ],
             ]);
 
         $this->assertDatabaseHas('shifts', [
             'id' => $shift->id,
-            'closing_float' => 350.50,
+            'actual_cash' => 350.50,
+            'actual_card' => 0.00,
             'status' => 'closed',
         ]);
+    }
+
+    public function test_cashier_cannot_close_shift_with_suspended_sales()
+    {
+        $user = $this->actingAsCashier();
+        $shift = $this->createOpenShift($user);
+
+        // Create a suspended sale
+        \App\Models\SuspendedSale::create([
+            'tenant_id' => $user->tenant_id,
+            'user_id' => $user->id,
+            'suspend_id' => 'SUS-001',
+            'customer_name' => 'General Customer',
+            'items' => [],
+            'subtotal' => 0,
+            'discount' => 0,
+            'total' => 0,
+        ]);
+
+        $response = $this->postJson('/api/shifts/end', [
+            'actual_cash' => 150.00,
+            'actual_card' => 0.00,
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJsonFragment([
+                'message' => 'لا يمكن إغلاق الوردية، يرجى إنهاء أو إلغاء الفواتير المعلقة. | Cannot close shift, please complete or cancel suspended sales.'
+            ]);
+    }
+
+    public function test_cashier_close_shift_with_difference_requires_notes()
+    {
+        $user = $this->actingAsCashier();
+        $shift = $this->createOpenShift($user); // opening float is 100.00 by default in test helper
+
+        // Send ended shift with difference but no notes
+        $response = $this->postJson('/api/shifts/end', [
+            'actual_cash' => 150.00, // 50.00 overage difference
+            'actual_card' => 0.00,
+        ]);
+
+        $response->assertStatus(422)
+            ->assertJsonFragment([
+                'message' => 'يجب تقديم تبرير لوجود فروقات في الوردية. | Justification is required for shift differences.'
+            ]);
+
+        // Submit with notes, should succeed
+        $response = $this->postJson('/api/shifts/end', [
+            'actual_cash' => 150.00,
+            'actual_card' => 0.00,
+            'notes' => 'Overage due to tips/extra float.',
+        ]);
+
+        $response->assertStatus(200);
+    }
+
+    public function test_cashier_can_get_z_report()
+    {
+        $user = $this->actingAsCashier();
+        $shift = $this->createOpenShift($user);
+
+        $this->postJson('/api/shifts/end', [
+            'actual_cash' => 100.00,
+            'actual_card' => 0.00,
+        ]);
+
+        $response = $this->getJson("/api/shifts/{$shift->id}/z-report");
+        $response->assertStatus(200)
+            ->assertHeader('Content-Type', 'text/html; charset=utf-8');
     }
 
     public function test_sale_creation_is_prevented_without_active_shift()

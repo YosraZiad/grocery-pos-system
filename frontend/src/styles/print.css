@@ -1,28 +1,45 @@
 /* Print Styles */
 @media print {
-  body {
-    margin: 0;
-    padding: 0;
-    background: white;
+  body, html, #root {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+    color: #000 !important;
+    height: auto !important;
+    overflow: visible !important;
   }
 
-  .no-print,
+  /* Hide navigation, layouts, buttons and menus */
+  aside,
   header,
   footer,
   nav,
-  button {
+  button,
+  .btn,
+  .no-print,
+  .card:not(.z-report-preview-container):not(.invoice-preview) {
     display: none !important;
   }
 
+  /* Reset main padding and container styling */
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+    background: transparent !important;
+  }
+
+  .z-report-preview-container,
   .invoice-preview {
-    width: 100%;
-    margin: 0;
-    padding: 0;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
   }
 
   @page {
-    margin: 1cm;
-    size: A4;
+    margin: 0;
   }
 
   * {

@@ -65,7 +65,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // Shifts
     Route::post('/shifts/start', [ShiftController::class, 'start']);
     Route::get('/shifts/active', [ShiftController::class, 'active']);
+    Route::get('/shifts/active-reconciliation', [ShiftController::class, 'reconciliation']);
     Route::post('/shifts/end', [ShiftController::class, 'end']);
+    Route::get('/shifts/{id}/z-report', [ShiftController::class, 'zReport']);
     
     // Categories
     Route::get('/categories', [CategoryController::class, 'index'])->middleware('permission:view products');

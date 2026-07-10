@@ -26,8 +26,11 @@ import {
   faUser,
   faUserShield,
   faUsers,
+  faPowerOff,
 } from "@fortawesome/free-solid-svg-icons";
 import Tooltip from "../components/Tooltip";
+import api from "../services/api";
+import CloseShiftModal from "../components/CloseShiftModal";
 
 /**
  * Layout حديث واحترافي بمخطط جانبي قابل للطي (Collapsible Sidebar Layout)
@@ -43,6 +46,29 @@ function Layout() {
   const [isCollapsed, setIsCollapsed] = useState(() => {
     return localStorage.getItem("pos_sidebar_collapsed") === "true";
   });
+  
+  const [activeShift, setActiveShift] = useState(null);
+  const [isCloseShiftOpen, setIsCloseShiftOpen] = useState(false);
+
+  const checkActiveShift = async () => {
+    try {
+      const response = await api.get("/shifts/active");
+      if (response.data?.active) {
+        setActiveShift(response.data.shift);
+      } else {
+        setActiveShift(null);
+      }
+    } catch (err) {
+      console.error("Error loading active shift in layout:", err);
+      setActiveShift(null);
+    }
+  };
+
+  useEffect(() => {
+    if (user) {
+      checkActiveShift();
+    }
+  }, [user, location.pathname]);
 
   const handleLogout = async () => {
     await logout();
@@ -329,6 +355,19 @@ function Layout() {
               </button>
             </Tooltip>
 
+            {/* زر إغلاق الوردية */}
+            {activeShift && (
+              <Tooltip label={t("closeShift") || "إغلاق الوردية"} position="bottom">
+                <button
+                  onClick={() => setIsCloseShiftOpen(true)}
+                  className="p-2 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors duration-200 animate-pulse"
+                  aria-label="Close Shift"
+                >
+                  <FontAwesomeIcon icon={faPowerOff} className="text-lg" />
+                </button>
+              </Tooltip>
+            )}
+
             {/* قائمة البروفايل والدخول */}
             <div className="user-menu-container relative">
               <button
@@ -357,6 +396,18 @@ function Layout() {
                       <FontAwesomeIcon icon={faUser} className="me-3 rtl:me-0 rtl:ml-3" />
                       <span>{t("profile")}</span>
                     </Link>
+                    {activeShift && (
+                      <button
+                        onClick={() => {
+                          setUserMenuOpen(false);
+                          setIsCloseShiftOpen(true);
+                        }}
+                        className="w-full flex items-center px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-start border-b border-gray-100 dark:border-gray-700 pb-2 mb-1"
+                      >
+                        <FontAwesomeIcon icon={faPowerOff} className="me-3 rtl:me-0 rtl:ml-3" />
+                        <span>{t("closeShift") || "إغلاق الوردية"}</span>
+                      </button>
+                    )}
                     <button
                       onClick={() => {
                         setUserMenuOpen(false);
@@ -390,6 +441,13 @@ function Layout() {
           </footer>
         )}
       </div>
+
+      {/* نافذة تسوية وإقفال الوردية */}
+      <CloseShiftModal
+        isOpen={isCloseShiftOpen}
+        onClose={() => setIsCloseShiftOpen(false)}
+        onShiftClosed={(shiftId) => navigate(`/shifts/${shiftId}/z-report`, { state: { autoPrint: true } })}
+      />
       
     </div>
   );

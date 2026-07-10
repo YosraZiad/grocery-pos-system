@@ -67,6 +67,7 @@ class VoucherTest extends TestCase
         $response = $this->postJson('/api/sales-returns', [
             'sale_id' => $this->sale->id,
             'refund_method' => 'replacement',
+            'is_not_damaged' => true,
             'customer_name' => 'John Doe',
             'customer_phone' => '0501234567',
             'reason' => 'Exchange request',
