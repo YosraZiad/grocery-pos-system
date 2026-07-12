@@ -47,6 +47,12 @@ class SaleController extends Controller
             ], 403);
         }
 
+        if (\Carbon\Carbon::parse($activeShift->opened_at)->setTimezone('UTC')->diffInHours(now()->setTimezone('UTC')) >= 12) {
+            return response()->json([
+                'message' => 'لقد انتهت صلاحية الوردية (الحد الأقصى 12 ساعة). يرجى إقفال الوردية الحالية وبدء وردية جديدة. | Active shift has expired (max 12 hours). Please close the active shift and start a new one.',
+            ], 403);
+        }
+
         $tenantId = config('tenant_id');
         
         // Custom validation for products with tenant_id

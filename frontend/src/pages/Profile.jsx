@@ -1,15 +1,16 @@
 import { useState } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useI18n } from '../context/I18nContext';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-hot-toast';
 import api from '../services/api';
 
 function Profile() {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const { user, checkAuth } = useAuth();
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState('profile'); // profile, password, pin
+  const [activeTab, setActiveTab] = useState('profile'); // profile, password, pin, shifts
+  const [shiftsPage, setShiftsPage] = useState(1);
   const [formData, setFormData] = useState({
     name: user?.name || '',
     email: user?.email || '',
@@ -113,6 +114,18 @@ function Profile() {
     updatePasswordMutation.mutate(passwordData);
   };
 
+  const { data: shiftsData, isLoading: isShiftsLoading } = useQuery({
+    queryKey: ['my-shifts', shiftsPage],
+    queryFn: async () => {
+      const response = await api.get(`/shifts?page=${shiftsPage}`);
+      return response.data;
+    },
+    enabled: activeTab === 'shifts',
+  });
+
+  const shifts = shiftsData?.data || [];
+  const shiftsTotalPages = shiftsData?.last_page || 1;
+
   const getRoleBadgeColor = (roleName) => {
     if (roleName === 'admin') {
       return 'bg-gradient-to-br from-purple-500 to-purple-700';
@@ -213,6 +226,16 @@ function Profile() {
             }`}
           >
             {t('fastPinSecurity') || 'Fast PIN'}
+          </button>
+          <button
+            onClick={() => setActiveTab('shifts')}
+            className={`px-4 py-2 font-medium transition-colors ${
+              activeTab === 'shifts'
+                ? 'border-b-2 border-primary-600 text-primary-600 dark:text-primary-400'
+                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+            }`}
+          >
+            {t('shiftsHistory') || 'Shifts History'}
           </button>
         </div>
       </div>
@@ -346,6 +369,137 @@ function Profile() {
             </button>
           </div>
         </form>
+      )}
+
+      {/* Shifts History Tab */}
+      {activeTab === 'shifts' && (
+        <div className="card space-y-4">
+          <h4 className="text-base font-bold text-gray-900 dark:text-white pb-2 border-b border-gray-150 dark:border-gray-700">
+            {t('shiftsHistory') || 'سجل الورديات الشخصية'}
+          </h4>
+
+          {isShiftsLoading ? (
+            <div className="flex flex-col items-center justify-center py-10 space-y-2">
+              <div className="w-8 h-8 border-4 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
+              <p className="text-sm font-semibold text-gray-500 dark:text-gray-400">
+                {language === 'ar' ? 'جاري جلب سجل شفتاتك...' : 'Fetching your shifts history...'}
+              </p>
+            </div>
+          ) : shifts.length === 0 ? (
+            <div className="text-center py-12">
+              <span className="text-4xl mb-2 block">📁</span>
+              <p className="text-sm font-bold text-gray-500 dark:text-gray-400">
+                {language === 'ar' ? 'لا يوجد سجل ورديات مسجل.' : 'No shifts records found.'}
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse text-gray-750 dark:text-gray-300 text-xs">
+                <thead>
+                  <tr className="border-b border-gray-150 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/40 text-gray-500 font-bold uppercase">
+                    <th className="py-3 px-4 text-start">{t('shiftNumber') || 'رقم الوردية'}</th>
+                    <th className="py-3 px-4 text-start">{t('device') || 'الجهاز'}</th>
+                    <th className="py-3 px-4 text-center">{language === 'ar' ? 'الافتتاحية' : 'Opening'}</th>
+                    <th className="py-3 px-4 text-center">{language === 'ar' ? 'الفعلي' : 'Actual'}</th>
+                    <th className="py-3 px-4 text-center">{language === 'ar' ? 'المتوقع' : 'Expected'}</th>
+                    <th className="py-3 px-4 text-center">{t('difference') || 'الفارق'}</th>
+                    <th className="py-3 px-4 text-center">{t('status') || 'الحالة'}</th>
+                    <th className="py-3 px-4 text-center">{t('openedAt') || 'تاريخ الفتح'}</th>
+                    <th className="py-3 px-4 text-center">{language === 'ar' ? 'الإجراءات' : 'Actions'}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-150 dark:divide-gray-700">
+                  {shifts.map((shift) => {
+                    const actualCash = parseFloat(shift.actual_cash ?? 0);
+                    const actualCard = parseFloat(shift.actual_card ?? 0);
+                    const expectedCash = parseFloat(shift.expected_cash ?? 0);
+                    const expectedCard = parseFloat(shift.expected_card ?? 0);
+                    const difference = parseFloat(shift.difference ?? 0);
+                    const isClosed = shift.status === 'closed';
+
+                    return (
+                      <tr key={shift.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-900/10 transition-colors">
+                        <td className="py-3 px-4 font-bold text-gray-950 dark:text-white">{shift.shift_number}</td>
+                        <td className="py-3 px-4 font-semibold">{shift.device_number || '-'}</td>
+                        <td className="py-3 px-4 text-center font-mono font-bold">{parseFloat(shift.opening_float).toFixed(2)}</td>
+                        <td className="py-3 px-4 text-center font-mono font-semibold">
+                          {isClosed ? (actualCash + actualCard).toFixed(2) : '-'}
+                        </td>
+                        <td className="py-3 px-4 text-center font-mono font-semibold">
+                          {isClosed ? (expectedCash + expectedCard).toFixed(2) : '-'}
+                        </td>
+                        <td className="py-3 px-4 text-center font-mono font-bold">
+                          {isClosed ? (
+                            <span className={difference < -0.01 ? 'text-red-500' : difference > 0.01 ? 'text-amber-500' : 'text-green-500'}>
+                              {difference > 0.01 ? '+' : ''}{difference.toFixed(2)}
+                            </span>
+                          ) : (
+                            '-'
+                          )}
+                        </td>
+                        <td className="py-3 px-4 text-center">
+                          {isClosed ? (
+                            <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full font-bold text-[9px] uppercase border border-gray-250 dark:border-gray-605">
+                              {language === 'ar' ? 'مغلقة' : 'Closed'}
+                            </span>
+                          ) : (
+                            <span className="px-2 py-0.5 bg-green-50 dark:bg-green-950/20 text-green-700 dark:text-green-400 rounded-full font-bold text-[9px] uppercase border border-green-200 dark:border-green-900/30 animate-pulse">
+                              {language === 'ar' ? 'نشطة' : 'Active'}
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-3 px-4 text-center font-mono text-gray-500">
+                          {new Date(shift.opened_at).toLocaleString(language === 'ar' ? 'ar-SA' : 'en-US', {
+                            dateStyle: 'short',
+                            timeStyle: 'short',
+                          })}
+                        </td>
+                        <td className="py-3 px-4 text-center">
+                          {isClosed ? (
+                            <a
+                              href={`/shifts/${shift.id}/z-report`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-primary-600 hover:text-primary-700 font-bold"
+                            >
+                              {t('viewZReport') || 'Z-Report'}
+                            </a>
+                          ) : (
+                            '-'
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+
+              {shiftsTotalPages > 1 && (
+                <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-150 dark:border-gray-700">
+                  <span className="text-gray-500 text-[10px] font-bold">
+                    {language === 'ar' ? `صفحة ${shiftsPage} من ${shiftsTotalPages}` : `Page ${shiftsPage} of ${shiftsTotalPages}`}
+                  </span>
+                  <div className="flex gap-2">
+                    <button
+                      disabled={shiftsPage <= 1}
+                      onClick={() => setShiftsPage((p) => Math.max(1, p - 1))}
+                      className="px-2.5 py-1 text-[10px] font-bold rounded-lg border border-gray-200 dark:border-gray-700 disabled:opacity-40"
+                    >
+                      {language === 'ar' ? 'السابق' : 'Prev'}
+                    </button>
+                    <button
+                      disabled={shiftsPage >= shiftsTotalPages}
+                      onClick={() => setShiftsPage((p) => Math.min(shiftsTotalPages, p + 1))}
+                      className="px-2.5 py-1 text-[10px] font-bold rounded-lg border border-gray-200 dark:border-gray-700 disabled:opacity-40"
+                    >
+                      {language === 'ar' ? 'التالي' : 'Next'}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       )}
     </div>
   );

@@ -15,7 +15,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import toast from "react-hot-toast";
 
-export default function CloseShiftModal({ isOpen, onClose, onShiftClosed }) {
+export default function CloseShiftModal({ isOpen, onClose, onShiftClosed, isForceClose = false }) {
   const { t, language } = useI18n();
 
   // States
@@ -57,7 +57,9 @@ export default function CloseShiftModal({ isOpen, onClose, onShiftClosed }) {
           ? "فشل تحميل تفاصيل الوردية النشطة."
           : "Failed to load active shift details."
       );
-      onClose();
+      if (!isForceClose) {
+        onClose();
+      }
     } finally {
       setCheckingPreconditions(false);
     }
@@ -130,7 +132,7 @@ export default function CloseShiftModal({ isOpen, onClose, onShiftClosed }) {
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm transition-opacity"
-        onClick={onClose}
+        onClick={isForceClose ? null : onClose}
       ></div>
 
       {/* Modal Container */}
@@ -144,16 +146,32 @@ export default function CloseShiftModal({ isOpen, onClose, onShiftClosed }) {
               {t("closeShift") || "إغلاق الوردية وتسوية العهدة"}
             </h3>
           </div>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 rounded-full flex items-center justify-center bg-white/10 hover:bg-white/20 transition-all"
-          >
-            <FontAwesomeIcon icon={faTimes} />
-          </button>
+          {!isForceClose && (
+            <button
+              onClick={onClose}
+              className="w-8 h-8 rounded-full flex items-center justify-center bg-white/10 hover:bg-white/20 transition-all"
+            >
+              <FontAwesomeIcon icon={faTimes} />
+            </button>
+          )}
         </div>
 
         {/* Modal Body */}
         <div className="p-6">
+          {isForceClose && (
+            <div className="mb-4 p-4 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30 rounded-2xl flex items-start gap-3 text-red-700 dark:text-red-400">
+              <FontAwesomeIcon icon={faTriangleExclamation} className="text-lg mt-0.5 flex-shrink-0" />
+              <div>
+                <h5 className="font-bold text-xs">
+                  {t("forceShiftClosing") || "وردية منتهية الصلاحية (إغلاق إجباري)"}
+                </h5>
+                <p className="text-[10px] leading-relaxed font-semibold mt-1">
+                  {t("shiftDurationLimit") || "لقد مر أكثر من 12 ساعة على فتح الوردية النشطة وهي منتهية الصلاحية الآن. يجب إقفال الوردية وتسوية الحساب قبل المتابعة."}
+                </p>
+              </div>
+            </div>
+          )}
+
           {checkingPreconditions ? (
             <div className="flex flex-col items-center justify-center py-12 space-y-3">
               <FontAwesomeIcon icon={faCircleNotch} className="animate-spin text-3xl text-primary-500" />

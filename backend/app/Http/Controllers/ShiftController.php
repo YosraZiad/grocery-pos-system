@@ -57,9 +57,6 @@ class ShiftController extends Controller
         ], 201);
     }
 
-    /**
-     * الحصول على الوردية النشطة للمستخدم الحالي
-     */
     public function active()
     {
         $shift = Shift::where('user_id', auth()->id())
@@ -72,8 +69,11 @@ class ShiftController extends Controller
             ], 200);
         }
 
+        $isExpired = \Carbon\Carbon::parse($shift->opened_at)->setTimezone('UTC')->diffInHours(now()->setTimezone('UTC')) >= 12;
+
         return response()->json([
             'active' => true,
+            'expired' => $isExpired,
             'shift' => $shift,
         ], 200);
     }
@@ -290,5 +290,53 @@ class ShiftController extends Controller
         $html = view('z_report', compact('shift', 'lang', 'tenantName'))->render();
 
         return response($html)->header('Content-Type', 'text/html');
+    }
+
+    /**
+     * عرض وإدارة الشفتات مع الفلترة
+     */
+    public function index(Request $request)
+    {
+        $query = Shift::with('user');
+
+        // تصفية حسب المستأجر (tenant_id)
+        $tenantId = config('tenant_id') ?? auth()->user()->tenant_id;
+        if ($tenantId) {
+            $query->where('tenant_id', $tenantId);
+        }
+
+        // الكاشير العادي يعرض شفتاته الشخصية فقط، بينما المسؤول يعرض الجميع
+        if (!auth()->user()->hasRole('admin')) {
+            $query->where('user_id', auth()->id());
+        } else {
+            if ($request->has('user_id') && !empty($request->user_id)) {
+                $query->where('user_id', $request->user_id);
+            }
+        }
+
+        // الفلترة حسب الحالة
+        if ($request->has('status') && !empty($request->status)) {
+            $query->where('status', $request->status);
+        }
+
+        // الفلترة حسب رقم الجهاز
+        if ($request->has('device_number') && !empty($request->device_number)) {
+            $query->where('device_number', 'like', "%{$request->device_number}%");
+        }
+
+        // الفلترة بالتاريخ
+        if ($request->has('from') && !empty($request->from)) {
+            $query->where('opened_at', '>=', $request->from . ' 00:00:00');
+        }
+        if ($request->has('to') && !empty($request->to)) {
+            $query->where('opened_at', '<=', $request->to . ' 23:59:59');
+        }
+
+        $query->orderBy('opened_at', 'desc');
+
+        $perPage = $request->get('per_page', 10);
+        $shifts = $query->paginate($perPage);
+
+        return response()->json($shifts, 200);
     }
 }

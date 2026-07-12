@@ -243,4 +243,53 @@ class ShiftControllerTest extends TestCase
 
         $response->assertStatus(201);
     }
+
+    public function test_active_shift_expires_after_12_hours()
+    {
+        $user = $this->actingAsCashier();
+        $shift = $this->createOpenShift($user);
+        
+        // Manually update opened_at to 13 hours ago
+        $shift->update(['opened_at' => now()->subHours(13)]);
+
+        $response = $this->getJson('/api/shifts/active');
+        $response->assertStatus(200)
+            ->assertJson([
+                'active' => true,
+                'expired' => true,
+            ]);
+    }
+
+    public function test_cannot_create_sale_if_active_shift_expired()
+    {
+        $user = $this->actingAsCashier();
+        $shift = $this->createOpenShift($user);
+        
+        // Manually update opened_at to 13 hours ago
+        $shift->update(['opened_at' => now()->subHours(13)]);
+
+        $category = Category::factory()->create(['tenant_id' => $this->tenant->id]);
+        $product = Product::factory()->create([
+            'category_id' => $category->id,
+            'tenant_id' => $this->tenant->id,
+            'quantity' => 10,
+            'sale_price' => 5.00,
+        ]);
+
+        $response = $this->postJson('/api/sales', [
+            'items' => [
+                [
+                    'product_id' => $product->id,
+                    'quantity' => 1,
+                    'price' => 5.00,
+                ],
+            ],
+            'payment_method' => 'cash',
+        ]);
+
+        $response->assertStatus(403)
+            ->assertJsonFragment([
+                'message' => 'لقد انتهت صلاحية الوردية (الحد الأقصى 12 ساعة). يرجى إقفال الوردية الحالية وبدء وردية جديدة. | Active shift has expired (max 12 hours). Please close the active shift and start a new one.'
+            ]);
+    }
 }

@@ -63,6 +63,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('suspended-sales', SuspendedSaleController::class)->only(['index', 'store', 'destroy']);
 
     // Shifts
+    Route::get('/shifts', [ShiftController::class, 'index']);
     Route::post('/shifts/start', [ShiftController::class, 'start']);
     Route::get('/shifts/active', [ShiftController::class, 'active']);
     Route::get('/shifts/active-reconciliation', [ShiftController::class, 'reconciliation']);

@@ -27,6 +27,7 @@ import {
   faUserShield,
   faUsers,
   faPowerOff,
+  faClock,
 } from "@fortawesome/free-solid-svg-icons";
 import Tooltip from "../components/Tooltip";
 import api from "../services/api";
@@ -49,18 +50,27 @@ function Layout() {
   
   const [activeShift, setActiveShift] = useState(null);
   const [isCloseShiftOpen, setIsCloseShiftOpen] = useState(false);
+  const [isShiftExpired, setIsShiftExpired] = useState(false);
 
   const checkActiveShift = async () => {
     try {
       const response = await api.get("/shifts/active");
       if (response.data?.active) {
         setActiveShift(response.data.shift);
+        if (response.data?.expired) {
+          setIsShiftExpired(true);
+          setIsCloseShiftOpen(true);
+        } else {
+          setIsShiftExpired(false);
+        }
       } else {
         setActiveShift(null);
+        setIsShiftExpired(false);
       }
     } catch (err) {
       console.error("Error loading active shift in layout:", err);
       setActiveShift(null);
+      setIsShiftExpired(false);
     }
   };
 
@@ -131,6 +141,7 @@ function Layout() {
     admin: [
       ...(hasPermission("view users") ? [{ path: "/users", label: t("usersManagement"), icon: faUsers }] : []),
       ...(hasPermission("view roles") ? [{ path: "/roles", label: t("rolesAndPermissions"), icon: faKey }] : []),
+      ...(hasPermission("view users") ? [{ path: "/shifts", label: t("shiftsManagement"), icon: faClock }] : []),
     ],
   };
 
@@ -445,8 +456,17 @@ function Layout() {
       {/* نافذة تسوية وإقفال الوردية */}
       <CloseShiftModal
         isOpen={isCloseShiftOpen}
-        onClose={() => setIsCloseShiftOpen(false)}
-        onShiftClosed={(shiftId) => navigate(`/shifts/${shiftId}/z-report`, { state: { autoPrint: true } })}
+        onClose={() => {
+          if (!isShiftExpired) {
+            setIsCloseShiftOpen(false);
+          }
+        }}
+        onShiftClosed={(shiftId) => {
+          setIsShiftExpired(false);
+          setIsCloseShiftOpen(false);
+          navigate(`/shifts/${shiftId}/z-report`, { state: { autoPrint: true } });
+        }}
+        isForceClose={isShiftExpired}
       />
       
     </div>

@@ -29,6 +29,7 @@ import FastLoginTestPanel from "./pages/FastLoginTestPanel";
 import StartShift from "./pages/StartShift";
 import CardTerminalSimulator from "./pages/CardTerminalSimulator";
 import ZReport from "./pages/ZReport";
+import ShiftsManagement from "./pages/ShiftsManagement";
 import "./App.css";
 import "./styles/print.css";
 
@@ -219,6 +220,14 @@ function App() {
               element={
                 <ProtectedRoute requiredPermission="create sales">
                   <ZReport />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="shifts"
+              element={
+                <ProtectedRoute requiredPermission="view users">
+                  <ShiftsManagement />
                 </ProtectedRoute>
               }
             />

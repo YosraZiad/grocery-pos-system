@@ -269,18 +269,21 @@ class SalesReturnController extends Controller
                 }
             }
 
-            // إضافة الرصيد إلى حساب العميل المسجل بالنظام مباشرة عند إرجاع أي منتج
-            $customer->increment('balance', $refundTotal);
+            $voucher = null;
+            if ($salesReturn->refund_method === 'replacement') {
+                // إضافة الرصيد إلى حساب العميل المسجل بالنظام مباشرة عند إرجاع أي منتج كـ رصيد بديل
+                $customer->increment('balance', $refundTotal);
 
-            // إنشاء سند استبدال (Voucher) نشط باستخدام رقم فاتورة المرتجع نفسه كـ كود للسند
-            $voucher = \App\Models\Voucher::create([
-                'tenant_id' => $sale->tenant_id,
-                'customer_id' => $customer->id,
-                'sales_return_id' => $salesReturn->id,
-                'code' => $returnNumber, // رقم فاتورة المرتجع نفسه هو كود السند!
-                'amount' => $refundTotal,
-                'status' => 'active',
-            ]);
+                // إنشاء سند استبدال (Voucher) نشط باستخدام رقم فاتورة المرتجع نفسه كـ كود للسند
+                $voucher = \App\Models\Voucher::create([
+                    'tenant_id' => $sale->tenant_id,
+                    'customer_id' => $customer->id,
+                    'sales_return_id' => $salesReturn->id,
+                    'code' => $returnNumber, // رقم فاتورة المرتجع نفسه هو كود السند!
+                    'amount' => $refundTotal,
+                    'status' => 'active',
+                ]);
+            }
 
             // لا يتم تعديل حالة الفاتورة الأصلية أبداً التزاماً بالمبادئ المحاسبية (تبقى مكتملة كما هي)
 

@@ -212,4 +212,31 @@ class SalesReturnTest extends TestCase
 
         $response->assertStatus(500); // تسبب في حدوث Exception تراجع عن العملية
     }
+
+    public function test_cash_refund_does_not_issue_voucher()
+    {
+        $this->actingAsCashier();
+
+        $saleItem1 = $this->sale->items()->where('product_id', $this->product1->id)->first();
+
+        $response = $this->postJson('/api/sales-returns', [
+            'sale_id' => $this->sale->id,
+            'refund_method' => 'cash',
+            'is_not_damaged' => true,
+            'reason' => 'Customer request',
+            'items' => [
+                [
+                    'sale_item_id' => $saleItem1->id,
+                    'return_qty' => 1,
+                ]
+            ]
+        ]);
+
+        $response->assertStatus(201);
+
+        // Verify that NO voucher was created for this sales return
+        $this->assertDatabaseMissing('vouchers', [
+            'sales_return_id' => $response->json('data.id')
+        ]);
+    }
 }
