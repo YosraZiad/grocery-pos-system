@@ -401,8 +401,16 @@ function SalesReturn() {
               </h3>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm text-gray-700 dark:text-gray-300">
                 <div>
-                  <span className="text-gray-400 block">رقم الفاتورة:</span>
-                  <span className="font-bold text-gray-900 dark:text-white">{activeInvoice.invoice_number}</span>
+                  <span
+                    onClick={() => {
+                      navigator.clipboard.writeText(activeInvoice.invoice_number);
+                      toast.success(language === "ar" ? `تم نسخ الرقم: ${activeInvoice.invoice_number}` : `Copied number: ${activeInvoice.invoice_number}`);
+                    }}
+                    className="font-bold text-gray-900 dark:text-white cursor-pointer hover:text-primary-600 transition-colors"
+                    title={language === "ar" ? "اضغط لنسخ الرقم" : "Click to copy"}
+                  >
+                    {activeInvoice.invoice_number}
+                  </span>
                 </div>
                 <div>
                   <span className="text-gray-400 block">الكاشير:</span>

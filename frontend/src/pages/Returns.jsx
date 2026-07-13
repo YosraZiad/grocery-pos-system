@@ -352,7 +352,16 @@ function Returns() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-600 dark:text-gray-400">
+                      <div
+                        onClick={() => {
+                          if (returnItem.sale?.invoice_number) {
+                            navigator.clipboard.writeText(returnItem.sale.invoice_number);
+                            toast.success(`تم نسخ الرقم: ${returnItem.sale.invoice_number}`);
+                          }
+                        }}
+                        className="text-sm font-bold text-gray-900 dark:text-white font-mono cursor-pointer hover:text-primary-600 transition-colors"
+                        title="اضغط لنسخ رقم الفاتورة"
+                      >
                         {returnItem.sale?.invoice_number || "-"}
                       </div>
                     </td>

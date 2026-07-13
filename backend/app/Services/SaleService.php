@@ -168,14 +168,16 @@ class SaleService
                 if (!$customer) {
                     throw new \RuntimeException("يجب اختيار عميل مسجل بالنظام لإجراء عملية الخصم من الحساب.");
                 }
-                if ($customer->balance < $accountDeduction) {
-                    throw new \RuntimeException("رصيد العميل غير كافٍ. الرصيد المتاح: {$customer->balance} ر.س، المطلوب خصمه: {$accountDeduction} ر.س.");
-                }
-                // خصم المبلغ من رصيد حساب العميل
-                $customer->decrement('balance', $accountDeduction);
 
-                // إذا كانت دفعة الحساب مرتبطة بسند استبدال/مرتجع محدد، نقوم بتحديث السند أيضاً لمنع استخدامه مجدداً
-                if ($appliedVoucher && $appliedVoucher->status === 'active') {
+                if ($appliedVoucher) {
+                    if ($appliedVoucher->status !== 'active') {
+                        throw new \RuntimeException("سند الاستبدال غير نشط أو تم استخدامه مسبقاً. | The voucher is inactive or already redeemed.");
+                    }
+                    if ($appliedVoucher->amount < $accountDeduction) {
+                        throw new \RuntimeException("رصيد السند غير كافٍ. الرصيد المتاح بالسند: {$appliedVoucher->amount} ر.س، المطلوب خصمه: {$accountDeduction} ر.س.");
+                    }
+
+                    // خصم المبلغ من السند
                     if ($appliedVoucher->amount > $accountDeduction) {
                         $appliedVoucher->decrement('amount', $accountDeduction);
                     } else {
@@ -185,14 +187,32 @@ class SaleService
                             'redeemed_at' => now(),
                         ]);
                     }
+
+                    // تحديث رصيد العميل بشكل آمن للمزامنة
+                    if ($customer->balance >= $accountDeduction) {
+                        $customer->decrement('balance', $accountDeduction);
+                    } else {
+                        $customer->update(['balance' => 0.00]);
+                    }
+                } else {
+                    if ($customer->balance < $accountDeduction) {
+                        throw new \RuntimeException("رصيد العميل غير كافٍ. الرصيد المتاح: {$customer->balance} ر.س، المطلوب خصمه: {$accountDeduction} ر.س.");
+                    }
+                    $customer->decrement('balance', $accountDeduction);
                 }
             }
+
+            $activeShift = \App\Models\Shift::where('user_id', $userId)
+                ->where('status', 'open')
+                ->first();
+            $shiftId = $activeShift ? $activeShift->id : null;
 
             // Create sale
             $sale = Sale::create([
                 'tenant_id' => $tenantId,
                 'invoice_number' => Sale::generateInvoiceNumber(),
                 'user_id' => $userId,
+                'shift_id' => $shiftId,
                 'total' => $total,
                 'discount' => $discountAmount,
                 'discount_type' => $discountType,

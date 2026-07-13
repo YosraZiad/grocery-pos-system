@@ -13,11 +13,13 @@ class ShiftControllerTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_cashier_can_start_shift_successfully()
+    public function test_admin_can_start_shift_for_cashier_successfully()
     {
-        $user = $this->actingAsCashier();
+        $admin = $this->actingAsAdmin();
+        $cashier = User::factory()->create();
 
         $response = $this->postJson('/api/shifts/start', [
+            'user_id' => $cashier->id,
             'opening_float' => 150.00,
             'device_number' => 'POS-01',
         ]);
@@ -36,26 +38,44 @@ class ShiftControllerTest extends TestCase
             ]);
 
         $this->assertDatabaseHas('shifts', [
-            'user_id' => $user->id,
+            'user_id' => $cashier->id,
             'device_number' => 'POS-01',
             'opening_float' => 150.00,
             'status' => 'open',
         ]);
     }
 
-    public function test_cashier_cannot_start_multiple_shifts()
+    public function test_cashier_cannot_start_shift_directly()
     {
-        $user = $this->actingAsCashier();
-        $this->createOpenShift($user);
+        $cashier = $this->actingAsCashier();
 
         $response = $this->postJson('/api/shifts/start', [
+            'user_id' => $cashier->id,
+            'opening_float' => 150.00,
+            'device_number' => 'POS-01',
+        ]);
+
+        $response->assertStatus(403)
+            ->assertJsonFragment([
+                'message' => 'Only administrators can open new shifts. | يسمح فقط لمدير النظام بفتح الوردية.',
+            ]);
+    }
+
+    public function test_admin_cannot_start_multiple_shifts_for_same_cashier()
+    {
+        $admin = $this->actingAsAdmin();
+        $cashier = User::factory()->create();
+        $this->createOpenShift($cashier);
+
+        $response = $this->postJson('/api/shifts/start', [
+            'user_id' => $cashier->id,
             'opening_float' => 200.00,
             'device_number' => 'POS-02',
         ]);
 
         $response->assertStatus(422)
             ->assertJsonFragment([
-                'message' => 'You already have an open shift. | لديك وردية مفتوحة بالفعل.',
+                'message' => 'The selected cashier already has an active open shift. | الموظف المختار لديه وردية مفتوحة بالفعل.',
             ]);
     }
 

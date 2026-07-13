@@ -13,6 +13,7 @@ class Sale extends BaseModel
         'tenant_id',
         'invoice_number',
         'user_id',
+        'shift_id',
         'total',
         'discount',
         'discount_type',

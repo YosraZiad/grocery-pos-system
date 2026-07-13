@@ -14,7 +14,7 @@ import api from "../services/api";
 import ProtectedComponent from "../components/ProtectedComponent";
 
 function SalesList() {
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
@@ -238,7 +238,14 @@ function SalesList() {
                     className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors duration-150"
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-bold text-gray-900 dark:text-white font-mono">
+                      <div 
+                        onClick={() => {
+                          navigator.clipboard.writeText(sale.number);
+                          toast.success(language === "ar" ? `تم نسخ الرقم: ${sale.number}` : `Copied number: ${sale.number}`);
+                        }}
+                        className="text-sm font-bold text-gray-900 dark:text-white font-mono cursor-pointer hover:text-primary-600 transition-colors"
+                        title={language === "ar" ? "اضغط لنسخ الرقم" : "Click to copy"}
+                      >
                         {sale.number}
                       </div>
                     </td>

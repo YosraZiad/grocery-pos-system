@@ -81,6 +81,14 @@ function Layout() {
   }, [user, location.pathname]);
 
   const handleLogout = async () => {
+    if (activeShift) {
+      const confirmLogout = window.confirm(
+        language === "ar"
+          ? "تنبيه: لديك وردية (شفت) مفتوحة حالياً. هل أنت متأكد من رغبتك في تسجيل الخروج دون إغلاق الوردية؟"
+          : "Warning: You have an active open shift. Are you sure you want to log out without closing it?"
+      );
+      if (!confirmLogout) return;
+    }
     await logout();
     navigate("/login");
   };

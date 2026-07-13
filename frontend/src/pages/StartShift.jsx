@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useI18n } from "../context/I18nContext";
+import { useQuery } from "@tanstack/react-query";
 import api from "../services/api";
 import toast from "react-hot-toast";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -79,6 +80,8 @@ export default function StartShift() {
   const { t, language } = useI18n();
   const navigate = useNavigate();
 
+  const isAdmin = user?.roles?.some((role) => role.name === "admin");
+  const [selectedUserId, setSelectedUserId] = useState("");
   const [openingFloat, setOpeningFloat] = useState("");
   const [deviceNumber, setDeviceNumber] = useState(
     localStorage.getItem("device_number") || ""
@@ -86,6 +89,17 @@ export default function StartShift() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [loading, setLoading] = useState(false);
   const [drawerOpenAnimation, setDrawerOpenAnimation] = useState(false);
+
+  const { data: usersResponse } = useQuery({
+    queryKey: ["users-list-for-shift-start"],
+    queryFn: async () => {
+      const response = await api.get("/users");
+      return response.data;
+    },
+    enabled: !!isAdmin,
+  });
+
+  const users = usersResponse?.data || [];
 
   // Live clock updating
   useEffect(() => {
@@ -97,6 +111,14 @@ export default function StartShift() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (isAdmin && !selectedUserId) {
+      toast.error(
+        language === "en" ? "Please select a cashier" : "الرجاء اختيار الموظف/الكاشير"
+      );
+      return;
+    }
+
     if (!openingFloat || isNaN(openingFloat) || Number(openingFloat) < 0) {
       toast.error(
         language === "en"
@@ -118,6 +140,7 @@ export default function StartShift() {
     setLoading(true);
     try {
       const response = await api.post("/shifts/start", {
+        user_id: isAdmin ? Number(selectedUserId) : user.id,
         opening_float: Number(openingFloat),
         device_number: deviceNumber.trim(),
       });
@@ -150,6 +173,44 @@ export default function StartShift() {
       setLoading(false);
     }
   };
+
+  if (!isAdmin) {
+    return (
+      <div className="min-h-[70vh] flex items-center justify-center p-4">
+        <div className="w-full max-w-lg bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 p-8 text-center space-y-6">
+          <div className="mx-auto w-20 h-20 bg-amber-50 dark:bg-amber-950/20 text-amber-500 rounded-full flex items-center justify-center text-4xl animate-pulse">
+            ⚠️
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-2xl font-bold text-gray-950 dark:text-white">
+              {language === "en" ? "Shift Start Restricted" : "بدء الوردية مقيد"}
+            </h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
+              {language === "en"
+                ? "Cashiers cannot start shifts themselves. Please ask an administrator to open your shift, assign your register, and set your opening float."
+                : "لا يمكنك بدء وردية بنفسك. يجب على مدير النظام فتح الوردية وتحديد الجهاز والعهدة الافتتاحية لك أولاً."}
+            </p>
+          </div>
+          <div className="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-xl text-start border border-gray-100 dark:border-gray-700 space-y-2 text-xs">
+            <div className="flex justify-between">
+              <span className="text-gray-400">{language === "en" ? "Your Username" : "اسم المستخدم:"}</span>
+              <span className="font-bold text-gray-700 dark:text-gray-300">{user?.name}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-400">{language === "en" ? "Your Email" : "البريد الإلكتروني:"}</span>
+              <span className="font-bold text-gray-700 dark:text-gray-300">{user?.email}</span>
+            </div>
+          </div>
+          <button
+            onClick={() => navigate("/sales")}
+            className="w-full btn btn-primary min-h-12"
+          >
+            {language === "en" ? "Go to POS Dashboard" : "الذهاب للوحة البيع"}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-[70vh] flex items-center justify-center p-4">
@@ -228,6 +289,36 @@ export default function StartShift() {
           </div>
 
           <div className="space-y-4">
+            {/* Cashier Selection (Only for Admin) */}
+            {isAdmin && (
+              <div>
+                <label htmlFor="userId" className="label text-xs">
+                  {language === "en" ? "Select Cashier" : "اختر الموظف / الكاشير *"}
+                </label>
+                <div className="relative">
+                  <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-gray-400 rtl:left-auto rtl:right-0 rtl:pr-3.5">
+                    <FontAwesomeIcon icon={faUser} />
+                  </span>
+                  <select
+                    id="userId"
+                    required
+                    value={selectedUserId}
+                    onChange={(e) => setSelectedUserId(e.target.value)}
+                    className="input min-h-12 pl-10 rtl:pl-3 rtl:pr-10 text-base font-bold"
+                  >
+                    <option value="">
+                      {language === "en" ? "-- Choose Cashier --" : "-- اختر الكاشير --"}
+                    </option>
+                    {users.map((u) => (
+                      <option key={u.id} value={u.id}>
+                        {u.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            )}
+
             {/* Device Number Input */}
             <div>
               <label htmlFor="deviceNumber" className="label text-xs">

@@ -12,6 +12,7 @@ class SalesReturn extends BaseModel
         'return_number',
         'sale_id',
         'user_id',
+        'shift_id',
         'subtotal',
         'discount_amount',
         'refund_total',

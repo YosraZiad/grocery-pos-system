@@ -5,6 +5,7 @@ import { useI18n } from "../context/I18nContext";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowLeft, faPrint } from "@fortawesome/free-solid-svg-icons";
 import api from "../services/api";
+import { toast } from "react-hot-toast";
 
 function SalesReturnInvoice() {
   const { id } = useParams();
@@ -73,7 +74,16 @@ function SalesReturnInvoice() {
       <div className="card bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-150 dark:border-gray-700">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+            <h2
+              onClick={() => {
+                if (salesReturn?.return_number) {
+                  navigator.clipboard.writeText(salesReturn.return_number);
+                  toast.success(language === "ar" ? `تم نسخ الرقم: ${salesReturn.return_number}` : `Copied number: ${salesReturn.return_number}`);
+                }
+              }}
+              className="text-2xl font-bold text-gray-900 dark:text-white cursor-pointer hover:text-amber-500 transition-colors"
+              title={language === "ar" ? "اضغط لنسخ الرقم" : "Click to copy"}
+            >
               فاتورة مرتجع مبيعات #{salesReturn?.return_number}
             </h2>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">

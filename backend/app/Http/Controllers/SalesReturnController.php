@@ -155,12 +155,18 @@ class SalesReturnController extends Controller
             $random = strtoupper(bin2hex(random_bytes(3)));
             $returnNumber = "RTN-{$date}-{$random}";
 
+            $activeShift = \App\Models\Shift::where('user_id', $request->user()->id)
+                ->where('status', 'open')
+                ->first();
+            $shiftId = $activeShift ? $activeShift->id : null;
+
             // إنشاء رأس المرتجع
             $salesReturn = SalesReturn::create([
                 'tenant_id' => $sale->tenant_id,
                 'return_number' => $returnNumber,
                 'sale_id' => $sale->id,
                 'user_id' => $request->user()->id,
+                'shift_id' => $shiftId,
                 'subtotal' => 0.00, // سيتم تحديثه
                 'discount_amount' => 0.00, // سيتم تحديثه
                 'refund_total' => 0.00, // سيتم تحديثه

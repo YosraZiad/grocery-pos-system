@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useI18n } from '../context/I18nContext';
+import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
 import api from '../services/api';
 import ProductSearch from '../components/ProductSearch';
@@ -48,6 +49,7 @@ const playDrawerSound = () => {
 };
 
 function Sales() {
+  const { user } = useAuth();
   const [cartItems, setCartItems] = useState(() => {
     try {
       const saved = localStorage.getItem('pos_cart_items');
@@ -65,7 +67,15 @@ function Sales() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const location = useLocation();
-  const { t } = useI18n();
+  const { t, language } = useI18n();
+
+  const isAdmin = user?.roles?.some((role) => role.name === "admin");
+
+  useEffect(() => {
+    if (!checkingShift && !activeShift && !isAdmin) {
+      navigate("/start-shift");
+    }
+  }, [checkingShift, activeShift, isAdmin]);
 
   const [discount, setDiscount] = useState(0);
   const [discountType, setDiscountType] = useState('fixed');
@@ -230,7 +240,7 @@ function Sales() {
     );
   }
 
-  if (!activeShift) {
+  if (!activeShift && !isAdmin) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center p-4">
         <div className="w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700 p-6 text-center space-y-5">

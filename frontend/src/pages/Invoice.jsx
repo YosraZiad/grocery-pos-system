@@ -5,6 +5,7 @@ import { useI18n } from "../context/I18nContext";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowLeft, faPrint } from "@fortawesome/free-solid-svg-icons";
 import api from "../services/api";
+import { toast } from "react-hot-toast";
 
 function Invoice() {
   const { id } = useParams();
@@ -73,7 +74,16 @@ function Invoice() {
       <div className="card">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+            <h2 
+              onClick={() => {
+                if (sale?.invoice_number) {
+                  navigator.clipboard.writeText(sale.invoice_number);
+                  toast.success(language === "ar" ? `تم نسخ الرقم: ${sale.invoice_number}` : `Copied number: ${sale.invoice_number}`);
+                }
+              }}
+              className="text-2xl font-bold text-gray-900 dark:text-white cursor-pointer hover:text-primary-600 transition-colors"
+              title={language === "ar" ? "اضغط لنسخ الرقم" : "Click to copy"}
+            >
               {t("invoice")} #{sale?.invoice_number}
             </h2>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">

@@ -14,7 +14,14 @@ class ShiftController extends Controller
      */
     public function start(Request $request)
     {
+        if (!auth()->user()->hasRole('admin')) {
+            return response()->json([
+                'message' => 'Only administrators can open new shifts. | يسمح فقط لمدير النظام بفتح الوردية.',
+            ], 403);
+        }
+
         $validator = Validator::make($request->all(), [
+            'user_id' => 'required|exists:users,id',
             'opening_float' => 'required|numeric|min:0',
             'device_number' => 'required|string|max:255',
         ]);
@@ -27,13 +34,13 @@ class ShiftController extends Controller
         }
 
         // التحقق مما إذا كان لدى الكاشير وردية مفتوحة بالفعل
-        $hasOpenShift = Shift::where('user_id', auth()->id())
+        $hasOpenShift = Shift::where('user_id', $request->user_id)
             ->where('status', 'open')
             ->exists();
 
         if ($hasOpenShift) {
             return response()->json([
-                'message' => 'You already have an open shift. | لديك وردية مفتوحة بالفعل.',
+                'message' => 'The selected cashier already has an active open shift. | الموظف المختار لديه وردية مفتوحة بالفعل.',
             ], 422);
         }
 
@@ -43,7 +50,7 @@ class ShiftController extends Controller
 
         $shift = Shift::create([
             'tenant_id' => config('tenant_id') ?? auth()->user()->tenant_id,
-            'user_id' => auth()->id(),
+            'user_id' => $request->user_id,
             'shift_number' => $shiftNumber,
             'device_number' => $request->device_number,
             'opening_float' => $request->opening_float,
@@ -100,9 +107,8 @@ class ShiftController extends Controller
         $totalReturns = 0.00;
 
         // مبيعات الوردية
-        $sales = \App\Models\Sale::where('user_id', $shift->user_id)
+        $sales = \App\Models\Sale::where('shift_id', $shift->id)
             ->where('status', 'completed')
-            ->where('created_at', '>=', $shift->opened_at)
             ->get();
 
         foreach ($sales as $sale) {
@@ -127,9 +133,8 @@ class ShiftController extends Controller
         }
 
         // مرتجعات الوردية
-        $returns = \App\Models\SalesReturn::where('user_id', $shift->user_id)
+        $returns = \App\Models\SalesReturn::where('shift_id', $shift->id)
             ->where('status', 'completed')
-            ->where('created_at', '>=', $shift->opened_at)
             ->get();
 
         foreach ($returns as $ret) {
@@ -196,9 +201,8 @@ class ShiftController extends Controller
         $totalReturns = 0.00;
 
         // مبيعات الوردية
-        $sales = \App\Models\Sale::where('user_id', $shift->user_id)
+        $sales = \App\Models\Sale::where('shift_id', $shift->id)
             ->where('status', 'completed')
-            ->where('created_at', '>=', $shift->opened_at)
             ->get();
 
         foreach ($sales as $sale) {
@@ -223,9 +227,8 @@ class ShiftController extends Controller
         }
 
         // مرتجعات الوردية
-        $returns = \App\Models\SalesReturn::where('user_id', $shift->user_id)
+        $returns = \App\Models\SalesReturn::where('shift_id', $shift->id)
             ->where('status', 'completed')
-            ->where('created_at', '>=', $shift->opened_at)
             ->get();
 
         foreach ($returns as $ret) {
