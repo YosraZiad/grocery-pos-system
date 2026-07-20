@@ -202,33 +202,71 @@
 
         <div class="divider"></div>
 
-        <!-- تفاصيل تسوية المدفوعات -->
-        <div class="section-title">{{ ($lang ?? 'ar') === 'en' ? 'Payment Reconciliation' : 'تسوية العهدة والمدفوعات' }}</div>
-        <div class="info-row" style="font-weight: bold; border-bottom: 1px solid #eee; padding-bottom: 2px;">
-            <span>{{ ($lang ?? 'ar') === 'en' ? 'Method' : 'طريقة الدفع' }}</span>
-            <span>{{ ($lang ?? 'ar') === 'en' ? 'Expected / Actual' : 'المتوقع / الفعلي' }}</span>
-        </div>
+        <!-- تفاصيل تسوية المدفوعات والمعادلة الرياضيات المباشرة -->
+        <div class="section-title">{{ ($lang ?? 'ar') === 'en' ? 'Cash & Card Equation Breakdown' : 'معادلة حساب الكاش والشبكة' }}</div>
         
-        <!-- النقد / كاش -->
-        <div class="info-row">
-            <span class="info-label">{{ ($lang ?? 'ar') === 'en' ? 'Cash:' : 'نقدي (كاش):' }}</span>
-            <span class="info-value">
-                {{ number_format($shift->expected_cash, 2) }} / {{ number_format($shift->actual_cash, 2) }} ر.س
-            </span>
-        </div>
-        
-        <!-- شبكة / بطاقة -->
-        <div class="info-row">
-            <span class="info-label">{{ ($lang ?? 'ar') === 'en' ? 'Card:' : 'بطاقة (شبكة):' }}</span>
-            <span class="info-value">
-                {{ number_format($shift->expected_card, 2) }} / {{ number_format($shift->actual_card, 2) }} ر.س
-            </span>
+        <!-- كاش المعادلة -->
+        <div style="font-size: 10px; background: #fafafa; padding: 6px; border: 1px solid #eee; border-radius: 4px; margin-bottom: 8px;">
+            <div style="font-weight: bold; border-bottom: 1px dashed #ddd; padding-bottom: 3px; margin-bottom: 3px; font-size: 11px;">
+                💵 {{ ($lang ?? 'ar') === 'en' ? 'Cash Equation:' : 'تفاصيل معادلة النقد (كاش):' }}
+            </div>
+            <div class="info-row">
+                <span>{{ ($lang ?? 'ar') === 'en' ? 'Opening Float:' : 'العهدة الافتتاحية:' }}</span>
+                <span>{{ number_format($shift->opening_float, 2) }} ر.س</span>
+            </div>
+            <div class="info-row">
+                <span>{{ ($lang ?? 'ar') === 'en' ? '+ Cash Sales:' : '+ مبيعات النقد الكلية:' }}</span>
+                <span>+{{ number_format($cashSales ?? 0, 2) }} ر.س</span>
+            </div>
+            <div class="info-row">
+                <span>{{ ($lang ?? 'ar') === 'en' ? '- Cash Returns:' : '- مرتجعات النقد الكلية:' }}</span>
+                <span>-{{ number_format($cashReturns ?? 0, 2) }} ر.س</span>
+            </div>
+            <div class="divider"></div>
+            <div class="info-row" style="font-weight: bold; font-size: 11px;">
+                <span>{{ ($lang ?? 'ar') === 'en' ? '= Expected Cash:' : '= الصافي المتوقع (كاش):' }}</span>
+                <span>{{ number_format($shift->expected_cash, 2) }} ر.س</span>
+            </div>
+            <div class="info-row" style="font-weight: bold; font-size: 11px;">
+                <span>{{ ($lang ?? 'ar') === 'en' ? 'Actual Cash in Drawer:' : 'الكاش الفعلي في الدرج:' }}</span>
+                <span>{{ number_format($shift->actual_cash, 2) }} ر.س</span>
+            </div>
+            <div class="info-row" style="font-weight: bold; font-size: 11px;">
+                <span>{{ ($lang ?? 'ar') === 'en' ? 'Cash Difference:' : 'فارق الكاش (عجز/زيادة):' }}</span>
+                <span style="color: {{ ($shift->actual_cash - $shift->expected_cash) < -0.01 ? '#c62828' : (($shift->actual_cash - $shift->expected_cash) > 0.01 ? '#ef6c00' : '#2e7d32') }}">
+                    {{ ($shift->actual_cash - $shift->expected_cash) > 0.01 ? '+' : '' }}{{ number_format($shift->actual_cash - $shift->expected_cash, 2) }} ر.س
+                </span>
+            </div>
         </div>
 
-        <!-- العهدة الافتتاحية -->
-        <div class="info-row" style="font-size: 10px; color: #555;">
-            <span>{{ ($lang ?? 'ar') === 'en' ? '* Opening Float:' : '* عهدة الافتتاح (مشمولة):' }}</span>
-            <span>{{ number_format($shift->opening_float, 2) }} ر.س</span>
+        <!-- شبكة المعادلة -->
+        <div style="font-size: 10px; background: #fafafa; padding: 6px; border: 1px solid #eee; border-radius: 4px; margin-bottom: 8px;">
+            <div style="font-weight: bold; border-bottom: 1px dashed #ddd; padding-bottom: 3px; margin-bottom: 3px; font-size: 11px;">
+                💳 {{ ($lang ?? 'ar') === 'en' ? 'Card Equation:' : 'تفاصيل معادلة الشبكة (فيزا):' }}
+            </div>
+            <div class="info-row">
+                <span>{{ ($lang ?? 'ar') === 'en' ? '+ Card Sales:' : '+ مبيعات الشبكة الكلية:' }}</span>
+                <span>+{{ number_format($cardSales ?? 0, 2) }} ر.س</span>
+            </div>
+            <div class="info-row">
+                <span>{{ ($lang ?? 'ar') === 'en' ? '- Card Returns:' : '- مرتجعات الشبكة الكلية:' }}</span>
+                <span>-{{ number_format($cardReturns ?? 0, 2) }} ر.س</span>
+            </div>
+            <div class="divider"></div>
+            <div class="info-row" style="font-weight: bold; font-size: 11px;">
+                <span>{{ ($lang ?? 'ar') === 'en' ? '= Expected Card:' : '= الصافي المتوقع (شبكة):' }}</span>
+                <span>{{ number_format($shift->expected_card, 2) }} ر.س</span>
+            </div>
+            <div class="info-row" style="font-weight: bold; font-size: 11px;">
+                <span>{{ ($lang ?? 'ar') === 'en' ? 'Actual Card Total:' : 'إجمالي الشبكة الفعلي:' }}</span>
+                <span>{{ number_format($shift->actual_card, 2) }} ر.س</span>
+            </div>
+            <div class="info-row" style="font-weight: bold; font-size: 11px;">
+                <span>{{ ($lang ?? 'ar') === 'en' ? 'Card Difference:' : 'فارق الشبكة (عجز/زيادة):' }}</span>
+                <span style="color: {{ ($shift->actual_card - $shift->expected_card) < -0.01 ? '#c62828' : (($shift->actual_card - $shift->expected_card) > 0.01 ? '#ef6c00' : '#2e7d32') }}">
+                    {{ ($shift->actual_card - $shift->expected_card) > 0.01 ? '+' : '' }}{{ number_format($shift->actual_card - $shift->expected_card, 2) }} ر.س
+                </span>
+            </div>
         </div>
 
         <div class="double-divider"></div>

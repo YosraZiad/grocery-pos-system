@@ -295,13 +295,37 @@ export default function CloseShiftModal({ isOpen, onClose, onShiftClosed, isForc
                   <div className="p-4 bg-gray-50 dark:bg-gray-900/40 border border-gray-150 dark:border-gray-700 rounded-2xl space-y-4">
                     
                     {/* Expected vs Actual Cash */}
-                    <div className="space-y-1">
+                    <div className="space-y-2">
                       <div className="flex justify-between items-center text-xs font-bold">
                         <span className="text-gray-600 dark:text-gray-400">💵 {t("actualCash") || "النقد الفعلي بالدرج"} (كاش):</span>
                         <span className="font-mono text-gray-900 dark:text-white">
                           {declaredCash.toFixed(2)} / {expectedCash.toFixed(2)} ر.س
                         </span>
                       </div>
+                      
+                      {/* Detailed Math Breakdown */}
+                      <div className="text-[10px] space-y-1 bg-white dark:bg-gray-800 p-2.5 rounded-xl border border-gray-200 dark:border-gray-700">
+                        <div className="font-bold text-gray-700 dark:text-gray-300 border-b border-gray-150 dark:border-gray-700 pb-1">
+                          💵 {language === "ar" ? "معادلة احتساب النقد المتوقع:" : "Expected Cash Equation:"}
+                        </div>
+                        <div className="flex justify-between text-gray-600 dark:text-gray-400">
+                          <span>{language === "ar" ? "العهدة الافتتاحية:" : "Opening Float:"}</span>
+                          <span className="font-mono">{parseFloat(reconData?.opening_float || 0).toFixed(2)} ر.س</span>
+                        </div>
+                        <div className="flex justify-between text-green-600 dark:text-green-400 font-semibold">
+                          <span>{language === "ar" ? "+ مبيعات النقد (كاش):" : "+ Cash Sales:"}</span>
+                          <span className="font-mono">+{parseFloat(reconData?.cash_sales || 0).toFixed(2)} ر.س</span>
+                        </div>
+                        <div className="flex justify-between text-red-500 dark:text-red-400 font-semibold">
+                          <span>{language === "ar" ? "- مرتجعات النقد (كاش):" : "- Cash Returns:"}</span>
+                          <span className="font-mono">-{parseFloat(reconData?.cash_returns || 0).toFixed(2)} ر.س</span>
+                        </div>
+                        <div className="flex justify-between font-bold pt-1 border-t border-gray-150 dark:border-gray-700 text-gray-900 dark:text-white">
+                          <span>{language === "ar" ? "= الصافي المتوقع (كاش):" : "= Net Expected Cash:"}</span>
+                          <span className="font-mono">{expectedCash.toFixed(2)} ر.س</span>
+                        </div>
+                      </div>
+
                       <div className="flex justify-between items-center text-[10px] font-semibold">
                         <span className="text-gray-500">{language === "ar" ? "فارق الكاش المتوقع:" : "Expected cash difference:"}</span>
                         <span className={`font-mono ${cashDiff < 0 ? "text-red-600" : cashDiff > 0 ? "text-amber-600" : "text-green-600"}`}>
@@ -313,13 +337,33 @@ export default function CloseShiftModal({ isOpen, onClose, onShiftClosed, isForc
                     <div className="border-t border-gray-200 dark:border-gray-800" />
 
                     {/* Expected vs Actual Card */}
-                    <div className="space-y-1">
+                    <div className="space-y-2">
                       <div className="flex justify-between items-center text-xs font-bold">
                         <span className="text-gray-600 dark:text-gray-400">💳 {t("actualCard") || "شبكة الدفع الفعلية"} (فيزا):</span>
                         <span className="font-mono text-gray-900 dark:text-white">
                           {declaredCard.toFixed(2)} / {expectedCard.toFixed(2)} ر.س
                         </span>
                       </div>
+
+                      {/* Detailed Card Math Breakdown */}
+                      <div className="text-[10px] space-y-1 bg-white dark:bg-gray-800 p-2.5 rounded-xl border border-gray-200 dark:border-gray-700">
+                        <div className="font-bold text-gray-700 dark:text-gray-300 border-b border-gray-150 dark:border-gray-700 pb-1">
+                          💳 {language === "ar" ? "معادلة احتساب الشبكة المتوقعة:" : "Expected Card Equation:"}
+                        </div>
+                        <div className="flex justify-between text-green-600 dark:text-green-400 font-semibold">
+                          <span>{language === "ar" ? "+ مبيعات الشبكة (فيزا):" : "+ Card Sales:"}</span>
+                          <span className="font-mono">+{parseFloat(reconData?.card_sales || 0).toFixed(2)} ر.س</span>
+                        </div>
+                        <div className="flex justify-between text-red-500 dark:text-red-400 font-semibold">
+                          <span>{language === "ar" ? "- مرتجعات الشبكة (فيزا):" : "- Card Returns:"}</span>
+                          <span className="font-mono">-{parseFloat(reconData?.card_returns || 0).toFixed(2)} ر.س</span>
+                        </div>
+                        <div className="flex justify-between font-bold pt-1 border-t border-gray-150 dark:border-gray-700 text-gray-900 dark:text-white">
+                          <span>{language === "ar" ? "= الصافي المتوقع (شبكة):" : "= Net Expected Card:"}</span>
+                          <span className="font-mono">{expectedCard.toFixed(2)} ر.س</span>
+                        </div>
+                      </div>
+
                       <div className="flex justify-between items-center text-[10px] font-semibold">
                         <span className="text-gray-500">{language === "ar" ? "فارق الشبكة المتوقع:" : "Expected card difference:"}</span>
                         <span className={`font-mono ${cardDiff < 0 ? "text-red-600" : cardDiff > 0 ? "text-amber-600" : "text-green-600"}`}>

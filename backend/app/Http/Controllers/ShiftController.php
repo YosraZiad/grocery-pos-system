@@ -100,9 +100,8 @@ class ShiftController extends Controller
             ], 400);
         }
 
-        // احتساب المبالغ المتوقعة
-        $expectedCash = floatval($shift->opening_float);
-        $expectedCard = 0.00;
+        $cashSales = 0.00;
+        $cardSales = 0.00;
         $totalSales = 0.00;
         $totalReturns = 0.00;
 
@@ -114,18 +113,18 @@ class ShiftController extends Controller
         foreach ($sales as $sale) {
             $totalSales += floatval($sale->total);
             if ($sale->payment_method === 'cash') {
-                $expectedCash += floatval($sale->total);
+                $cashSales += floatval($sale->total);
             } elseif ($sale->payment_method === 'card') {
-                $expectedCard += floatval($sale->total);
+                $cardSales += floatval($sale->total);
             } elseif ($sale->payment_method === 'hybrid') {
                 if (is_array($sale->payment_details)) {
                     foreach ($sale->payment_details as $detail) {
                         $method = $detail['method'] ?? ($detail['payment_method'] ?? null);
                         $amount = floatval($detail['amount'] ?? 0);
                         if ($method === 'cash') {
-                            $expectedCash += $amount;
+                            $cashSales += $amount;
                         } elseif ($method === 'card') {
-                            $expectedCard += $amount;
+                            $cardSales += $amount;
                         }
                     }
                 }
@@ -137,14 +136,20 @@ class ShiftController extends Controller
             ->where('status', 'completed')
             ->get();
 
+        $cashReturns = 0.00;
+        $cardReturns = 0.00;
+
         foreach ($returns as $ret) {
             $totalReturns += floatval($ret->refund_total);
             if ($ret->refund_method === 'cash') {
-                $expectedCash -= floatval($ret->refund_total);
+                $cashReturns += floatval($ret->refund_total);
             } elseif ($ret->refund_method === 'card') {
-                $expectedCard -= floatval($ret->refund_total);
+                $cardReturns += floatval($ret->refund_total);
             }
         }
+
+        $expectedCash = floatval($shift->opening_float) + $cashSales - $cashReturns;
+        $expectedCard = $cardSales - $cardReturns;
 
         $hasSuspendedSales = \App\Models\SuspendedSale::where('user_id', auth()->id())->exists();
 
@@ -155,6 +160,10 @@ class ShiftController extends Controller
             'total_returns' => $totalReturns,
             'has_suspended_sales' => $hasSuspendedSales,
             'opening_float' => floatval($shift->opening_float),
+            'cash_sales' => $cashSales,
+            'card_sales' => $cardSales,
+            'cash_returns' => $cashReturns,
+            'card_returns' => $cardReturns,
         ], 200);
     }
 
@@ -290,7 +299,53 @@ class ShiftController extends Controller
             $tenantName = auth()->user()->tenant?->name ?? 'Grocery POS';
         }
 
-        $html = view('z_report', compact('shift', 'lang', 'tenantName'))->render();
+        $cashSales = 0.00;
+        $cardSales = 0.00;
+        $sales = \App\Models\Sale::where('shift_id', $shift->id)
+            ->where('status', 'completed')
+            ->get();
+        foreach ($sales as $sale) {
+            if ($sale->payment_method === 'cash') {
+                $cashSales += floatval($sale->total);
+            } elseif ($sale->payment_method === 'card') {
+                $cardSales += floatval($sale->total);
+            } elseif ($sale->payment_method === 'hybrid') {
+                if (is_array($sale->payment_details)) {
+                    foreach ($sale->payment_details as $detail) {
+                        $method = $detail['method'] ?? ($detail['payment_method'] ?? null);
+                        $amount = floatval($detail['amount'] ?? 0);
+                        if ($method === 'cash') {
+                            $cashSales += $amount;
+                        } elseif ($method === 'card') {
+                            $cardSales += $amount;
+                        }
+                    }
+                }
+            }
+        }
+
+        $cashReturns = 0.00;
+        $cardReturns = 0.00;
+        $returns = \App\Models\SalesReturn::where('shift_id', $shift->id)
+            ->where('status', 'completed')
+            ->get();
+        foreach ($returns as $ret) {
+            if ($ret->refund_method === 'cash') {
+                $cashReturns += floatval($ret->refund_total);
+            } elseif ($ret->refund_method === 'card') {
+                $cardReturns += floatval($ret->refund_total);
+            }
+        }
+
+        $html = view('z_report', compact(
+            'shift', 
+            'lang', 
+            'tenantName',
+            'cashSales',
+            'cardSales',
+            'cashReturns',
+            'cardReturns'
+        ))->render();
 
         return response($html)->header('Content-Type', 'text/html');
     }

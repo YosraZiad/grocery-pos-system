@@ -31,6 +31,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import Tooltip from "../components/Tooltip";
 import api from "../services/api";
+import toast from "react-hot-toast";
 import CloseShiftModal from "../components/CloseShiftModal";
 
 /**
@@ -82,12 +83,13 @@ function Layout() {
 
   const handleLogout = async () => {
     if (activeShift) {
-      const confirmLogout = window.confirm(
+      toast.error(
         language === "ar"
-          ? "تنبيه: لديك وردية (شفت) مفتوحة حالياً. هل أنت متأكد من رغبتك في تسجيل الخروج دون إغلاق الوردية؟"
-          : "Warning: You have an active open shift. Are you sure you want to log out without closing it?"
+          ? "يجب إغلاق الوردية (الشفت) النشطة أولاً قبل تسجيل الخروج!"
+          : "You must close your active shift first before logging out!"
       );
-      if (!confirmLogout) return;
+      setIsCloseShiftOpen(true);
+      return;
     }
     await logout();
     navigate("/login");

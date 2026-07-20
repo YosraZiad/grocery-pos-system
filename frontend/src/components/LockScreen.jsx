@@ -35,6 +35,23 @@ function LockScreen({ onUnlock }) {
     setPin(pin.slice(0, -1));
   };
 
+  const handleLockScreenLogout = async () => {
+    try {
+      const response = await api.get("/shifts/active");
+      if (response.data && response.data.active === true) {
+        toast.error(
+          language === "ar"
+            ? "يجب إلغاء قفل الشاشة وإغلاق الوردية النشطة أولاً قبل تسجيل الخروج!"
+            : "You must unlock the screen and close your active shift first before logging out!"
+        );
+        return;
+      }
+    } catch (err) {
+      console.warn("Error checking active shift on lock screen logout:", err);
+    }
+    await logout();
+  };
+
   const handleClear = () => {
     if (loading || error) return;
     setPin("");
@@ -178,7 +195,7 @@ function LockScreen({ onUnlock }) {
         {/* Switch cashier / Logout button */}
         <button
           type="button"
-          onClick={logout}
+          onClick={handleLockScreenLogout}
           className="flex items-center space-x-2 rtl:space-x-reverse px-5 py-2.5 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 text-sm font-medium transition-all duration-200 border border-red-500/20"
         >
           <FontAwesomeIcon icon={faDoorOpen} />
