@@ -42,7 +42,10 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/fast-login-test" element={<FastLoginTestPanel />} />
-          <Route path="/terminal-simulator" element={<CardTerminalSimulator />} />
+          <Route
+            path="/terminal-simulator"
+            element={<CardTerminalSimulator />}
+          />
 
           {/* Protected routes */}
           <Route
@@ -64,6 +67,7 @@ function App() {
             />
             <Route
               path="products/:id"
+              // have see products permission
               element={
                 <ProtectedRoute requiredPermission="view products">
                   <ProductCard />
