@@ -39,6 +39,8 @@ import CloseShiftModal from "../components/CloseShiftModal";
  */
 function Layout() {
   const { user, logout, lockSession, hasPermission } = useAuth();
+  const isAdmin = user?.roles?.some((role) => role.name === "admin");
+  const isCashier = user?.roles?.some((role) => role.name === "cashier");
   const { t, language, toggleLanguage } = useI18n();
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
@@ -126,32 +128,32 @@ function Layout() {
   // المجموعات البرمجية وقنوات التنقل مفلترة بالصلاحيات
   const navigationGroups = {
     main: [
-      { path: "/", label: t("home"), icon: faHouse },
-      ...(hasPermission("view products") ? [{ path: "/products", label: t("products"), icon: faBox }] : []),
+      ...((isAdmin || hasPermission("view reports") || hasPermission("view users") || !isCashier) ? [{ path: "/", label: t("home"), icon: faHouse }] : []),
+      ...(hasPermission("view products") && !isCashier ? [{ path: "/products", label: t("products"), icon: faBox }] : []),
     ],
     sales: [
-      ...(hasPermission("create sales") ? [{ path: "/sales", label: t("sales"), icon: faMoneyBill }] : []),
-      ...(hasPermission("view sales") ? [{ path: "/sales-list", label: t("salesList"), icon: faListCheck }] : []),
-      ...(hasPermission("create returns") ? [{ path: "/sales-returns", label: t("salesReturns") || "مرتجع المبيعات", icon: faRightLeft }] : []),
+      ...(hasPermission("create sales") && !isAdmin ? [{ path: "/sales", label: t("sales"), icon: faMoneyBill }] : []),
+      ...(hasPermission("view sales") && !isAdmin && !isCashier ? [{ path: "/sales-list", label: t("salesList"), icon: faListCheck }] : []),
+      ...(hasPermission("create returns") && !isAdmin ? [{ path: "/sales-returns", label: t("salesReturns") || "مرتجع المبيعات", icon: faRightLeft }] : []),
     ],
     management: [
-      ...(hasPermission("view sales") ? [{ path: "/customers", label: t("customersManagement") || "إدارة العملاء", icon: faUsers }] : []),
-      ...(hasPermission("view inventory") ? [{ path: "/inventory", label: t("inventory"), icon: faChartColumn }] : []),
-      ...(hasPermission("view returns") ? [{ path: "/returns", label: t("returnsManagement"), icon: faRightLeft }] : []),
-      ...(hasPermission("view suppliers") ? [{ path: "/suppliers", label: t("suppliersManagement"), icon: faUsers }] : []),
-      ...(hasPermission("view purchases") ? [{ path: "/purchase-invoices", label: t("purchaseInvoices"), icon: faFileInvoice }] : []),
-      ...(hasPermission("view expenses") ? [{ path: "/expenses", label: t("expensesManagement"), icon: faMoneyBillTransfer }] : []),
+      ...(hasPermission("view sales") && !isCashier ? [{ path: "/customers", label: t("customersManagement") || "إدارة العملاء", icon: faUsers }] : []),
+      ...(hasPermission("view inventory") && !isCashier ? [{ path: "/inventory", label: t("inventory"), icon: faChartColumn }] : []),
+      ...(hasPermission("view returns") && !isCashier ? [{ path: "/returns", label: t("returnsManagement"), icon: faRightLeft }] : []),
+      ...(hasPermission("view suppliers") && !isCashier ? [{ path: "/suppliers", label: t("suppliersManagement"), icon: faUsers }] : []),
+      ...(hasPermission("view purchases") && !isCashier ? [{ path: "/purchase-invoices", label: t("purchaseInvoices"), icon: faFileInvoice }] : []),
+      ...(hasPermission("view expenses") && !isCashier ? [{ path: "/expenses", label: t("expensesManagement"), icon: faMoneyBillTransfer }] : []),
     ],
     reports: [
-      ...(hasPermission("view reports") ? [
+      ...(hasPermission("view reports") && !isCashier ? [
         { path: "/profit-loss", label: t("profitLoss"), icon: faChartColumn },
         { path: "/reports", label: t("reports"), icon: faChartColumn },
       ] : []),
     ],
     admin: [
-      ...(hasPermission("view users") ? [{ path: "/users", label: t("usersManagement"), icon: faUsers }] : []),
-      ...(hasPermission("view roles") ? [{ path: "/roles", label: t("rolesAndPermissions"), icon: faKey }] : []),
-      ...(hasPermission("view users") ? [{ path: "/shifts", label: t("shiftsManagement"), icon: faClock }] : []),
+      ...(hasPermission("view users") && !isCashier ? [{ path: "/users", label: t("usersManagement"), icon: faUsers }] : []),
+      ...(hasPermission("view roles") && !isCashier ? [{ path: "/roles", label: t("rolesAndPermissions"), icon: faKey }] : []),
+      ...(hasPermission("view users") && !isCashier ? [{ path: "/shifts", label: t("shiftsManagement"), icon: faClock }] : []),
     ],
   };
 

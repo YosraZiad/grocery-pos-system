@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { useI18n } from "../context/I18nContext";
@@ -31,6 +31,10 @@ function Home() {
   // التحقق من نوع المستخدم
   const isAdmin = user?.roles?.some((role) => role.name === "admin");
   const isCashier = user?.roles?.some((role) => role.name === "cashier");
+
+  if (isCashier && !isAdmin) {
+    return <Navigate to="/sales" replace />;
+  }
 
   // جلب إحصائيات Dashboard
   const { data: dashboardData, isLoading } = useQuery({

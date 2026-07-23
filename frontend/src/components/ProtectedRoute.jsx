@@ -1,14 +1,18 @@
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useI18n } from '../context/I18nContext';
 import toast from 'react-hot-toast';
 import { useEffect } from 'react';
 
 function ProtectedRoute({ children, requiredPermission }) {
-  const { isAuthenticated, loading, hasPermission } = useAuth();
+  const { isAuthenticated, loading, hasPermission, user } = useAuth();
   const { t } = useI18n();
+  const location = useLocation();
 
-  const isAuthorized = !requiredPermission || hasPermission(requiredPermission);
+  const isAdmin = user?.roles?.some((role) => role.name === 'admin');
+  const isBlockedRouteForAdmin = isAdmin && (location.pathname === '/sales' || location.pathname === '/sales-list');
+
+  const isAuthorized = (!requiredPermission || hasPermission(requiredPermission)) && !isBlockedRouteForAdmin;
 
   useEffect(() => {
     if (isAuthenticated && !loading && !isAuthorized) {
