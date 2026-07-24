@@ -50,7 +50,7 @@ function Layout() {
   const [isCollapsed, setIsCollapsed] = useState(() => {
     return localStorage.getItem("pos_sidebar_collapsed") === "true";
   });
-  
+
   const [activeShift, setActiveShift] = useState(null);
   const [isCloseShiftOpen, setIsCloseShiftOpen] = useState(false);
   const [isShiftExpired, setIsShiftExpired] = useState(false);
@@ -88,7 +88,7 @@ function Layout() {
       toast.error(
         language === "ar"
           ? "يجب إغلاق الوردية (الشفت) النشطة أولاً قبل تسجيل الخروج!"
-          : "You must close your active shift first before logging out!"
+          : "You must close your active shift first before logging out!",
       );
       setIsCloseShiftOpen(true);
       return;
@@ -128,32 +128,102 @@ function Layout() {
   // المجموعات البرمجية وقنوات التنقل مفلترة بالصلاحيات
   const navigationGroups = {
     main: [
-      ...((isAdmin || hasPermission("view reports") || hasPermission("view users") || !isCashier) ? [{ path: "/", label: t("home"), icon: faHouse }] : []),
-      ...(hasPermission("view products") && !isCashier ? [{ path: "/products", label: t("products"), icon: faBox }] : []),
+      ...(hasPermission("view reports") || hasPermission("view users")
+        ? [{ path: "/", label: t("home"), icon: faHouse }]
+        : []),
+      ...(hasPermission("view products")
+        ? [{ path: "/products", label: t("products"), icon: faBox }]
+        : []),
     ],
     sales: [
-      ...(hasPermission("create sales") && !isAdmin ? [{ path: "/sales", label: t("sales"), icon: faMoneyBill }] : []),
-      ...(hasPermission("view sales") && !isAdmin && !isCashier ? [{ path: "/sales-list", label: t("salesList"), icon: faListCheck }] : []),
-      ...(hasPermission("create returns") && !isAdmin ? [{ path: "/sales-returns", label: t("salesReturns") || "مرتجع المبيعات", icon: faRightLeft }] : []),
+      ...(hasPermission("create sales")
+        ? [{ path: "/sales", label: t("sales"), icon: faMoneyBill }]
+        : []),
+      ...(hasPermission("view sales") && !isAdmin && !isCashier
+        ? [{ path: "/sales-list", label: t("salesList"), icon: faListCheck }]
+        : []),
+      ...(hasPermission("create returns") && !isAdmin
+        ? [
+            {
+              path: "/sales-returns",
+              label: t("salesReturns") || "مرتجع المبيعات",
+              icon: faRightLeft,
+            },
+          ]
+        : []),
     ],
     management: [
-      ...(hasPermission("view sales") && !isCashier ? [{ path: "/customers", label: t("customersManagement") || "إدارة العملاء", icon: faUsers }] : []),
-      ...(hasPermission("view inventory") && !isCashier ? [{ path: "/inventory", label: t("inventory"), icon: faChartColumn }] : []),
-      ...(hasPermission("view returns") && !isCashier ? [{ path: "/returns", label: t("returnsManagement"), icon: faRightLeft }] : []),
-      ...(hasPermission("view suppliers") && !isCashier ? [{ path: "/suppliers", label: t("suppliersManagement"), icon: faUsers }] : []),
-      ...(hasPermission("view purchases") && !isCashier ? [{ path: "/purchase-invoices", label: t("purchaseInvoices"), icon: faFileInvoice }] : []),
-      ...(hasPermission("view expenses") && !isCashier ? [{ path: "/expenses", label: t("expensesManagement"), icon: faMoneyBillTransfer }] : []),
+      ...(hasPermission("view sales") && !isCashier
+        ? [
+            {
+              path: "/customers",
+              label: t("customersManagement") || "إدارة العملاء",
+              icon: faUsers,
+            },
+          ]
+        : []),
+      ...(hasPermission("view inventory") && !isCashier
+        ? [{ path: "/inventory", label: t("inventory"), icon: faChartColumn }]
+        : []),
+      ...(hasPermission("view returns") && !isCashier
+        ? [
+            {
+              path: "/returns",
+              label: t("returnsManagement"),
+              icon: faRightLeft,
+            },
+          ]
+        : []),
+      ...(hasPermission("view suppliers") && !isCashier
+        ? [
+            {
+              path: "/suppliers",
+              label: t("suppliersManagement"),
+              icon: faUsers,
+            },
+          ]
+        : []),
+      ...(hasPermission("view purchases") && !isCashier
+        ? [
+            {
+              path: "/purchase-invoices",
+              label: t("purchaseInvoices"),
+              icon: faFileInvoice,
+            },
+          ]
+        : []),
+      ...(hasPermission("view expenses") && !isCashier
+        ? [
+            {
+              path: "/expenses",
+              label: t("expensesManagement"),
+              icon: faMoneyBillTransfer,
+            },
+          ]
+        : []),
     ],
     reports: [
-      ...(hasPermission("view reports") && !isCashier ? [
-        { path: "/profit-loss", label: t("profitLoss"), icon: faChartColumn },
-        { path: "/reports", label: t("reports"), icon: faChartColumn },
-      ] : []),
+      ...(hasPermission("view reports") && !isCashier
+        ? [
+            {
+              path: "/profit-loss",
+              label: t("profitLoss"),
+              icon: faChartColumn,
+            },
+            { path: "/reports", label: t("reports"), icon: faChartColumn },
+          ]
+        : []),
     ],
     admin: [
-      ...(hasPermission("view users") && !isCashier ? [{ path: "/users", label: t("usersManagement"), icon: faUsers }] : []),
-      ...(hasPermission("view roles") && !isCashier ? [{ path: "/roles", label: t("rolesAndPermissions"), icon: faKey }] : []),
-      ...(hasPermission("view users") && !isCashier ? [{ path: "/shifts", label: t("shiftsManagement"), icon: faClock }] : []),
+      ...(hasPermission("view users") && !isCashier
+        ? [{ path: "/users", label: t("usersManagement"), icon: faUsers }]
+        : []),
+      ...(hasPermission("view roles") && !isCashier
+        ? [{ path: "/roles", label: t("rolesAndPermissions"), icon: faKey }]
+        : []),
+      ...(hasPermission("view users") && !isCashier
+        ? [{ path: "/shifts", label: t("shiftsManagement"), icon: faClock }]
+        : []),
     ],
   };
 
@@ -181,15 +251,22 @@ function Layout() {
                     key={item.path}
                     to={item.path}
                     className={`flex items-center rounded-xl transition-all duration-200 ${
-                      showLabels ? "px-4 py-2.5 space-x-3 rtl:space-x-reverse" : "p-3 justify-center"
+                      showLabels
+                        ? "px-4 py-2.5 space-x-3 rtl:space-x-reverse"
+                        : "p-3 justify-center"
                     } ${
                       isActive(item.path)
                         ? "bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-md shadow-primary-500/20"
                         : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800/50"
                     }`}
                   >
-                    <FontAwesomeIcon icon={item.icon} className={showLabels ? "text-base" : "text-xl"} />
-                    {showLabels && <span className="font-medium text-sm">{item.label}</span>}
+                    <FontAwesomeIcon
+                      icon={item.icon}
+                      className={showLabels ? "text-base" : "text-xl"}
+                    />
+                    {showLabels && (
+                      <span className="font-medium text-sm">{item.label}</span>
+                    )}
                   </Link>
                 );
 
@@ -213,15 +290,22 @@ function Layout() {
                 <Link
                   to="/settings"
                   className={`flex items-center rounded-xl transition-all duration-200 ${
-                    showLabels ? "px-4 py-2.5 space-x-3 rtl:space-x-reverse" : "p-3 justify-center"
+                    showLabels
+                      ? "px-4 py-2.5 space-x-3 rtl:space-x-reverse"
+                      : "p-3 justify-center"
                   } ${
                     isActive("/settings")
                       ? "bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-md shadow-primary-500/20"
                       : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800/50"
                   }`}
                 >
-                  <FontAwesomeIcon icon={faGear} className={showLabels ? "text-base" : "text-xl"} />
-                  {showLabels && <span className="font-medium text-sm">{t("settings")}</span>}
+                  <FontAwesomeIcon
+                    icon={faGear}
+                    className={showLabels ? "text-base" : "text-xl"}
+                  />
+                  {showLabels && (
+                    <span className="font-medium text-sm">{t("settings")}</span>
+                  )}
                 </Link>
               );
 
@@ -239,13 +323,13 @@ function Layout() {
     );
   };
 
-  const drawerClasses = language === "en"
-    ? `left-0 ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full"}`
-    : `right-0 ${mobileMenuOpen ? "translate-x-0" : "translate-x-full"}`;
+  const drawerClasses =
+    language === "en"
+      ? `left-0 ${mobileMenuOpen ? "translate-x-0" : "-translate-x-full"}`
+      : `right-0 ${mobileMenuOpen ? "translate-x-0" : "translate-x-full"}`;
 
   return (
     <div className="h-screen w-screen flex flex-row bg-gray-50 dark:bg-gray-900 transition-colors duration-200 overflow-hidden">
-      
       {/* 1. الشريط الجانبي المكتبي (Desktop Collapsible Sidebar) */}
       <aside
         className={`hidden lg:flex flex-col bg-white dark:bg-gray-800 border-e border-gray-200 dark:border-gray-700 transition-all duration-300 ${
@@ -256,7 +340,10 @@ function Layout() {
         <div className="h-16 flex items-center justify-between px-4 border-b border-gray-200 dark:border-gray-700/50">
           <div className="flex items-center space-x-3 rtl:space-x-reverse truncate">
             <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-700 rounded-lg flex items-center justify-center flex-shrink-0">
-              <FontAwesomeIcon icon={faCartShopping} className="text-white text-xl" />
+              <FontAwesomeIcon
+                icon={faCartShopping}
+                className="text-white text-xl"
+              />
             </div>
             {!isCollapsed && (
               <span className="text-lg font-bold text-gray-900 dark:text-white truncate">
@@ -276,7 +363,11 @@ function Layout() {
           <button
             onClick={toggleSidebar}
             className="w-10 h-10 rounded-xl bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600/50 text-gray-600 dark:text-gray-300 flex items-center justify-center transition-colors duration-200"
-            title={isCollapsed ? t("expand") || "Expand" : t("collapse") || "Collapse"}
+            title={
+              isCollapsed
+                ? t("expand") || "Expand"
+                : t("collapse") || "Collapse"
+            }
           >
             <FontAwesomeIcon
               icon={
@@ -306,7 +397,10 @@ function Layout() {
         <div className="h-16 flex items-center justify-between px-4 border-b border-gray-200 dark:border-gray-700/50 flex-shrink-0">
           <div className="flex items-center space-x-3 rtl:space-x-reverse">
             <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-primary-700 rounded-lg flex items-center justify-center">
-              <FontAwesomeIcon icon={faCartShopping} className="text-white text-xl" />
+              <FontAwesomeIcon
+                icon={faCartShopping}
+                className="text-white text-xl"
+              />
             </div>
             <span className="text-lg font-bold text-gray-900 dark:text-white">
               {t("appName")}
@@ -346,7 +440,12 @@ function Layout() {
           {/* الجانب الأيسر (أو الأيمن LTR): أدوات اللغة والمظهر وقفل الجلسة والبروفايل */}
           <div className="flex items-center space-x-3 rtl:space-x-reverse">
             {/* زر تبديل اللغة */}
-            <Tooltip label={language === "en" ? t("switchToArabic") : t("switchToEnglish")} position="bottom">
+            <Tooltip
+              label={
+                language === "en" ? t("switchToArabic") : t("switchToEnglish")
+              }
+              position="bottom"
+            >
               <button
                 onClick={toggleLanguage}
                 className="p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200 text-lg"
@@ -357,13 +456,19 @@ function Layout() {
             </Tooltip>
 
             {/* زر تبديل المظهر */}
-            <Tooltip label={theme === "light" ? t("darkMode") : t("lightMode")} position="bottom">
+            <Tooltip
+              label={theme === "light" ? t("darkMode") : t("lightMode")}
+              position="bottom"
+            >
               <button
                 onClick={toggleTheme}
                 className="p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors duration-200"
                 aria-label="Theme Toggle"
               >
-                <FontAwesomeIcon icon={theme === "light" ? faMoon : faSun} className="text-lg" />
+                <FontAwesomeIcon
+                  icon={theme === "light" ? faMoon : faSun}
+                  className="text-lg"
+                />
               </button>
             </Tooltip>
 
@@ -380,7 +485,10 @@ function Layout() {
 
             {/* زر إغلاق الوردية */}
             {activeShift && (
-              <Tooltip label={t("closeShift") || "إغلاق الوردية"} position="bottom">
+              <Tooltip
+                label={t("closeShift") || "إغلاق الوردية"}
+                position="bottom"
+              >
                 <button
                   onClick={() => setIsCloseShiftOpen(true)}
                   className="p-2 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors duration-200 animate-pulse"
@@ -416,7 +524,10 @@ function Layout() {
                       onClick={() => setUserMenuOpen(false)}
                       className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                     >
-                      <FontAwesomeIcon icon={faUser} className="me-3 rtl:me-0 rtl:ml-3" />
+                      <FontAwesomeIcon
+                        icon={faUser}
+                        className="me-3 rtl:me-0 rtl:ml-3"
+                      />
                       <span>{t("profile")}</span>
                     </Link>
                     {activeShift && (
@@ -427,7 +538,10 @@ function Layout() {
                         }}
                         className="w-full flex items-center px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-start border-b border-gray-100 dark:border-gray-700 pb-2 mb-1"
                       >
-                        <FontAwesomeIcon icon={faPowerOff} className="me-3 rtl:me-0 rtl:ml-3" />
+                        <FontAwesomeIcon
+                          icon={faPowerOff}
+                          className="me-3 rtl:me-0 rtl:ml-3"
+                        />
                         <span>{t("closeShift") || "إغلاق الوردية"}</span>
                       </button>
                     )}
@@ -438,7 +552,10 @@ function Layout() {
                       }}
                       className="w-full flex items-center px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-start"
                     >
-                      <FontAwesomeIcon icon={faDoorOpen} className="me-3 rtl:me-0 rtl:ml-3" />
+                      <FontAwesomeIcon
+                        icon={faDoorOpen}
+                        className="me-3 rtl:me-0 rtl:ml-3"
+                      />
                       <span>{t("logout")}</span>
                     </button>
                   </div>
@@ -449,8 +566,16 @@ function Layout() {
         </header>
 
         {/* عرض المحتوى للمسار الحالي */}
-        <main className={`flex-1 ${location.pathname === "/sales" ? "p-4 overflow-hidden flex flex-col min-h-0" : "p-6 lg:p-8 overflow-y-auto"}`}>
-          <div className={location.pathname === "/sales" ? "w-full h-full flex flex-col flex-1 min-h-0" : "max-w-7xl mx-auto w-full"}>
+        <main
+          className={`flex-1 ${location.pathname === "/sales" ? "p-4 overflow-hidden flex flex-col min-h-0" : "p-6 lg:p-8 overflow-y-auto"}`}
+        >
+          <div
+            className={
+              location.pathname === "/sales"
+                ? "w-full h-full flex flex-col flex-1 min-h-0"
+                : "max-w-7xl mx-auto w-full"
+            }
+          >
             <Outlet />
           </div>
         </main>
@@ -476,11 +601,12 @@ function Layout() {
         onShiftClosed={(shiftId) => {
           setIsShiftExpired(false);
           setIsCloseShiftOpen(false);
-          navigate(`/shifts/${shiftId}/z-report`, { state: { autoPrint: true } });
+          navigate(`/shifts/${shiftId}/z-report`, {
+            state: { autoPrint: true },
+          });
         }}
         isForceClose={isShiftExpired}
       />
-      
     </div>
   );
 }
